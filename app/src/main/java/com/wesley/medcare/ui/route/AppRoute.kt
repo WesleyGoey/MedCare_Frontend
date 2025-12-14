@@ -1,8 +1,7 @@
-import androidx.navigation.NavDestination.Companion.hierarchy
-import com.wesley.medcare.ui.view.Medicine.HomeView
-
 package com.wesley.medcare.ui.route
 
+import androidx.navigation.NavDestination.Companion.hierarchy
+import com.wesley.medcare.ui.view.Medicine.HomeView
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
