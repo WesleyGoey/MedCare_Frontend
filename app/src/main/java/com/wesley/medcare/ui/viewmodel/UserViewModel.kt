@@ -11,13 +11,11 @@ import java.io.IOException
 
 class UserViewModel : ViewModel() {
 
-    private val repository = AppContainer().authRepository
+    private val repository = AppContainer().userRepository
 
-    // State untuk User Data
     private val _userState = MutableStateFlow(User())
     val userState: StateFlow<User> = _userState
 
-    // State untuk Loading
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -25,7 +23,7 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val result = repository.loginUser(email, password)
+                val result = repository.login(email, password)
                 _userState.value = result
             } catch (e: IOException) {
                 _userState.value = User(
@@ -43,11 +41,11 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun register(username: String, email: String, password: String, age: Int, phone: String) {
+    fun register(name: String, email: String, password: String, age: Int, phone: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val result = repository.registerUser(username, email, password, age, phone)
+                val result = repository.register(name, email, password, age, phone)
                 _userState.value = result
             } catch (e: IOException) {
                 _userState.value = User(
