@@ -10,7 +10,7 @@ fun MedicineView(
 
 }
 
-@Preview
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun MedicinePreview() {
     MedicineView()

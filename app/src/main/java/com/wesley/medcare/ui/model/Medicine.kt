@@ -1,13 +1,13 @@
 package com.wesley.medcare.ui.model
 
 data class Medicine(
-    val id: Int,
-    val userId: Int,
-    val name: String,
-    val type: String,
-    val dosage: String,
-    val stock: Int,
-    val minStock: Int,
+    val id: Int = 0,
+    val userId: Int = 0,
+    val name: String = "",
+    val type: String = "",
+    val dosage: String = "",
+    val stock: Int = 0,
+    val minStock: Int = 0,
     val notes: String? = null,
     val image: String? = null
 )
