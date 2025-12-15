@@ -15,5 +15,3 @@ interface UserService {
     @POST("register")
     suspend fun register(@Body req: RegisterRequest): Response<RegisterResponse>
 }
-
-// Halo Test
