@@ -1,4 +1,4 @@
-package com.wesley.medcare.ui.view.Schedule
+package com.wesley.medcare.ui.view.History
 
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
@@ -9,15 +9,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun ReminderView(
+fun HistoryView(
     modifier: Modifier = Modifier,
-            navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController()
 ) {
 
 }
 
 @Composable
 @Preview(showBackground = true, showSystemUi = true)
-private fun ReminderViewPreview() {
-    ReminderView()
+private fun HistoryPreview() {
+    HistoryView()
 }
