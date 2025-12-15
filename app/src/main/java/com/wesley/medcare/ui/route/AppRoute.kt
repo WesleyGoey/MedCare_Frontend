@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.route
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,7 @@ import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
 enum class AppView(
@@ -63,13 +65,18 @@ data class BottomNavItem(
 @Composable
 fun AppRoute() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+
+    // Initialize UserViewModel
+    val userViewModel: UserViewModel = remember {
+        UserViewModel(context.applicationContext as Application)
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
     val currentView = AppView.entries.find { it.name == currentRoute }
 
-    // ordered as requested: Home, Meds, Remind, History, Profile
     val bottomNavItems = listOf(
         BottomNavItem(AppView.HomeView, "Home"),
         BottomNavItem(AppView.MedicineView, "Meds"),
@@ -85,10 +92,6 @@ fun AppRoute() {
 
     val bottomRoutes = bottomNavItems.map { it.view.name }
     val showBottomBar = currentRoute in bottomRoutes
-
-    val context = LocalContext.current
-    val appContainer = remember(context) { AppContainer(context.applicationContext) }
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -118,28 +121,10 @@ fun AppRoute() {
         ) {
             composable(route = AppView.LoginView.name) {
                 LoginView(
-                    onSignIn = { email, password ->
-                        scope.launch {
-                            try {
-                                val response = appContainer.userRepository.login(email, password)
-
-                                if (response.isSuccessful) {
-                                    val body = response.body()
-                                    val token = body?.`data`?.token
-                                    if (!token.isNullOrBlank()) {
-                                        navController.navigate(AppView.HomeView.name) {
-                                            popUpTo(AppView.LoginView.name) { inclusive = true }
-                                        }
-                                    } else {
-                                        Toast.makeText(context, "Login failed: missing token", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e("LoginError", "Exception during login", e)
-                                Toast.makeText(context, "Login error: ${e.message}", Toast.LENGTH_LONG).show()
-                            }
+                    viewModel = userViewModel,
+                    onNavigateToHome = {
+                        navController.navigate(AppView.HomeView.name) {
+                            popUpTo(AppView.LoginView.name) { inclusive = true }
                         }
                     },
                     onSignUpClick = { navController.navigate(AppView.RegisterView.name) }
@@ -147,7 +132,8 @@ fun AppRoute() {
             }
             composable(route = AppView.RegisterView.name) {
                 RegisterView(
-                    onSignUp = { name, age, phone, email, password ->
+                    viewModel = userViewModel,
+                    onNavigateToHome = {
                         navController.navigate(AppView.HomeView.name) {
                             popUpTo(AppView.RegisterView.name) { inclusive = true }
                         }

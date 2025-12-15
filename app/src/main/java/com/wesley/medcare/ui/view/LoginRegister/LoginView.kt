@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.view.LoginRegister
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,16 +55,43 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wesley.medcare.ui.viewmodel.UserViewModel
 
 @Composable
 fun LoginView(
     modifier: Modifier = Modifier,
-    onSignIn: (email: String, password: String) -> Unit = { _, _ -> },
+    viewModel: UserViewModel,
+    onNavigateToHome: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var loginAttempted by remember { mutableStateOf(false) }
+
+    val userState by viewModel.userState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    // Handle login success/error
+    LaunchedEffect(userState, isLoading, loginAttempted) {
+        if (loginAttempted && !isLoading) {
+            when {
+                userState.isError && userState.errorMessage != null -> {
+                    Toast.makeText(context, userState.errorMessage, Toast.LENGTH_LONG).show()
+                    viewModel.resetError()
+                    loginAttempted = false
+                }
+                !userState.isError && userState.errorMessage == null -> {
+                    Toast.makeText(context, "Login berhasil!", Toast.LENGTH_SHORT).show()
+                    loginAttempted = false
+                    onNavigateToHome()
+                }
+            }
+        }
+    }
+
+
 
     Column(
         modifier = modifier
@@ -144,20 +176,27 @@ fun LoginView(
                         value = email,
                         onValueChange = { email = it },
                         placeholder = { Text("your@email.com") },
+                        enabled = !isLoading,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
                             focusedTextColor = Color(0xFF0B1220),
                             unfocusedTextColor = Color(0xFF0B1220),
+                            disabledTextColor = Color(0xFF9AA3AE),
                             focusedPlaceholderColor = Color(0xFF9AA3AE),
                             unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
                     )
                 }
             }
@@ -187,6 +226,7 @@ fun LoginView(
                         value = password,
                         onValueChange = { password = it },
                         placeholder = { Text("Enter your password") },
+                        enabled = !isLoading,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -200,13 +240,16 @@ fun LoginView(
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
                             focusedTextColor = Color(0xFF0B1220),
                             unfocusedTextColor = Color(0xFF0B1220),
+                            disabledTextColor = Color(0xFF9AA3AE),
                             focusedPlaceholderColor = Color(0xFF9AA3AE),
                             unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -217,7 +260,15 @@ fun LoginView(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = { onSignIn(email, password) },
+                onClick = {
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        loginAttempted = true
+                        viewModel.login(email, password)
+                    } else {
+                        Toast.makeText(context, "Email dan password harus diisi", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -230,18 +281,38 @@ fun LoginView(
                         .fillMaxWidth()
                         .height(52.dp)
                         .background(
-                            brush = Brush.verticalGradient(listOf(Color(0xFF4DA1FF), Color(0xFF1E7BFF))),
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0xFF4DA1FF),
+                                    Color(0xFF1E7BFF)
+                                )
+                            ),
                             shape = RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Sign In", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Sign In",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
                 Text("  OR  ", color = Color(0xFF9AA3AE), fontSize = 12.sp)
                 Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
@@ -249,7 +320,10 @@ fun LoginView(
 
             Spacer(Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text("Don't have an account? ", color = Color(0xFF9AA3AE))
                 Text(
                     text = "Sign Up",
@@ -265,5 +339,5 @@ fun LoginView(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LoginPreview() {
-    LoginView()
+    // Preview without ViewModel
 }

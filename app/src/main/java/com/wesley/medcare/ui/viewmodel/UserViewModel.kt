@@ -29,33 +29,26 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = repository.login(email, password)
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    val token = body?.`data`?.token
+                val result = repository.login(email, password)
+                result.onSuccess { loginResponse ->
+                    val token = loginResponse.data.token
                     if (!token.isNullOrBlank()) {
-                        // update user state to clear errors (adjust to your User model if it has token field)
-                        _userState.value =
-                            _userState.value.copy(isError = false, errorMessage = null)
-                        // If your User model has a token field, set it here, e.g.
-                        // _userState.value = _userState.value.copy(token = token, isError = false, errorMessage = null)
+                        _userState.value = _userState.value.copy(
+                            isError = false,
+                            errorMessage = null
+                        )
                     } else {
                         _userState.value = _userState.value.copy(
                             isError = true,
                             errorMessage = "Login failed: missing token"
                         )
                     }
-                } else {
+                }.onFailure { exception ->
                     _userState.value = _userState.value.copy(
                         isError = true,
-                        errorMessage = "Login failed: ${response.message()}"
+                        errorMessage = exception.message ?: "Login gagal. Cek email/password."
                     )
                 }
-            } catch (e: IOException) {
-                _userState.value = _userState.value.copy(
-                    isError = true,
-                    errorMessage = "Tidak ada koneksi internet."
-                )
             } catch (e: Exception) {
                 _userState.value = _userState.value.copy(
                     isError = true,

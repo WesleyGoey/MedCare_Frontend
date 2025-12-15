@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.view.LoginRegister
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,11 +26,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wesley.medcare.ui.viewmodel.UserViewModel
 
 @Composable
 fun RegisterView(
     modifier: Modifier = Modifier,
-    onSignUp: (name: String, age: String, phone: String, email: String, password: String) -> Unit = { _, _, _, _, _ -> },
+    viewModel: UserViewModel,
+    onNavigateToHome: () -> Unit = {},
     onSignInClick: () -> Unit = {}
 ) {
     var name by remember { mutableStateOf("") }
@@ -39,6 +43,31 @@ fun RegisterView(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var registerAttempted by remember { mutableStateOf(false) }
+
+    val userState by viewModel.userState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    // Handle registration success/error
+    LaunchedEffect(userState, isLoading, registerAttempted) {
+        if (registerAttempted && !isLoading) {
+            when {
+                userState.isError && userState.errorMessage != null -> {
+                    Toast.makeText(context, userState.errorMessage, Toast.LENGTH_LONG).show()
+                    viewModel.resetError()
+                    registerAttempted = false
+                }
+                !userState.isError && userState.errorMessage == null -> {
+                    Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
+                    registerAttempted = false
+                    onNavigateToHome()
+                }
+            }
+        }
+    }
+
+
 
     LazyColumn(
         modifier = modifier
@@ -125,12 +154,15 @@ fun RegisterView(
                             value = name,
                             onValueChange = { name = it },
                             placeholder = { Text("Enter your full name") },
+                            enabled = !isLoading,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -164,16 +196,22 @@ fun RegisterView(
                             value = age,
                             onValueChange = { age = it },
                             placeholder = { Text("Your age") },
+                            enabled = !isLoading,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
                 }
@@ -203,16 +241,22 @@ fun RegisterView(
                             value = phone,
                             onValueChange = { phone = it },
                             placeholder = { Text("Your phone number") },
+                            enabled = !isLoading,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
                 }
@@ -242,16 +286,22 @@ fun RegisterView(
                             value = email,
                             onValueChange = { email = it },
                             placeholder = { Text("your@email.com") },
+                            enabled = !isLoading,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
                 }
@@ -281,6 +331,7 @@ fun RegisterView(
                             value = password,
                             onValueChange = { password = it },
                             placeholder = { Text("Create a password") },
+                            enabled = !isLoading,
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -294,9 +345,11 @@ fun RegisterView(
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -330,6 +383,7 @@ fun RegisterView(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
                             placeholder = { Text("Confirm your password") },
+                            enabled = !isLoading,
                             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
@@ -343,9 +397,11 @@ fun RegisterView(
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
                                 cursorColor = Color(0xFF2F93FF),
                                 focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -357,7 +413,29 @@ fun RegisterView(
                 Spacer(Modifier.height(12.dp))
 
                 Button(
-                    onClick = { onSignUp(name, age, phone, email, password) },
+                    onClick = {
+                        // Validation
+                        when {
+                            name.isBlank() -> Toast.makeText(context, "Nama harus diisi", Toast.LENGTH_SHORT).show()
+                            age.isBlank() -> Toast.makeText(context, "Umur harus diisi", Toast.LENGTH_SHORT).show()
+                            phone.isBlank() -> Toast.makeText(context, "Nomor telepon harus diisi", Toast.LENGTH_SHORT).show()
+                            email.isBlank() -> Toast.makeText(context, "Email harus diisi", Toast.LENGTH_SHORT).show()
+                            password.isBlank() -> Toast.makeText(context, "Password harus diisi", Toast.LENGTH_SHORT).show()
+                            confirmPassword.isBlank() -> Toast.makeText(context, "Konfirmasi password harus diisi", Toast.LENGTH_SHORT).show()
+                            password != confirmPassword -> Toast.makeText(context, "Password tidak cocok", Toast.LENGTH_SHORT).show()
+                            password.length < 6 -> Toast.makeText(context, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
+                            else -> {
+                                val ageInt = age.toIntOrNull()
+                                if (ageInt == null) {
+                                    Toast.makeText(context, "Umur harus berupa angka", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    registerAttempted = true
+                                    viewModel.register(name, ageInt, phone, email, password)
+                                }
+                            }
+                        }
+                    },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
@@ -370,18 +448,38 @@ fun RegisterView(
                             .fillMaxWidth()
                             .height(52.dp)
                             .background(
-                                brush = Brush.verticalGradient(listOf(Color(0xFF4DA1FF), Color(0xFF1E7BFF))),
+                                brush = Brush.verticalGradient(
+                                    listOf(
+                                        Color(0xFF4DA1FF),
+                                        Color(0xFF1E7BFF)
+                                    )
+                                ),
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Create Account", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Create Account",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
 
                 Spacer(Modifier.height(12.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
                     Text("  OR  ", color = Color(0xFF9AA3AE), fontSize = 12.sp)
                     HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
@@ -389,7 +487,10 @@ fun RegisterView(
 
                 Spacer(Modifier.height(8.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text("Already have an account? ", color = Color(0xFF9AA3AE))
                     Text(
                         text = "Sign In",
@@ -406,5 +507,5 @@ fun RegisterView(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun RegisterPreview() {
-    RegisterView()
+    // Preview without ViewModel
 }
