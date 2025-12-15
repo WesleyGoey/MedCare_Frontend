@@ -14,9 +14,7 @@ import retrofit2.http.Query
 interface MedicineService {
 
     @GET("medicines")
-    suspend fun getAllMedicines(
-        @Query("page") page: Int? = null
-    ): Response<GetAllMedicinesResponse>
+    suspend fun getAllMedicines(): Response<GetAllMedicinesResponse>
 
     @GET("medicines/low-stock")
     suspend fun checkLowStock(
@@ -31,16 +29,16 @@ interface MedicineService {
     @POST("medicines")
     suspend fun addMedicine(
         @Body request: AddMedicineRequest
-    ): Response<Unit>
+    ): Response<GetMedicineByIdResponse>
 
     @PATCH("medicines/{id}")
     suspend fun updateMedicine(
         @Path("id") id: Int,
         @Body request: UpdateMedicineRequest
-    ): Response<Unit>
+    ): Response<GetMedicineByIdResponse>
 
     @DELETE("medicines/{id}")
     suspend fun deleteMedicine(
         @Path("id") id: Int
-    ): Response<Unit>
+    ): Response<GetMedicineByIdResponse>
 }
