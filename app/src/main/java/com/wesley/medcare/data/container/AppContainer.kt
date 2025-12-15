@@ -8,7 +8,7 @@ import com.wesley.medcare.data.repository.UserRepository
 
 class AppContainer {
     companion object {
-        private const val ROOT_URL = "http://10.0.2.2:3000"
+        private const val ROOT_URL = "http://10.222.192.232:3000"
         private const val BASE_URL = "${ROOT_URL}/api/"
 
     }
