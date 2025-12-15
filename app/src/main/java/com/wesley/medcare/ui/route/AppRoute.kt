@@ -1,6 +1,3 @@
-// kotlin
-// File: java/com/wesley/medcare/ui/route/AppRoute.kt
-
 package com.wesley.medcare.ui.route
 
 import android.widget.Toast
@@ -13,13 +10,15 @@ import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -34,10 +33,10 @@ import com.wesley.medcare.ui.view.LoginRegister.RegisterView
 import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
+import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
-import com.wesley.medcare.ui.view.Medicine.ProfileView
-import com.wesley.medcare.ui.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
 enum class AppView(
     val title: String,
@@ -64,38 +63,12 @@ data class BottomNavItem(
 fun AppRoute() {
     val navController = rememberNavController()
 
-    // keep single AppContainer instance
-    val appContainer = remember { AppContainer() }
-
-    // use viewModel() so lifecycle-managed instance is used
-    val userViewModel: UserViewModel = viewModel()
-
-    // collect user state to react to login success
-    val userState by userViewModel.userState.collectAsState()
-
-    // navigate to Home when token becomes available (adjust if your User model uses a different field)
-    LaunchedEffect(userState) {
-        // assume User has `token` property; adjust condition if different
-        val tokenField = try {
-            val tokenProp = userState::class.members.firstOrNull { it.name == "token" }
-            tokenProp?.call(userState) as? String
-        } catch (_: Exception) {
-            null
-        }
-
-        if (!tokenField.isNullOrBlank()) {
-            navController.navigate(AppView.HomeView.name) {
-                popUpTo(AppView.LoginView.name) { inclusive = true }
-                launchSingleTop = true
-            }
-        }
-    }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
     val currentView = AppView.entries.find { it.name == currentRoute }
 
+    // ordered as requested: Home, Meds, Remind, History, Profile
     val bottomNavItems = listOf(
         BottomNavItem(AppView.HomeView, "Home"),
         BottomNavItem(AppView.MedicineView, "Meds"),
@@ -111,6 +84,10 @@ fun AppRoute() {
 
     val bottomRoutes = bottomNavItems.map { it.view.name }
     val showBottomBar = currentRoute in bottomRoutes
+
+    val appContainer = remember { AppContainer() }
+    val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
@@ -141,11 +118,30 @@ fun AppRoute() {
             composable(route = AppView.LoginView.name) {
                 LoginView(
                     onSignIn = { email, password ->
-                        userViewModel.login(email, password)
+                        scope.launch {
+                            try {
+                                val response = appContainer.userRepository.login(email, password)
+
+                                if (response.isSuccessful) {
+                                    val body = response.body()
+                                    val token = body?.`data`?.token
+                                    if (!token.isNullOrBlank()) {
+                                        navController.navigate(AppView.HomeView.name) {
+                                            popUpTo(AppView.LoginView.name) { inclusive = true }
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Login failed: missing token", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("LoginError", "Exception during login", e)
+                                Toast.makeText(context, "Login error: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     },
-                    onSignUpClick = {
-                        navController.navigate(AppView.RegisterView.name)
-                    }
+                    onSignUpClick = { navController.navigate(AppView.RegisterView.name) }
                 )
             }
             composable(route = AppView.RegisterView.name) {
