@@ -1,5 +1,9 @@
+// kotlin
 package com.wesley.medcare.ui.route
 
+import android.util.Log
+import androidx.compose.runtime.remember
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -9,9 +13,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -23,12 +29,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
 import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
+import kotlinx.coroutines.launch
 
 enum class AppView(
     val title: String,
@@ -64,14 +72,16 @@ fun AppRoute() {
         BottomNavItem(AppView.ProfileView, "Profile")
     )
 
-    // Show TopBar for all screens except Login/Register
     val showTopBar = currentRoute !in listOf(
         AppView.LoginView.name,
         AppView.RegisterView.name
     )
 
-    // Show BottomBar only for main navigation items
     val showBottomBar = currentRoute in bottomNavItems.map { it.view.name }
+
+    val appContainer = remember { AppContainer() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -102,20 +112,36 @@ fun AppRoute() {
             composable(route = AppView.LoginView.name) {
                 LoginView(
                     onSignIn = { email, password ->
-                        // TODO: Handle login logic
-                        navController.navigate(AppView.HomeView.name) {
-                            popUpTo(AppView.LoginView.name) { inclusive = true }
+                        scope.launch {
+                            try {
+                                val response = appContainer.userRepository.login(email, password)
+
+                                if (response.isSuccessful) {
+                                    val body = response.body()
+                                    val token = body?.`data`?.token
+                                    if (!token.isNullOrBlank()) {
+                                        navController.navigate(AppView.HomeView.name) {
+                                            popUpTo(AppView.LoginView.name) { inclusive = true }
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Login failed: missing token", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                // Add full logging here
+                                android.util.Log.e("LoginError", "Exception during login", e)
+                                Toast.makeText(context, "Login p: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
                         }
                     },
-                    onSignUpClick = {
-                        navController.navigate(AppView.RegisterView.name)
-                    }
+                    onSignUpClick = { navController.navigate(AppView.RegisterView.name) }
                 )
             }
             composable(route = AppView.RegisterView.name) {
                 RegisterView(
                     onSignUp = { name, email, password ->
-                        // TODO: Handle register logic
                         navController.navigate(AppView.LoginView.name) {
                             popUpTo(AppView.RegisterView.name) { inclusive = true }
                         }
