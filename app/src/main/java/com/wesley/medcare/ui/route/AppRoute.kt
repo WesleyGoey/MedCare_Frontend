@@ -1,23 +1,21 @@
-// kotlin
 package com.wesley.medcare.ui.route
 
-import android.util.Log
-import androidx.compose.runtime.remember
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -36,16 +34,20 @@ import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
+import com.wesley.medcare.ui.view.Schedule.ReminderView
+import com.wesley.medcare.ui.view.History.HistoryView
 import kotlinx.coroutines.launch
 
 enum class AppView(
     val title: String,
-    val icon: ImageVector? = null
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     LoginView("Login"),
     RegisterView("Register"),
     HomeView("Home", Icons.Filled.Home),
-    MedicineView("Medicine", Icons.Filled.MedicalServices),
+    MedicineView("Meds", Icons.Filled.MedicalServices),
+    ReminderView("Remind", Icons.Filled.Notifications),
+    HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
     AddMedicineView("Add Medication")
 }
@@ -66,9 +68,12 @@ fun AppRoute() {
     val currentRoute = currentDestination?.route
     val currentView = AppView.entries.find { it.name == currentRoute }
 
+    // ordered as requested: Home, Meds, Remind, History, Profile
     val bottomNavItems = listOf(
         BottomNavItem(AppView.HomeView, "Home"),
-        BottomNavItem(AppView.MedicineView, "Medicine"),
+        BottomNavItem(AppView.MedicineView, "Meds"),
+        BottomNavItem(AppView.ReminderView, "Remind"),
+        BottomNavItem(AppView.HistoryView, "History"),
         BottomNavItem(AppView.ProfileView, "Profile")
     )
 
@@ -77,11 +82,12 @@ fun AppRoute() {
         AppView.RegisterView.name
     )
 
-    val showBottomBar = currentRoute in bottomNavItems.map { it.view.name }
+    val bottomRoutes = bottomNavItems.map { it.view.name }
+    val showBottomBar = currentRoute in bottomRoutes
 
     val appContainer = remember { AppContainer() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
@@ -89,7 +95,7 @@ fun AppRoute() {
                 MyTopAppBar(
                     currentView = currentView,
                     canNavigateBack = navController.previousBackStackEntry != null
-                            && currentRoute !in bottomNavItems.map { it.view.name },
+                            && currentRoute !in bottomRoutes,
                     navigateUp = { navController.navigateUp() }
                 )
             }
@@ -130,9 +136,8 @@ fun AppRoute() {
                                     Toast.makeText(context, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                                 }
                             } catch (e: Exception) {
-                                // Add full logging here
                                 android.util.Log.e("LoginError", "Exception during login", e)
-                                Toast.makeText(context, "Login p: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Login error: ${e.message}", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -141,7 +146,7 @@ fun AppRoute() {
             }
             composable(route = AppView.RegisterView.name) {
                 RegisterView(
-                    onSignUp = { name, email, password ->
+                    onSignUp = { _, _, _ ->
                         navController.navigate(AppView.HomeView.name) {
                             popUpTo(AppView.RegisterView.name) { inclusive = true }
                         }
@@ -156,6 +161,12 @@ fun AppRoute() {
             }
             composable(route = AppView.MedicineView.name) {
                 MedicineView(navController = navController)
+            }
+            composable(route = AppView.ReminderView.name) {
+                ReminderView(navController = navController)
+            }
+            composable(route = AppView.HistoryView.name) {
+                HistoryView(navController = navController)
             }
             composable(route = AppView.ProfileView.name) {
                 ProfileView(navController = navController)
@@ -188,7 +199,7 @@ fun MyTopAppBar(
             if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back"
                     )
                 }
