@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun ReminderView(
     modifier: Modifier = Modifier,
-            navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController()
 ) {
 
 }
