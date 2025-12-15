@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.wesley.medcare.ui.route.AppRoute
 import com.wesley.medcare.ui.theme.MedCareTheme
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 
@@ -20,7 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MedCareTheme {
-                    LoginView()
+                    AppRoute()
             }
         }
     }

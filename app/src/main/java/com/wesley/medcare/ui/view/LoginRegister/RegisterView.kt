@@ -2,42 +2,13 @@ package com.wesley.medcare.ui.view.LoginRegister
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,12 +27,11 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RegisterView(
     modifier: Modifier = Modifier,
-    onSignUp: (fullName: String, email: String, age: String, password: String) -> Unit = { _, _, _, _ -> },
+    onSignUp: (name: String, email: String, password: String) -> Unit = { _, _, _ -> },
     onSignInClick: () -> Unit = {}
 ) {
-    var fullName by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -114,14 +84,20 @@ fun RegisterView(
 
             Text(
                 text = "Create Account",
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0B1220)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Sign up to get started",
+                fontSize = 13.sp,
+                color = Color(0xFF9AA3AE)
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // Full Name
+            // Name
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text("Full Name", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
                 Spacer(Modifier.height(8.dp))
@@ -139,19 +115,15 @@ fun RegisterView(
                         contentDescription = null,
                         tint = Color(0xFF2F93FF)
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.width(10.dp))
                     TextField(
-                        value = fullName,
-                        onValueChange = { fullName = it },
-                        placeholder = { Text("Enter your full name") },
+                        value = name,
+                        onValueChange = { name = it },
+                        placeholder = { Text("John Doe") },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
@@ -182,7 +154,7 @@ fun RegisterView(
                         contentDescription = null,
                         tint = Color(0xFF2F93FF)
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.width(10.dp))
                     TextField(
                         value = email,
                         onValueChange = { email = it },
@@ -191,59 +163,12 @@ fun RegisterView(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Age
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Age", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    TextField(
-                        value = age,
-                        onValueChange = { age = it.filter { ch -> ch.isDigit() } },
-                        placeholder = { Text("Your age") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
                     )
                 }
             }
@@ -268,11 +193,11 @@ fun RegisterView(
                         contentDescription = null,
                         tint = Color(0xFF2F93FF)
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.width(10.dp))
                     TextField(
                         value = password,
                         onValueChange = { password = it },
-                        placeholder = { Text("Create a password") },
+                        placeholder = { Text("Enter your password") },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -287,16 +212,12 @@ fun RegisterView(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                 }
             }
@@ -321,7 +242,7 @@ fun RegisterView(
                         contentDescription = null,
                         tint = Color(0xFF2F93FF)
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.width(10.dp))
                     TextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
@@ -340,16 +261,11 @@ fun RegisterView(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             cursorColor = Color(0xFF2F93FF),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done)
+                        singleLine = true
                     )
                 }
             }
@@ -357,13 +273,7 @@ fun RegisterView(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = {
-                    if (password == confirmPassword) {
-                        onSignUp(fullName, email, age, password)
-                    } else {
-                        // keep simple: ignore or show toast in real app
-                    }
-                },
+                onClick = { onSignUp(name, email, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -381,16 +291,16 @@ fun RegisterView(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Create Account", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Sign Up", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
                 Text("  OR  ", color = Color(0xFF9AA3AE), fontSize = 12.sp)
-                Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
             }
 
             Spacer(Modifier.height(8.dp))
