@@ -14,11 +14,16 @@ import java.util.concurrent.TimeUnit
 
 class AppContainer(private val context: Context) {
     companion object {
-        // private const val ROOT_URL = "http://10.0.2.2:3000"
-        // private const val ROOT_URL = "http://172.20.10.1:3000"
         const val ROOT_URL = "http://10.222.192.93:3000"
         const val BASE_URL = "${ROOT_URL}/api/"
     }
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(AuthInterceptor(context))
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
 
     private val retrofit = Retrofit.Builder()
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
