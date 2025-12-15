@@ -1,26 +1,31 @@
-// Kotlin
 package com.wesley.medcare.ui.view.Medicine
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -30,227 +35,304 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.wesley.medcare.data.dto.Medicine.MedicineData
 
 @Composable
-fun AddMedicineView(
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit,
-    onSave: (MedicineData) -> Unit = {}
-) {
-    val scroll = rememberScrollState()
+fun AddMedicineView(onBack: () -> Unit = {}) {
+    val scrollState = rememberScrollState()
 
-    var medName by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("") }
-    var minStock by remember { mutableStateOf("") }
+    // Form state
+    val nameState = remember { mutableStateOf("") }
+    val dosageState = remember { mutableStateOf("") }
+    val stockState = remember { mutableStateOf("") }
+    val minStockState = remember { mutableStateOf("") }
+    val notesState = remember { mutableStateOf("") }
+    val selectedType = remember { mutableStateOf("Tablet") }
+
     val types = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
-    var selectedType by remember { mutableStateOf(types.first()) }
-    var notes by remember { mutableStateOf("") }
-    var photoSelected by remember { mutableStateOf(false) }
 
-    val cardColor = Color(0xFFFFFFFF) // explicit surface color (no MaterialTheme)
-    val pageBg = Color(0xFFF3F6F9)
+    // Shared textfield colors — borderless look with light container
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(pageBg)
-            .verticalScroll(scroll)
-            .padding(horizontal = 16.dp)
-            .padding(top = 12.dp, bottom = 24.dp)
+            .background(Color(0xFFF3F6F9))
     ) {
-        // Basic Information Card
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp,
-            color = cardColor,
-            modifier = Modifier.fillMaxWidth()
+        // Header replaced TopAppBar - simple back + title inside scrollable content
+        Column(
+            modifier = Modifier
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Basic Information", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = medName,
-                    onValueChange = { medName = it },
-                    label = { Text("Medication Name") },
-                    placeholder = { Text("e.g., Paracetamol") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true
-                )
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = dosage,
-                    onValueChange = { dosage = it },
-                    label = { Text("Dosage") },
-                    placeholder = { Text("e.g., 500mg") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true
-                )
-                Spacer(Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = stock,
-                        onValueChange = { stock = it },
-                        label = { Text("Stock") },
-                        placeholder = { Text("30") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        singleLine = true
+            Column(modifier = Modifier.padding(start = 8.dp)) {
+                Text(text = "Add Medication", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Add a new medication to your list", fontSize = 13.sp, color = Color(0xFF9E9E9E))
+            }
+
+            // Basic Information Card
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                shadowElevation = 6.dp,
+                color = Color.White,
+                tonalElevation = 2.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Basic Information", fontWeight = FontWeight.SemiBold)
+                    Text("Medication Name", fontSize = 13.sp, color = Color(0xFF6C6C6C))
+                    TextField(
+                        value = nameState.value,
+                        onValueChange = { nameState.value = it },
+                        placeholder = { Text("e.g., Paracetamol", color = Color(0xFF9E9E9E)) },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor =  Color(0xFFF7F8FA),
+                            unfocusedContainerColor = Color(0xFFF7F8FA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            cursorColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
                     )
-                    OutlinedTextField(
-                        value = minStock,
-                        onValueChange = { minStock = it },
-                        label = { Text("Min. Stock") },
-                        placeholder = { Text("5") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        singleLine = true
+
+                    Text("Dosage", fontSize = 13.sp, color = Color(0xFF6C6C6C))
+                    TextField(
+                        value = dosageState.value,
+                        onValueChange = { dosageState.value = it },
+                        placeholder = { Text("e.g., 500mg", color = Color(0xFF9E9E9E)) },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor =  Color(0xFFF7F8FA),
+                            unfocusedContainerColor = Color(0xFFF7F8FA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            cursorColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
                     )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Stock", fontSize = 13.sp, color = Color(0xFF6C6C6C))
+                            TextField(
+                                value = stockState.value,
+                                onValueChange = { stockState.value = it },
+                                placeholder = { Text("30", color = Color(0xFF9E9E9E)) },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor =  Color(0xFFF7F8FA),
+                                    unfocusedContainerColor = Color(0xFFF7F8FA),
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    cursorColor = Color.Black
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Min. Stock", fontSize = 13.sp, color = Color(0xFF6C6C6C))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(Color(0xFFDEEAFE)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("i", fontSize = 10.sp, color = Color(0xFF2B8AF7))
+                                }
+                            }
+                            TextField(
+                                value = minStockState.value,
+                                onValueChange = { minStockState.value = it },
+                                placeholder = { Text("5", color = Color(0xFF9E9E9E)) },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor =  Color(0xFFF7F8FA),
+                                    unfocusedContainerColor = Color(0xFFF7F8FA),
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    cursorColor = Color.Black
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(Modifier.height(16.dp))
-
-        // Medication Type Card
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp,
-            color = cardColor,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Medication Type", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    types.forEach { type ->
-                        val selected = type == selectedType
-                        val background = if (selected) {
-                            Brush.horizontalGradient(listOf(Color(0xFF2F8AF7), Color(0xFF56B5FF)))
-                        } else {
-                            Brush.verticalGradient(listOf(Color(0xFFF2F2F2), Color(0xFFF2F2F2)))
-                        }
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .height(44.dp)
-                                .clip(RoundedCornerShape(22.dp))
-                                .background(background)
-                                .clickable { selectedType = type }
-                                .padding(horizontal = 20.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = type,
-                                    color = if (selected) Color.White else Color.Black,
-                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-                                )
-                                if (selected) {
-                                    Spacer(Modifier.width(8.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.CameraAlt,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+            // Medication Type Card
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                shadowElevation = 6.dp,
+                color = Color.White,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Medication Type", fontWeight = FontWeight.SemiBold)
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        types.forEach { type ->
+                            val isSelected = selectedType.value == type
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isSelected) Brush.horizontalGradient(
+                                            listOf(Color(0xFF4B9BFF), Color(0xFF0B6CF6))
+                                        ) else Brush.linearGradient(listOf(Color(0xFFF7F8FA), Color(0xFFF7F8FA)))
                                     )
+                                    .border(
+                                        BorderStroke(
+                                            if (isSelected) 0.dp else 1.dp,
+                                            if (isSelected) Color.Transparent else Color(0xFFE6E6E6)
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { selectedType.value = type },
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = type,
+                                        color = if (isSelected) Color.White else Color(0xFF4B4B4B),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = Color.White
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(Modifier.height(16.dp))
-
-        // Notes Card
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp,
-            color = cardColor,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Notes (Optional)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes") },
-                    placeholder = { Text("e.g., Take after meals") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    shape = RoundedCornerShape(10.dp)
-                )
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Photo Card
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp,
-            color = cardColor,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Notes Card
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                shadowElevation = 6.dp,
+                color = Color.White,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Medication Photo (Optional)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF7FBFF))
-                        .clickable { photoSelected = !photoSelected },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.CameraAlt,
-                            contentDescription = "Upload",
-                            tint = Color(0xFF2F8AF7),
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(if (photoSelected) "Photo Selected" else "Upload Photo", color = Color(0xFF2F8AF7))
-                        Spacer(Modifier.height(4.dp))
-                        Text("Tap to select medication photo", color = Color.Gray, fontSize = 12.sp)
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Notes (Optional)", fontWeight = FontWeight.SemiBold)
+                    TextField(
+                        value = notesState.value,
+                        onValueChange = { notesState.value = it },
+                        placeholder = { Text("e.g., Take after meals", color = Color(0xFF9E9E9E)) },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor =  Color(0xFFF7F8FA),
+                            unfocusedContainerColor = Color(0xFFF7F8FA),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            cursorColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
+            }
+
+            // Photo upload card
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                shadowElevation = 6.dp,
+                color = Color.White,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Medication Photo (Optional)", fontWeight = FontWeight.SemiBold)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(2.dp, Color(0xFF4B9BFF), RoundedCornerShape(12.dp))
+                            .background(Color(0xFFEFF7FF))
+                            .clickable { /* open picker */ },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF2B8AF7)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.CameraAlt, contentDescription = "Camera", tint = Color.White)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Upload Photo", color = Color(0xFF2B8AF7), fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Tap to select medication photo", color = Color(0xFF9E9E9E), fontSize = 12.sp)
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Add Medication Button (explicit color usage)
-        Button(
-            onClick = { /* handle add */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(26.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2F8AF7),
-                contentColor = Color.White
+            // Add Medication Button
+            Button(
+                onClick = { /* save action */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                content = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF4B9BFF), Color(0xFF0B6CF6))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Add Medication", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             )
-        ) {
-            Text("Add Medication", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
+        }
     }
 }
 
