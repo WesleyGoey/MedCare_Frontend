@@ -1,10 +1,12 @@
 package com.wesley.medcare.data.container
 
 import com.google.gson.GsonBuilder
+import com.wesley.medcare.data.repository.MedicineRepository
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.wesley.medcare.data.service.UserService
 import com.wesley.medcare.data.repository.UserRepository
+import com.wesley.medcare.data.service.MedicineService
 
 class AppContainer {
     companion object {
@@ -24,5 +26,13 @@ const val BASE_URL = "${ROOT_URL}/api/"
 
     val userRepository: UserRepository by lazy {
         UserRepository(userService)
+    }
+
+    private val medicineService: MedicineService by lazy {
+        retrofit.create(MedicineService::class.java)
+    }
+
+    val medicineRepository: MedicineRepository by lazy {
+        MedicineRepository(medicineService)
     }
 }
