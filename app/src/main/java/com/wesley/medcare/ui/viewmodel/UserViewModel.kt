@@ -1,9 +1,7 @@
-package com.jeruk.alp_frontend.ui.viewmodel
+package com.wesley.medcare.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jeruk.alp_frontend.data.container.AppContainer
-import com.jeruk.alp_frontend.ui.model.User
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,22 +22,29 @@ class UserViewModel : ViewModel() {
     private val repository = AppContainer().userRepository
 
     // Login by email
-    fun login(email: String, pass: String) {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val result = repository.loginUser(email, pass) // adapt to your repo signature
-                _userState.value = result
+                val response = repository.login(email, password)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val token = body?.`data`?.token
+                    if (!token.isNullOrBlank()) {
+                        // update user state to clear errors (adjust to your User model if it has token field)
+                        _userState.value = _userState.value.copy(isError = false, errorMessage = null)
+                        // If your User model has a token field, set it here, e.g.
+                        // _userState.value = _userState.value.copy(token = token, isError = false, errorMessage = null)
+                    } else {
+                        _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: missing token")
+                    }
+                } else {
+                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: ${response.code()}")
+                }
             } catch (e: IOException) {
-                _userState.value = User(
-                    isError = true,
-                    errorMessage = "Tidak ada koneksi internet."
-                )
+                _userState.value = _userState.value.copy(isError = true, errorMessage = "Tidak ada koneksi internet.")
             } catch (e: Exception) {
-                _userState.value = User(
-                    isError = true,
-                    errorMessage = e.message ?: "Login gagal. Cek email/password."
-                )
+                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Login gagal. Cek email/password.")
             } finally {
                 _isLoading.value = false
             }
@@ -47,40 +52,21 @@ class UserViewModel : ViewModel() {
     }
 
     // Register new user
-    fun register(name: String, email: String, pass: String) {
+    fun register(name: String, email: String, phone: String, age: Int, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val result = repository.register(name, email, pass, age, phone)
-                _userState.value = result
+                val response = repository.register(name, email, phone, age, password)
+                if (response.isSuccessful) {
+                    // registration succeeded — update state accordingly
+                    _userState.value = _userState.value.copy(isError = false, errorMessage = null)
+                } else {
+                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Register failed: ${response.code()}")
+                }
             } catch (e: IOException) {
-                _userState.value = User(
-                    isError = true,
-                    errorMessage = "Tidak ada koneksi internet."
-                )
+                _userState.value = _userState.value.copy(isError = true, errorMessage = "Tidak ada koneksi internet.")
             } catch (e: Exception) {
-                _userState.value = User(
-                    isError = true,
-                    errorMessage = e.message ?: "Registrasi gagal."
-                )
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // Logout and clear user state
-    fun logout() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                repository.logout()
-                _userState.value = User()
-            } catch (e: Exception) {
-                _userState.value = _userState.value.copy(
-                    isError = true,
-                    errorMessage = e.message ?: "Logout gagal."
-                )
+                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Registrasi gagal.")
             } finally {
                 _isLoading.value = false
             }

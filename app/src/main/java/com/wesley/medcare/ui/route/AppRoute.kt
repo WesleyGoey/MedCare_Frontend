@@ -142,7 +142,7 @@ fun AppRoute() {
             composable(route = AppView.RegisterView.name) {
                 RegisterView(
                     onSignUp = { name, email, password ->
-                        navController.navigate(AppView.LoginView.name) {
+                        navController.navigate(AppView.HomeView.name) {
                             popUpTo(AppView.RegisterView.name) { inclusive = true }
                         }
                     },
