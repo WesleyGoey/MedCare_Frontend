@@ -1,405 +1,254 @@
-package com.wesley.medcare.ui.view.LoginRegister
+// kotlin
+// File: java/com/wesley/medcare/ui/route/AppRoute.kt
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+package com.wesley.medcare.ui.route
+
+import android.widget.Toast
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.wesley.medcare.data.container.AppContainer
+import com.wesley.medcare.ui.view.LoginRegister.LoginView
+import com.wesley.medcare.ui.view.LoginRegister.RegisterView
+import com.wesley.medcare.ui.view.Medicine.AddMedicineView
+import com.wesley.medcare.ui.view.Medicine.HomeView
+import com.wesley.medcare.ui.view.Medicine.MedicineView
+import com.wesley.medcare.ui.view.Schedule.ReminderView
+import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Medicine.ProfileView
+import com.wesley.medcare.ui.viewmodel.UserViewModel
 
-@Composable
-fun RegisterView(
-    onSignUp: (name: String, age: String, phone: String, email: String, password: String) -> Unit = { _, _, _, _, _ -> },
-    onSignInClick: () -> Unit = {}
+enum class AppView(
+    val title: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
-    var name by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    LoginView("Login"),
+    RegisterView("Register"),
+    HomeView("Home", Icons.Filled.Home),
+    MedicineView("Meds", Icons.Filled.MedicalServices),
+    ReminderView("Remind", Icons.Filled.Notifications),
+    HistoryView("History", Icons.Filled.History),
+    ProfileView("Profile", Icons.Filled.Person),
+    AddMedicineView("Add Medication")
+}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .widthIn(max = 360.dp)
-                .wrapContentHeight()
-                .shadow(12.dp, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .padding(horizontal = 20.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+data class BottomNavItem(
+    val view: AppView,
+    val label: String
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AppRoute() {
+    val navController = rememberNavController()
+
+    // keep single AppContainer instance
+    val appContainer = remember { AppContainer() }
+
+    // use viewModel() so lifecycle-managed instance is used
+    val userViewModel: UserViewModel = viewModel()
+
+    // collect user state to react to login success
+    val userState by userViewModel.userState.collectAsState()
+
+    // navigate to Home when token becomes available (adjust if your User model uses a different field)
+    LaunchedEffect(userState) {
+        // assume User has `token` property; adjust condition if different
+        val tokenField = try {
+            val tokenProp = userState::class.members.firstOrNull { it.name == "token" }
+            tokenProp?.call(userState) as? String
+        } catch (_: Exception) {
+            null
+        }
+
+        if (!tokenField.isNullOrBlank()) {
+            navController.navigate(AppView.HomeView.name) {
+                popUpTo(AppView.LoginView.name) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = currentDestination?.route
+    val currentView = AppView.entries.find { it.name == currentRoute }
+
+    val bottomNavItems = listOf(
+        BottomNavItem(AppView.HomeView, "Home"),
+        BottomNavItem(AppView.MedicineView, "Meds"),
+        BottomNavItem(AppView.ReminderView, "Remind"),
+        BottomNavItem(AppView.HistoryView, "History"),
+        BottomNavItem(AppView.ProfileView, "Profile")
+    )
+
+    val showTopBar = currentRoute !in listOf(
+        AppView.LoginView.name,
+        AppView.RegisterView.name
+    )
+
+    val bottomRoutes = bottomNavItems.map { it.view.name }
+    val showBottomBar = currentRoute in bottomRoutes
+
+    Scaffold(
+        topBar = {
+            if (showTopBar) {
+                MyTopAppBar(
+                    currentView = currentView,
+                    canNavigateBack = navController.previousBackStackEntry != null
+                            && currentRoute !in bottomRoutes,
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
+        },
+        bottomBar = {
+            if (showBottomBar) {
+                MyBottomNavigationBar(
+                    navController = navController,
+                    currentDestination = currentDestination,
+                    items = bottomNavItems
+                )
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            startDestination = AppView.LoginView.name
         ) {
-            Box(
-                modifier = Modifier
-                    .size(88.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF2F93FF))
-                    .shadow(6.dp, RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MedicalServices,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(48.dp)
+            composable(route = AppView.LoginView.name) {
+                LoginView(
+                    onSignIn = { email, password ->
+                        userViewModel.login(email, password)
+                    },
+                    onSignUpClick = {
+                        navController.navigate(AppView.RegisterView.name)
+                    }
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = "MedCare",
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
-                color = Color(0xFF2F93FF)
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Create Account",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0B1220)
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Sign up to get started",
-                fontSize = 13.sp,
-                color = Color(0xFF9AA3AE)
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Name
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Full Name", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        placeholder = { Text("Enter your full name") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Age
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Age", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = age,
-                        onValueChange = { age = it },
-                        placeholder = { Text("Your age") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Phone
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Phone", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        placeholder = { Text("Your phone number") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Email
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Email", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = { Text("your@email.com") },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Password
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Password", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        placeholder = { Text("Create a password") },
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6B7280)
-                                )
-                            }
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Confirm Password
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Confirm Password", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFF2F93FF)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    TextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        placeholder = { Text("Confirm your password") },
-                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                                Icon(
-                                    imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6B7280)
-                                )
-                            }
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = { onSignUp(name, age, phone, email, password) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .shadow(8.dp, RoundedCornerShape(12.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(
-                            brush = Brush.verticalGradient(listOf(Color(0xFF4DA1FF), Color(0xFF1E7BFF))),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Create Account", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
-                Text("  OR  ", color = Color(0xFF9AA3AE), fontSize = 12.sp)
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Text("Already have an account? ", color = Color(0xFF9AA3AE))
-                Text(
-                    text = "Sign In",
-                    color = Color(0xFF2F93FF),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onSignInClick() }
+            composable(route = AppView.RegisterView.name) {
+                RegisterView(
+                    onSignUp = { name, age, phone, email, password ->
+                        navController.navigate(AppView.HomeView.name) {
+                            popUpTo(AppView.RegisterView.name) { inclusive = true }
+                        }
+                    },
+                    onSignInClick = {
+                        navController.popBackStack()
+                    }
                 )
+            }
+            composable(route = AppView.HomeView.name) {
+                HomeView()
+            }
+            composable(route = AppView.MedicineView.name) {
+                MedicineView(navController = navController)
+            }
+            composable(route = AppView.ReminderView.name) {
+                ReminderView(navController = navController)
+            }
+            composable(route = AppView.HistoryView.name) {
+                HistoryView(navController = navController)
+            }
+            composable(route = AppView.ProfileView.name) {
+                ProfileView(navController = navController)
+            }
+            composable(route = AppView.AddMedicineView.name) {
+                AddMedicineView(onBack = { navController.popBackStack() })
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RegisterPreview() {
-    RegisterView()
+fun MyTopAppBar(
+    currentView: AppView?,
+    canNavigateBack: Boolean,
+    navigateUp: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = currentView?.title ?: "MedCare",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        modifier = modifier,
+        navigationIcon = {
+            if (canNavigateBack) {
+                IconButton(onClick = navigateUp) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color(0xFF2F93FF),
+            titleContentColor = Color.White,
+            navigationIconContentColor = Color.White
+        )
+    )
+}
+
+@Composable
+fun MyBottomNavigationBar(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+    items: List<BottomNavItem>
+) {
+    NavigationBar(
+        containerColor = Color.White,
+        contentColor = Color(0xFF2F93FF)
+    ) {
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = item.view.icon!!,
+                        contentDescription = item.label
+                    )
+                },
+                label = { Text(item.label) },
+                selected = currentDestination?.hierarchy?.any {
+                    it.route == item.view.name
+                } == true,
+                onClick = {
+                    navController.navigate(item.view.name) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    }
 }
