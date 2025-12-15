@@ -33,19 +33,32 @@ class UserViewModel : ViewModel() {
                     val token = body?.`data`?.token
                     if (!token.isNullOrBlank()) {
                         // update user state to clear errors (adjust to your User model if it has token field)
-                        _userState.value = _userState.value.copy(isError = false, errorMessage = null)
+                        _userState.value =
+                            _userState.value.copy(isError = false, errorMessage = null)
                         // If your User model has a token field, set it here, e.g.
                         // _userState.value = _userState.value.copy(token = token, isError = false, errorMessage = null)
                     } else {
-                        _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: missing token")
+                        _userState.value = _userState.value.copy(
+                            isError = true,
+                            errorMessage = "Login failed: missing token"
+                        )
                     }
                 } else {
-                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: ${response.message()}")
+                    _userState.value = _userState.value.copy(
+                        isError = true,
+                        errorMessage = "Login failed: ${response.message()}"
+                    )
                 }
             } catch (e: IOException) {
-                _userState.value = _userState.value.copy(isError = true, errorMessage = "Tidak ada koneksi internet.")
+                _userState.value = _userState.value.copy(
+                    isError = true,
+                    errorMessage = "Tidak ada koneksi internet."
+                )
             } catch (e: Exception) {
-                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Login gagal. Cek email/password.")
+                _userState.value = _userState.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Login gagal. Cek email/password."
+                )
             } finally {
                 _isLoading.value = false
             }
@@ -53,21 +66,30 @@ class UserViewModel : ViewModel() {
     }
 
     // Register new user
-    fun register(name: String, email: String, phone: String, age: Int, password: String) {
+    fun register(name: String, age: Int, phone: String, email: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = repository.register(name, email, phone, age, password)
+                val response = repository.register(name, age, phone, email, password)
                 if (response.isSuccessful) {
                     // registration succeeded — update state accordingly
                     _userState.value = _userState.value.copy(isError = false, errorMessage = null)
                 } else {
-                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Register failed: ${response.code()}")
+                    _userState.value = _userState.value.copy(
+                        isError = true,
+                        errorMessage = "Register failed: ${response.code()}"
+                    )
                 }
             } catch (e: IOException) {
-                _userState.value = _userState.value.copy(isError = true, errorMessage = "Tidak ada koneksi internet.")
+                _userState.value = _userState.value.copy(
+                    isError = true,
+                    errorMessage = "Tidak ada koneksi internet."
+                )
             } catch (e: Exception) {
-                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Registrasi gagal.")
+                _userState.value = _userState.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "Registrasi gagal."
+                )
             } finally {
                 _isLoading.value = false
             }

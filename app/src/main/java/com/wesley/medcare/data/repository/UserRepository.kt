@@ -14,8 +14,20 @@ class UserRepository(private val userService: UserService) {
         return userService.login(req)
     }
 
-    suspend fun register(name: String, email: String, phone: String, age: Int, password: String): Response<RegisterResponse> {
-        val req = RegisterRequest(name = name, email = email, password = password, phone = phone, age = age)
+    suspend fun register(
+        name: String,
+        age: Int,
+        phone: String,
+        email: String,
+        password: String
+    ): Response<RegisterResponse> {
+        val req = RegisterRequest(
+            name = name,
+            age = age,
+            phone = phone,
+            email = email,
+            password = password
+        )
         return userService.register(req)
     }
 }
