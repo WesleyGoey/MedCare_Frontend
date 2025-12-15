@@ -8,9 +8,9 @@ import com.wesley.medcare.data.repository.UserRepository
 
 class AppContainer {
     companion object {
-        private const val ROOT_URL = "http://10.152.62.180:3000"
+        const val ROOT_URL = "http://10.237.188.134:3000"
 //        private const val ROOT_URL = "http://172.20.10.1:3000"
-        private const val BASE_URL = "${ROOT_URL}/api/"
+const val BASE_URL = "${ROOT_URL}/api/"
     }
 
     private val retrofit = Retrofit.Builder()
