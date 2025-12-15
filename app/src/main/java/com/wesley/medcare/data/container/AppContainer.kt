@@ -12,7 +12,7 @@ class   AppContainer {
     companion object {
 //        private const val ROOT_URL = "http://10.0.2.2:3000"
 //        private const val ROOT_URL = "http://172.20.10.1:3000"
-        const val ROOT_URL = "http://10.222.192.129:3000"
+        const val ROOT_URL = "http://10.222.192.93:3000"
 const val BASE_URL = "${ROOT_URL}/api/"
     }
 
