@@ -2,31 +2,33 @@ package com.wesley.medcare.data.container
 
 import android.content.Context
 import com.google.gson.GsonBuilder
+import com.wesley.medcare.data.network.AuthInterceptor
 import com.wesley.medcare.data.repository.MedicineRepository
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import com.wesley.medcare.data.service.UserService
 import com.wesley.medcare.data.repository.UserRepository
 import com.wesley.medcare.data.service.MedicineService
+import com.wesley.medcare.data.service.UserService
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class AppContainer(private val context: Context) {
     companion object {
-<<<<<<< HEAD
-        // private const val ROOT_URL = "http://10.0.2.2:3000"
-        // private const val ROOT_URL = "http://172.20.10.1:3000"
         const val ROOT_URL = "http://10.222.192.93:3000"
         const val BASE_URL = "${ROOT_URL}/api/"
-=======
-//        private const val ROOT_URL = "http://10.0.2.2:3000"
-//        private const val ROOT_URL = "http://172.20.10.1:3000"
-        const val ROOT_URL = "http://10.222.192.129:3000"
-const val BASE_URL = "${ROOT_URL}/api/"
->>>>>>> niki
     }
 
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(AuthInterceptor(context))
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     private val retrofit = Retrofit.Builder()
-        .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
+        .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
         .baseUrl(BASE_URL)
+        .client(okHttpClient)
         .build()
 
     private val userService: UserService by lazy {
