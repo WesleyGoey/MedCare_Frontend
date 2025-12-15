@@ -17,17 +17,27 @@ class UserRepository(
 ) {
     private val prefs = context.getSharedPreferences("medcare_prefs", Context.MODE_PRIVATE)
 
-    suspend fun login(email: String, password: String): Response<LoginResponse> {
-        val req = LoginRequest(email = email, password = password)
-        val response = userService.login(req)
+    suspend fun login(email: String, password: String): Result<LoginResponse> {
+        return try {
+            println("Login attempt: $email")
+            val response = userService.login(LoginRequest(email, password))
+            println("Response code: ${response.code()}")
+            println("Response body: ${response.body()}")
 
-        if (response.isSuccessful && response.body() != null) {
-            val token = response.body()!!.data.token
-            saveToken(token)
+            if (response.isSuccessful && response.body() != null) {
+                val loginResponse = response.body()!!
+                saveToken(loginResponse.data.token)
+                Result.success(loginResponse)
+            } else {
+                println("Login failed: ${response.errorBody()?.string()}")
+                Result.failure(Exception("Login failed: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            println("Login error: ${e.message}")
+            Result.failure(e)
         }
-
-        return response
     }
+
 
     suspend fun register(
         name: String,
@@ -46,21 +56,21 @@ class UserRepository(
         val response = userService.register(req)
 
         if (response.isSuccessful && response.body() != null) {
-            val token = response.body()!!.data.token
-            saveToken(token)
+            val responseToken = response.body()!!.data.token
+            saveToken(responseToken)
         }
 
         return response
     }
 
     suspend fun getProfile(): Response<GetProfileResponse> {
-        val token = getToken() ?: throw Exception("No token found")
-        return userService.getProfile("Bearer $token")
+        val authToken = getToken() ?: throw Exception("No token found")
+        return userService.getProfile("Bearer $authToken")
     }
 
     suspend fun editProfile(request: UpdateUserRequest): Response<GetProfileResponse> {
-        val token = getToken() ?: throw Exception("No token found")
-        return userService.editProfile("Bearer $token", request)
+        val authToken = getToken() ?: throw Exception("No token found")
+        return userService.editProfile("Bearer $authToken", request)
     }
 
     private fun saveToken(token: String) {
