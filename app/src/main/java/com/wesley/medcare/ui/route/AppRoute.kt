@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -85,9 +86,9 @@ fun AppRoute() {
     val bottomRoutes = bottomNavItems.map { it.view.name }
     val showBottomBar = currentRoute in bottomRoutes
 
-    val appContainer = remember { AppContainer() }
+    val context = LocalContext.current
+    val appContainer = remember(context) { AppContainer(context.applicationContext) }
     val scope = rememberCoroutineScope()
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
