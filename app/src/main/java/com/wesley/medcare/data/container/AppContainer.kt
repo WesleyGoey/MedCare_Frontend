@@ -1,5 +1,6 @@
 package com.wesley.medcare.data.container
 
+import android.content.Context
 import com.google.gson.GsonBuilder
 import com.wesley.medcare.data.repository.MedicineRepository
 import retrofit2.Retrofit
@@ -8,12 +9,12 @@ import com.wesley.medcare.data.service.UserService
 import com.wesley.medcare.data.repository.UserRepository
 import com.wesley.medcare.data.service.MedicineService
 
-class   AppContainer {
+class AppContainer(private val context: Context) {
     companion object {
-//        private const val ROOT_URL = "http://10.0.2.2:3000"
-//        private const val ROOT_URL = "http://172.20.10.1:3000"
+        // private const val ROOT_URL = "http://10.0.2.2:3000"
+        // private const val ROOT_URL = "http://172.20.10.1:3000"
         const val ROOT_URL = "http://10.222.192.93:3000"
-const val BASE_URL = "${ROOT_URL}/api/"
+        const val BASE_URL = "${ROOT_URL}/api/"
     }
 
     private val retrofit = Retrofit.Builder()
@@ -26,7 +27,7 @@ const val BASE_URL = "${ROOT_URL}/api/"
     }
 
     val userRepository: UserRepository by lazy {
-        UserRepository(userService)
+        UserRepository(context, userService)
     }
 
     private val medicineService: MedicineService by lazy {
