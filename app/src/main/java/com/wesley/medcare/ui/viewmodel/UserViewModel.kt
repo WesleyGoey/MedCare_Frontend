@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wesley.medcare.data.container.AppContainer
@@ -39,7 +40,7 @@ class UserViewModel : ViewModel() {
                         _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: missing token")
                     }
                 } else {
-                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: ${response.code()}")
+                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Login failed: ${response.message()}")
                 }
             } catch (e: IOException) {
                 _userState.value = _userState.value.copy(isError = true, errorMessage = "Tidak ada koneksi internet.")
