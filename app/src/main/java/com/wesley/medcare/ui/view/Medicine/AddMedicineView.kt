@@ -112,3 +112,8 @@ fun AddMedicineView(
         }
     }
 }
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun AddMedicinePreview() {
+    AddMedicineView()
+}
