@@ -2,6 +2,7 @@ package com.wesley.medcare.data.repository
 
 import android.net.Uri
 import android.util.Log
+import android.webkit.MimeTypeMap
 import com.wesley.medcare.data.dto.Medicine.GetAllMedicinesResponse
 import com.wesley.medcare.data.dto.Medicine.GetLowStockResponse
 import com.wesley.medcare.data.dto.Medicine.GetMedicineByIdResponse
@@ -75,9 +76,11 @@ class MedicineRepository(private val medicineService: MedicineService) {
             val minStockBody = minStock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val notesBody = notes?.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val imagePart = imageFile?.let {
-                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
-                MultipartBody.Part.createFormData("image", it.name, requestFile)
+            val imagePart = imageFile?.let { file ->
+                val extension = file.extension.takeIf { it.isNotBlank() } ?: "jpg"
+                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "image/*"
+                val requestFile = file.asRequestBody(mime.toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("image", file.name, requestFile)
             }
 
             val response = medicineService.addMedicine(
