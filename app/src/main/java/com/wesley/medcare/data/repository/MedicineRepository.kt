@@ -11,7 +11,7 @@ import com.wesley.medcare.data.service.MedicineService
 
 class MedicineRepository(
     private val medicineService: MedicineService,
-    private val context: Context  // Tambahkan context parameter
+    private val context: Context
 ) {
     private fun getToken(): String? {
         val sharedPreferences = context.getSharedPreferences("medcare_prefs", Context.MODE_PRIVATE)
@@ -79,7 +79,6 @@ class MedicineRepository(
         }
     }
 
-    // Update method lainnya dengan pola yang sama...
     suspend fun getMedicineById(id: Int): GetMedicineByIdResponse? {
         return try {
             val token = getToken() ?: return null

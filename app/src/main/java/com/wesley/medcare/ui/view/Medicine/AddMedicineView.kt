@@ -47,11 +47,9 @@ fun AddMedicineView(
     val successMessage by viewModel.successMessage.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    // Snackbar host
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // React to success -> navigate back
     LaunchedEffect(successMessage) {
         successMessage?.let {
             onBack()
