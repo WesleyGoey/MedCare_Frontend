@@ -20,6 +20,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
+import kotlinx.coroutines.flow.collect
 import kotlin.compareTo
 
 @Composable
@@ -28,6 +29,20 @@ fun MedicineView(
     viewModel: MedicineViewModel = viewModel()
 ) {
     val medicines by viewModel.medicines.collectAsState()
+
+    // Listen for refresh signal from other screens via SavedStateHandle
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle
+            ?.getStateFlow("refreshMedicines", false)
+            ?.collect { shouldRefresh ->
+                if (shouldRefresh) {
+                    viewModel.getAllMedicines()
+                    // reset the flag
+                    savedStateHandle.set("refreshMedicines", false)
+                }
+            }
+    }
 
     LaunchedEffect(Unit) {
         if (medicines.isEmpty()) {
