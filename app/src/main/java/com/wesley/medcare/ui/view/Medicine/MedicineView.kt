@@ -20,6 +20,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
+import kotlin.compareTo
 
 @Composable
 fun MedicineView(
@@ -33,6 +34,7 @@ fun MedicineView(
             viewModel.getAllMedicines()
         }
     }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (medicines.isEmpty()) {
             Column(
@@ -54,7 +56,11 @@ fun MedicineView(
                         name = med.name,
                         dosageText = med.dosage,
                         pillsLeftText = if (med.stock > 0) "${med.stock} pills left" else "Out of stock",
-                        scheduleTimes = emptyList() // replace if schedule available
+                        scheduleTimes = emptyList(),
+                        onClick = {
+                            // Navigate ke MedicineInfoView dengan medicineId
+                            navController.navigate("MedicineInfoView/${med.id}")
+                        }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }

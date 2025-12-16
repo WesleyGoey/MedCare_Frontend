@@ -2,6 +2,7 @@ package com.wesley.medcare.ui.view.Medicine
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,11 +25,13 @@ fun MedicineCard(
     name: String,
     dosageText: String,
     pillsLeftText: String,
-    scheduleTimes: List<String> = emptyList()
+    scheduleTimes: List<String> = emptyList(),
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
@@ -42,7 +45,12 @@ fun MedicineCard(
                         .size(64.dp)
                         .shadow(6.dp, RoundedCornerShape(14.dp))
                         .background(
-                            brush = Brush.verticalGradient(listOf(Color(0xFF4DA1FF), Color(0xFF2F93FF))),
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0xFF4DA1FF),
+                                    Color(0xFF2F93FF)
+                                )
+                            ),
                             shape = RoundedCornerShape(14.dp)
                         ),
                     contentAlignment = Alignment.Center

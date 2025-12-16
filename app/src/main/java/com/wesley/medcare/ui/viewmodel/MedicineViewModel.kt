@@ -51,13 +51,14 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage
 
+//    private val _medicineSchedules = MutableStateFlow<List<Schedule>>(emptyList())
+//    val medicineSchedules = _medicineSchedules.asStateFlow()
+
     fun clearMessages() {
         _errorMessage.value = null
         _successMessage.value = null
     }
 
-
-    // repository-backed operations
     fun getAllMedicines() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -89,6 +90,10 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+//    fun getSchedulesByMedicineId(medicineId: String): Flow<List<Schedule>> {
+//        return scheduleDao.getSchedulesByMedicineId(medicineId)
+//    }
+
 
     fun getLowStock() {
         viewModelScope.launch {
