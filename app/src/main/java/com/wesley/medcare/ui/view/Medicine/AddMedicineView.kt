@@ -1,8 +1,6 @@
+// kotlin
 package com.wesley.medcare.ui.view.Medicine
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,12 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import androidx.compose.runtime.collectAsState
@@ -43,7 +39,6 @@ fun AddMedicineView(
     var minStock by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("Tablet") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
 
@@ -55,14 +50,6 @@ fun AddMedicineView(
     // Snackbar host
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
-    // Image picker
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
-        viewModel.setSelectedImageUri(uri) // keep VM in sync if needed
-    }
 
     // React to success -> navigate back
     LaunchedEffect(successMessage) {
@@ -256,69 +243,6 @@ fun AddMedicineView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Photo Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Medication Photo (Optional)",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2C3E50)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF0F8FF))
-                            .border(2.dp, Color(0xFF5B9BD5), RoundedCornerShape(12.dp))
-                            .clickable { imagePickerLauncher.launch("image/*") },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (imageUri != null) {
-                            AsyncImage(
-                                model = imageUri,
-                                contentDescription = "Selected medication photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Default.CameraAlt,
-                                    contentDescription = "Upload photo",
-                                    tint = Color(0xFF5B9BD5),
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Upload Photo",
-                                    color = Color(0xFF5B9BD5),
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Tap to select medication photo",
-                                    color = Color.Gray,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Add Button
@@ -331,8 +255,7 @@ fun AddMedicineView(
                         dosage = dosage,
                         stock = stock.toIntOrNull() ?: 0,
                         minStock = minStock.toIntOrNull() ?: 0,
-                        notes = notes.ifBlank { null },
-                        imageUri = imageUri
+                        notes = notes.ifBlank { null }
                     )
                 },
                 modifier = Modifier

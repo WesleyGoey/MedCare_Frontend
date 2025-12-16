@@ -35,6 +35,6 @@ class AppContainer(private val context: Context) {
     }
 
     val medicineRepository: MedicineRepository by lazy {
-        MedicineRepository(medicineService)
+        MedicineRepository(medicineService, context)
     }
 }

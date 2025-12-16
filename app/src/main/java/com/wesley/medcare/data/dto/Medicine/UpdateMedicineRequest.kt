@@ -6,6 +6,5 @@ data class UpdateMedicineRequest(
     val dosage: String? = null,
     val stock: Int? = null,
     val minStock: Int? = null,
-    val notes: String? = null,
-    val imageFile: java.io.File? = null
+    val notes: String? = null
 )

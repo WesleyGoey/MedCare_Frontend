@@ -1,21 +1,16 @@
+// app/src/main/java/com/wesley/medcare/ui/viewmodel/MedicineViewModel.kt
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
-import android.net.Uri
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wesley.medcare.data.container.AppContainer
-import com.wesley.medcare.data.dto.Medicine.MedicineData
 import com.wesley.medcare.data.dto.Medicine.MedicineDataWithSchedule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
-import java.util.UUID
 
 class MedicineViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -41,9 +36,6 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     private val _notes = MutableStateFlow<String?>(null)
     val notes: StateFlow<String?> = _notes
 
-    private val _selectedImageUri = MutableStateFlow<Uri?>(null)
-    val selectedImageUri: StateFlow<Uri?> = _selectedImageUri
-
     private val _medicines = MutableStateFlow<List<MedicineDataWithSchedule>>(emptyList())
     val medicines: StateFlow<List<MedicineDataWithSchedule>> = _medicines
 
@@ -63,6 +55,7 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         _errorMessage.value = null
         _successMessage.value = null
     }
+
 
     // repository-backed operations
     fun getAllMedicines() {
@@ -112,10 +105,6 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
-    fun setSelectedImageUri(uri: Uri?) {
-        _selectedImageUri.value = uri
-    }
-
 
     fun addMedicine(
         context: Context,
@@ -124,39 +113,43 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         dosage: String,
         stock: Int,
         minStock: Int,
-        notes: String?,
-        imageUri: Uri?
+        notes: String?
     ) {
+        Log.d("MedicineViewModel", "addMedicine called: name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock")
+
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             _successMessage.value = null
             try {
-                val imageFile = imageUri?.let { createFileFromUri(context, it) }
+                Log.d("MedicineViewModel", "Calling repository.addMedicine...")
                 val success = repository.addMedicine(
                     name = name,
                     type = type,
                     dosage = dosage,
                     stock = stock,
                     minStock = minStock,
-                    notes = notes,
-                    imageFile = imageFile
+                    notes = notes
                 )
+                Log.d("MedicineViewModel", "Repository response: success=$success")
+
                 if (success) {
                     clearForm()
                     _successMessage.value = "Medicine added"
                     getAllMedicines()
                 } else {
                     _errorMessage.value = "Failed to add medicine"
+                    Log.e("MedicineViewModel", "Repository returned false")
                 }
             } catch (e: Exception) {
-                Log.e("MedicineViewModel", "addMedicine error", e)
+                Log.e("MedicineViewModel", "addMedicine error: ${e.message}", e)
                 _errorMessage.value = e.message ?: "An error occurred"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
 
     fun updateMedicine(
         context: Context,
@@ -166,15 +159,13 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         dosage: String?,
         stock: Int?,
         minStock: Int?,
-        notes: String?,
-        imageUri: Uri?
+        notes: String?
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             _successMessage.value = null
             try {
-                val imageFile = imageUri?.let { createFileFromUri(context, it) }
                 val success = repository.updateMedicine(
                     id = id,
                     name = name,
@@ -182,8 +173,7 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                     dosage = dosage,
                     stock = stock,
                     minStock = minStock,
-                    notes = notes,
-                    imageFile = imageFile
+                    notes = notes
                 )
                 if (success) {
                     _successMessage.value = "Medicine updated"
@@ -229,26 +219,5 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         _minStock.value = ""
         _medicineType.value = "Tablet"
         _notes.value = null
-        _selectedImageUri.value = null
-    }
-
-    private fun createFileFromUri(context: Context, uri: Uri): File? {
-        return try {
-            val input = context.contentResolver.openInputStream(uri) ?: return null
-
-            // derive extension from mime type; fallback to jpg
-            val mime = context.contentResolver.getType(uri)
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime) ?: "jpg"
-
-            val tempFile = File(context.cacheDir, "upload_${UUID.randomUUID()}.$extension")
-            FileOutputStream(tempFile).use { output ->
-                input.copyTo(output)
-            }
-            input.close()
-            tempFile
-        } catch (e: Exception) {
-            Log.e("MedicineViewModel", "Failed to create file from uri", e)
-            null
-        }
     }
 }

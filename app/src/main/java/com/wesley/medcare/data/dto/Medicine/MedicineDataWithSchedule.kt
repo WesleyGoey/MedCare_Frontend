@@ -3,7 +3,6 @@ package com.wesley.medcare.data.dto.Medicine
 data class MedicineDataWithSchedule(
     val dosage: String,
     val id: Int,
-    val image: String?,
     val minStock: Int,
     val name: String,
     val notes: String?,

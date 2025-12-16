@@ -1,22 +1,34 @@
+// File: app/src/main/java/com/wesley/medcare/data/repository/MedicineRepository.kt
 package com.wesley.medcare.data.repository
 
-import android.net.Uri
+import android.content.Context
 import android.util.Log
-import android.webkit.MimeTypeMap
+import com.wesley.medcare.data.dto.Medicine.AddMedicineRequest
 import com.wesley.medcare.data.dto.Medicine.GetAllMedicinesResponse
 import com.wesley.medcare.data.dto.Medicine.GetLowStockResponse
 import com.wesley.medcare.data.dto.Medicine.GetMedicineByIdResponse
 import com.wesley.medcare.data.service.MedicineService
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
 
-class MedicineRepository(private val medicineService: MedicineService) {
+class MedicineRepository(
+    private val medicineService: MedicineService,
+    private val context: Context  // Tambahkan context parameter
+) {
+    private fun getToken(): String? {
+        val sharedPreferences = context.getSharedPreferences("medcare_prefs", Context.MODE_PRIVATE)
+        val token = sharedPreferences.getString("auth_token", null)
+        Log.d("MedicineRepository", "getToken: token=${if (token.isNullOrEmpty()) "NULL/EMPTY" else "EXISTS (${token.take(10)}...)"}")
+        return token
+    }
+
     suspend fun getAllMedicines(): GetAllMedicinesResponse? {
         return try {
-            val response = medicineService.getAllMedicines()
+            val token = getToken()
+            if (token.isNullOrEmpty()) {
+                Log.e("MedicineRepository", "Token not found")
+                return null
+            }
+
+            val response = medicineService.getAllMedicines("Bearer $token")
             if (response.isSuccessful) {
                 response.body()
             } else {
@@ -29,69 +41,30 @@ class MedicineRepository(private val medicineService: MedicineService) {
         }
     }
 
-    suspend fun getMedicineById(id: Int): GetMedicineByIdResponse? {
-        return try {
-            val response = medicineService.getMedicineById(id)
-            if (response.isSuccessful) {
-                response.body()
-            } else {
-                Log.e("MedicineRepository", "Failed to get medicine: ${response.errorBody()?.string()}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("MedicineRepository", "Error getting medicine", e)
-            null
-        }
-    }
-
-    suspend fun getLowStock(): GetLowStockResponse? {
-        return try {
-            val response = medicineService.getLowStock()
-            if (response.isSuccessful) {
-                response.body()
-            } else {
-                Log.e("MedicineRepository", "Failed to get low stock: ${response.errorBody()?.string()}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("MedicineRepository", "Error getting low stock", e)
-            null
-        }
-    }
-
     suspend fun addMedicine(
         name: String,
         type: String,
         dosage: String,
         stock: Int,
         minStock: Int,
-        notes: String?,
-        imageFile: File?
+        notes: String?
     ): Boolean {
         return try {
-            val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
-            val typeBody = type.toRequestBody("text/plain".toMediaTypeOrNull())
-            val dosageBody = dosage.toRequestBody("text/plain".toMediaTypeOrNull())
-            val stockBody = stock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val minStockBody = minStock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val notesBody = notes?.toRequestBody("text/plain".toMediaTypeOrNull())
-
-            val imagePart = imageFile?.let { file ->
-                val extension = file.extension.takeIf { it.isNotBlank() } ?: "jpg"
-                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "image/*"
-                val requestFile = file.asRequestBody(mime.toMediaTypeOrNull())
-                MultipartBody.Part.createFormData("image", file.name, requestFile)
+            val token = getToken()
+            if (token.isNullOrEmpty()) {
+                Log.e("MedicineRepository", "Token not found")
+                return false
             }
 
-            val response = medicineService.addMedicine(
-                name = nameBody,
-                type = typeBody,
-                dosage = dosageBody,
-                stock = stockBody,
-                minStock = minStockBody,
-                notes = notesBody,
-                image = imagePart
+            val request = AddMedicineRequest(
+                name = name,
+                type = type,
+                dosage = dosage,
+                stock = stock,
+                minStock = minStock,
+                notes = notes
             )
+            val response = medicineService.addMedicine("Bearer $token", request)
 
             if (response.isSuccessful) {
                 Log.d("MedicineRepository", "Medicine added successfully")
@@ -106,6 +79,29 @@ class MedicineRepository(private val medicineService: MedicineService) {
         }
     }
 
+    // Update method lainnya dengan pola yang sama...
+    suspend fun getMedicineById(id: Int): GetMedicineByIdResponse? {
+        return try {
+            val token = getToken() ?: return null
+            val response = medicineService.getMedicineById("Bearer $token", id)
+            if (response.isSuccessful) response.body() else null
+        } catch (e: Exception) {
+            Log.e("MedicineRepository", "Error getting medicine", e)
+            null
+        }
+    }
+
+    suspend fun getLowStock(): GetLowStockResponse? {
+        return try {
+            val token = getToken() ?: return null
+            val response = medicineService.getLowStock("Bearer $token")
+            if (response.isSuccessful) response.body() else null
+        } catch (e: Exception) {
+            Log.e("MedicineRepository", "Error getting low stock", e)
+            null
+        }
+    }
+
     suspend fun updateMedicine(
         id: Int,
         name: String?,
@@ -113,40 +109,14 @@ class MedicineRepository(private val medicineService: MedicineService) {
         dosage: String?,
         stock: Int?,
         minStock: Int?,
-        notes: String?,
-        imageFile: File?
+        notes: String?
     ): Boolean {
         return try {
-            val nameBody = name?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val typeBody = type?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val dosageBody = dosage?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val stockBody = stock?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val minStockBody = minStock?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
-            val notesBody = notes?.toRequestBody("text/plain".toMediaTypeOrNull())
-
-            val imagePart = imageFile?.let {
-                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
-                MultipartBody.Part.createFormData("image", it.name, requestFile)
-            }
-
+            val token = getToken() ?: return false
             val response = medicineService.updateMedicine(
-                id = id,
-                name = nameBody,
-                type = typeBody,
-                dosage = dosageBody,
-                stock = stockBody,
-                minStock = minStockBody,
-                notes = notesBody,
-                image = imagePart
+                "Bearer $token", id, name, type, dosage, stock, minStock, notes
             )
-
-            if (response.isSuccessful) {
-                Log.d("MedicineRepository", "Medicine updated successfully")
-                true
-            } else {
-                Log.e("MedicineRepository", "Failed to update medicine: ${response.errorBody()?.string()}")
-                false
-            }
+            response.isSuccessful
         } catch (e: Exception) {
             Log.e("MedicineRepository", "Error updating medicine", e)
             false
@@ -155,14 +125,9 @@ class MedicineRepository(private val medicineService: MedicineService) {
 
     suspend fun deleteMedicine(id: Int): Boolean {
         return try {
-            val response = medicineService.deleteMedicine(id)
-            if (response.isSuccessful) {
-                Log.d("MedicineRepository", "Medicine deleted successfully")
-                true
-            } else {
-                Log.e("MedicineRepository", "Failed to delete medicine: ${response.errorBody()?.string()}")
-                false
-            }
+            val token = getToken() ?: return false
+            val response = medicineService.deleteMedicine("Bearer $token", id)
+            response.isSuccessful
         } catch (e: Exception) {
             Log.e("MedicineRepository", "Error deleting medicine", e)
             false

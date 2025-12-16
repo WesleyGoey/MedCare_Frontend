@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -27,6 +28,11 @@ fun MedicineView(
 ) {
     val medicines by viewModel.medicines.collectAsState()
 
+    LaunchedEffect(Unit) {
+        if (medicines.isEmpty()) {
+            viewModel.getAllMedicines()
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         if (medicines.isEmpty()) {
             Column(
