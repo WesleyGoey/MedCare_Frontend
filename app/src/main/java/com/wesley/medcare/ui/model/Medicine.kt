@@ -8,6 +8,5 @@ data class Medicine(
     val dosage: String = "",
     val stock: Int = 0,
     val minStock: Int = 0,
-    val notes: String? = null,
-    val image: String? = null
+    val notes: String? = null
 )
