@@ -1,3 +1,4 @@
+// kotlin
 package com.wesley.medcare.ui.route
 
 import android.app.Application
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -29,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
@@ -38,6 +41,7 @@ import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -71,6 +75,13 @@ fun AppRoute() {
     val userViewModel: UserViewModel = remember {
         UserViewModel(context.applicationContext as Application)
     }
+
+    // Initialize MedicineViewModel using AndroidViewModelFactory so it's lifecycle-aware
+    val medicineViewModel: MedicineViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
+            context.applicationContext as Application
+        )
+    )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -147,7 +158,7 @@ fun AppRoute() {
                 HomeView()
             }
             composable(route = AppView.MedicineView.name) {
-                MedicineView(navController = navController)
+                MedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(route = AppView.ReminderView.name) {
                 ReminderView(navController = navController)
@@ -159,7 +170,7 @@ fun AppRoute() {
                 ProfileView(navController = navController)
             }
             composable(route = AppView.AddMedicineView.name) {
-                AddMedicineView(onBack = { navController.popBackStack() })
+                AddMedicineView(onBack = { navController.popBackStack() }, viewModel = medicineViewModel)
             }
         }
     }

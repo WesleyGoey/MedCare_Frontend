@@ -1,44 +1,50 @@
 package com.wesley.medcare.data.service
 
-import com.wesley.medcare.data.dto.Medicine.*
+import com.wesley.medcare.data.dto.Medicine.AddMedicineRequest
+import com.wesley.medcare.data.dto.Medicine.GetAllMedicinesResponse
+import com.wesley.medcare.data.dto.Medicine.GetLowStockResponse
+import com.wesley.medcare.data.dto.Medicine.GetMedicineByIdResponse
+import com.wesley.medcare.data.dto.Medicine.UpdateMedicineRequest
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.PATCH
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface MedicineService {
-
-    @GET("medicines")
+    @GET("medicine")
     suspend fun getAllMedicines(): Response<GetAllMedicinesResponse>
 
-    @GET("medicines/low-stock")
-    suspend fun checkLowStock(
-        @Query("threshold") threshold: Int? = null
-    ): Response<GetLowStockResponse>
+    @GET("medicine/{id}")
+    suspend fun getMedicineById(@Path("id") id: Int): Response<GetMedicineByIdResponse>
 
-    @GET("medicines/{id}")
-    suspend fun getMedicineById(
-        @Path("id") id: Int
-    ): Response<GetMedicineByIdResponse>
+    @GET("medicine/low-stock")
+    suspend fun getLowStock(): Response<GetLowStockResponse>
 
-    @POST("medicines")
+    @Multipart
+    @POST("medicine")
     suspend fun addMedicine(
-        @Body request: AddMedicineRequest
-    ): Response<GetMedicineByIdResponse>
+        @Part("name") name: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("dosage") dosage: RequestBody,
+        @Part("stock") stock: RequestBody,
+        @Part("minStock") minStock: RequestBody,
+        @Part("notes") notes: RequestBody?,
+        @Part image: MultipartBody.Part?
+    ): Response<Unit>
 
-    @PATCH("medicines/{id}")
+    @Multipart
+    @PUT("medicine/{id}")
     suspend fun updateMedicine(
         @Path("id") id: Int,
-        @Body request: UpdateMedicineRequest
-    ): Response<GetMedicineByIdResponse>
+        @Part("name") name: RequestBody?,
+        @Part("type") type: RequestBody?,
+        @Part("dosage") dosage: RequestBody?,
+        @Part("stock") stock: RequestBody?,
+        @Part("minStock") minStock: RequestBody?,
+        @Part("notes") notes: RequestBody?,
+        @Part image: MultipartBody.Part?
+    ): Response<Unit>
 
-    @DELETE("medicines/{id}")
-    suspend fun deleteMedicine(
-        @Path("id") id: Int
-    ): Response<GetMedicineByIdResponse>
+    @DELETE("medicine/{id}")
+    suspend fun deleteMedicine(@Path("id") id: Int): Response<Unit>
 }

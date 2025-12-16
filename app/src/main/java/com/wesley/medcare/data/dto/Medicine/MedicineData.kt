@@ -3,9 +3,10 @@ package com.wesley.medcare.data.dto.Medicine
 data class MedicineData(
     val dosage: String,
     val id: Int,
+    val image: String?,
     val minStock: Int,
     val name: String,
-    val notes: String,
+    val notes: String?,
     val stock: Int,
     val type: String,
     val userId: Int

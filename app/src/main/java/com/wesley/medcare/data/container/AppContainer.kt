@@ -2,33 +2,24 @@ package com.wesley.medcare.data.container
 
 import android.content.Context
 import com.google.gson.GsonBuilder
-import com.wesley.medcare.data.network.AuthInterceptor
 import com.wesley.medcare.data.repository.MedicineRepository
 import com.wesley.medcare.data.repository.UserRepository
 import com.wesley.medcare.data.service.MedicineService
 import com.wesley.medcare.data.service.UserService
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
 class AppContainer(private val context: Context) {
     companion object {
-        const val ROOT_URL = "http://10.222.192.129:3000"
+                const val ROOT_URL = "http://10.222.192.93:3000"
+//        const val ROOT_URL = "http://192.168.1.12:3000"
         const val BASE_URL = "${ROOT_URL}/api/"
     }
 
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(AuthInterceptor(context))
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
 
     private val retrofit = Retrofit.Builder()
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setLenient().create()))
         .baseUrl(BASE_URL)
-        .client(okHttpClient)
         .build()
 
     private val userService: UserService by lazy {
