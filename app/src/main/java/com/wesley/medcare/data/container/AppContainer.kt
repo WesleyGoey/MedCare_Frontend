@@ -2,8 +2,10 @@ package com.wesley.medcare.data.container
 
 import android.content.Context
 import com.google.gson.GsonBuilder
+import com.wesley.medcare.data.repository.HistoryRepository
 import com.wesley.medcare.data.repository.MedicineRepository
 import com.wesley.medcare.data.repository.UserRepository
+import com.wesley.medcare.data.service.HistoryService
 import com.wesley.medcare.data.service.MedicineService
 import com.wesley.medcare.data.service.UserService
 import retrofit2.Retrofit
@@ -11,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class AppContainer(private val context: Context) {
     companion object {
-                const val ROOT_URL = "http://10.222.192.93:3000" //hotspot wesley
+        const val ROOT_URL = "http://10.0.183.172:3000"
         const val BASE_URL = "${ROOT_URL}/api/"
     }
 
@@ -35,5 +37,13 @@ class AppContainer(private val context: Context) {
 
     val medicineRepository: MedicineRepository by lazy {
         MedicineRepository(medicineService, context)
+    }
+
+    private val historyService: HistoryService by lazy {
+        retrofit.create(HistoryService::class.java)
+    }
+
+    val historyRepository: HistoryRepository by lazy {
+        HistoryRepository(historyService, context)
     }
 }

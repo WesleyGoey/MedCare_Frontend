@@ -187,7 +187,6 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
-
         }
     }
 }
