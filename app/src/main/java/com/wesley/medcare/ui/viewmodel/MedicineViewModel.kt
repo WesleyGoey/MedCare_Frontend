@@ -1,4 +1,4 @@
-// Kotlin
+// kotlin
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 
 class MedicineViewModel(application: Application) : AndroidViewModel(application) {
 
-
     private val repository = AppContainer(application).medicineRepository
 
     private val _medicineName = MutableStateFlow("")
@@ -23,12 +22,11 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     private val _dosage = MutableStateFlow("")
     val dosage: StateFlow<String> = _dosage.asStateFlow()
 
-    // change stock/minStock to Int? flows
-    private val _stock = MutableStateFlow<Int?>(null)
-    val stock: StateFlow<Int?> = _stock.asStateFlow()
+    private val _stock = MutableStateFlow<Int>(0)
+    val stock: StateFlow<Int> = _stock.asStateFlow()
 
-    private val _minStock = MutableStateFlow<Int?>(null)
-    val minStock: StateFlow<Int?> = _minStock.asStateFlow()
+    private val _minStock = MutableStateFlow<Int>(0)
+    val minStock: StateFlow<Int> = _minStock.asStateFlow()
 
     private val _medicineType = MutableStateFlow("Tablet")
     val medicineType: StateFlow<String> = _medicineType.asStateFlow()
@@ -52,6 +50,15 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
     init { getAllMedicines() }
+
+    fun setMedicineName(value: String) { _medicineName.value = value }
+    fun setDosage(value: String) { _dosage.value = value }
+    fun setStock(value: Int) { _stock.value = value }
+    fun setMinStock(value: Int) { _minStock.value = value }
+    fun setMedicineType(value: String) { _medicineType.value = value }
+    fun setNotes(value: String?) { _notes.value = value }
+
+    fun resetSuccessMessage() { _successMessage.value = null }
 
     private fun validateForm(name: String, stock: Int?, minStock: Int?): String? {
         if (name.isBlank()) return "Medication name is required"
@@ -110,13 +117,12 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // Removed Context param; UI should provide values via form flows or parameters
     fun addMedicine(
         name: String = _medicineName.value,
         type: String = _medicineType.value,
         dosage: String = _dosage.value,
-        stock: Int = _stock.value ?: 0,
-        minStock: Int = _minStock.value ?: 0,
+        stock: Int = _stock.value,
+        minStock: Int = _minStock.value,
         notes: String? = _notes.value
     ) {
         val validationError = validateForm(name, stock, minStock)
@@ -155,7 +161,6 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
-
 
     fun updateMedicine(
         id: Int,
@@ -224,8 +229,8 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     fun clearForm() {
         _medicineName.value = ""
         _dosage.value = ""
-        _stock.value = null
-        _minStock.value = null
+        _stock.value = 0
+        _minStock.value = 0
         _medicineType.value = "Tablet"
         _notes.value = null
     }
@@ -233,6 +238,5 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         _successMessage.value = null
         _errorMessage.value = null
         _isLoading.value = false
-        // Reset form fields jika perlu
     }
 }
