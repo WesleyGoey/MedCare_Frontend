@@ -12,3 +12,4 @@
 /captures
 .externalNativeBuild
 .cxx
+.gradle/8.13/fileHashes/fileHashes.lock
