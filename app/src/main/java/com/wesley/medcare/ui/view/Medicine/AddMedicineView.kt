@@ -1,303 +1,249 @@
 package com.wesley.medcare.ui.view.Medicine
 
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.wesley.medcare.ui.view.components.BackTopAppBar
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicineView(
-    onBack: () -> Unit,
-    viewModel: MedicineViewModel
+    navController: NavHostController,
+    viewModel: MedicineViewModel = viewModel()
 ) {
     val context = LocalContext.current
-
-    // local form state
-    var name by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("") }
-    var minStock by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("Tablet") }
-
-    val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
-
-    // Observe ViewModel flows
     val isLoading by viewModel.isLoading.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
+    var name by remember { mutableStateOf("") }
+    var dosage by remember { mutableStateOf("") }
+    var stockText by remember { mutableStateOf("") }
+    var minStockText by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("Tablet") }
+    var notes by remember { mutableStateOf("") }
+
+    val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
+
+    LaunchedEffect(Unit) {
+        // Reset state setiap kali view dibuka
+        viewModel.resetState()
+    }
 
     LaunchedEffect(successMessage) {
-        successMessage?.let {
-            onBack()
-            viewModel.clearMessages()
+        if (successMessage != null) {
+            navController.popBackStack()
         }
     }
 
-    // React to errors -> show snackbar
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let { msg ->
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(msg)
-                viewModel.clearMessages()
-            }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Basic Information Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
+    Scaffold(
+        topBar = { BackTopAppBar(onBack = { navController.navigateUp() }, title = "Add Medication") },
+        content = { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Basic Information",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2C3E50)
-                    )
+                item {
+                    Text("Add a new medication to your list", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Medication Name") },
-                        placeholder = { Text("e.g., Paracetamol") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF5B9BD5),
-                            unfocusedBorderColor = Color(0xFFE0E0E0)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = dosage,
-                        onValueChange = { dosage = it },
-                        label = { Text("Dosage") },
-                        placeholder = { Text("e.g., 500mg") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF5B9BD5),
-                            unfocusedBorderColor = Color(0xFFE0E0E0)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // Basic Information Card
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(6.dp)
                     ) {
-                        OutlinedTextField(
-                            value = stock,
-                            onValueChange = { stock = it },
-                            label = { Text("Stock") },
-                            placeholder = { Text("30") },
-                            modifier = Modifier.weight(1f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF5B9BD5),
-                                unfocusedBorderColor = Color(0xFFE0E0E0)
-                            )
-                        )
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text("Basic Information", style = MaterialTheme.typography.titleMedium)
 
-                        OutlinedTextField(
-                            value = minStock,
-                            onValueChange = { minStock = it },
-                            label = { Text("Min. Stock") },
-                            placeholder = { Text("5") },
-                            modifier = Modifier.weight(1f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF5B9BD5),
-                                unfocusedBorderColor = Color(0xFFE0E0E0)
+                            OutlinedTextField(
+                                value = name,
+                                onValueChange = { name = it },
+                                placeholder = { Text("e.g., Paracetamol") },
+                                label = { Text("Medication Name") },
+                                singleLine = true,
+                                enabled = !isLoading,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                        )
+
+                            OutlinedTextField(
+                                value = dosage,
+                                onValueChange = { dosage = it },
+                                placeholder = { Text("e.g., 500mg") },
+                                label = { Text("Dosage") },
+                                singleLine = true,
+                                enabled = !isLoading,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = stockText,
+                                    onValueChange = { stockText = it.filter { ch -> ch.isDigit() } },
+                                    placeholder = { Text("30") },
+                                    label = { Text("Stock") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    enabled = !isLoading,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                OutlinedTextField(
+                                    value = minStockText,
+                                    onValueChange = { minStockText = it.filter { ch -> ch.isDigit() } },
+                                    placeholder = { Text("5") },
+                                    label = { Text("Min. Stock") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    enabled = !isLoading,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Medication Type Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Medication Type",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2C3E50)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    medicineTypes.chunked(2).forEach { rowTypes ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            rowTypes.forEach { type ->
-                                Box(
+                // Medicine Type list
+                item {
+                    Text("Medication Type", style = MaterialTheme.typography.titleSmall)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        medicineTypes.forEach { type ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectedType = type },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = if (selectedType == type)
+                                    CardDefaults.cardColors(containerColor = Color(0xFF2F93FF))
+                                else
+                                    CardDefaults.cardColors(containerColor = Color(0xFFF5F7FA))
+                            ) {
+                                Row(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                        .clip(RoundedCornerShape(24.dp))
-                                        .background(
-                                            if (selectedType == type) Color(0xFF5B9BD5)
-                                            else Color(0xFFF0F0F0)
-                                        )
-                                        .clickable { selectedType = type }
-                                        .border(
-                                            width = if (selectedType == type) 2.dp else 0.dp,
-                                            color = if (selectedType == type) Color(0xFF5B9BD5) else Color.Transparent,
-                                            shape = RoundedCornerShape(24.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
                                         text = type,
-                                        color = if (selectedType == type) Color.White else Color.Gray,
-                                        fontWeight = if (selectedType == type) FontWeight.Bold else FontWeight.Normal
+                                        color = if (selectedType == type) Color.White else Color(0xFF111827)
                                     )
+                                    Spacer(Modifier.weight(1f))
+                                    if (selectedType == type) {
+                                        Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                    }
                                 }
                             }
-                            if (rowTypes.size < 2) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Notes Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Notes (Optional)",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2C3E50)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
+                // Notes (optional)
+                item {
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
                         placeholder = { Text("e.g., Take after meals") },
+                        label = { Text("Notes (Optional)") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
-                        maxLines = 3,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF5B9BD5),
-                            unfocusedBorderColor = Color(0xFFE0E0E0)
-                        )
+                            .height(120.dp),
+                        enabled = !isLoading,
+                        colors = TextFieldDefaults.colors()
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Add Button
-            Button(
-                onClick = {
-                    viewModel.addMedicine(
-                        context = context,
-                        name = name,
-                        type = selectedType,
-                        dosage = dosage,
-                        stock = stock.toIntOrNull() ?: 0,
-                        minStock = minStock.toIntOrNull() ?: 0,
-                        notes = notes.ifBlank { null }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5B9BD5)),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !isLoading && name.isNotBlank() && dosage.isNotBlank()
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                } else {
-                    Text(text = "Add Medication", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                // Photo upload (optional)
+                item {
+                    Text("Medication Photo (Optional)", style = MaterialTheme.typography.titleSmall)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clickable {
+                                Toast.makeText(context, "Photo picker not implemented in this stub", Toast.LENGTH_SHORT).show()
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Outlined.CameraAlt, contentDescription = null, tint = Color(0xFF2F93FF), modifier = Modifier.size(36.dp))
+                                Spacer(Modifier.height(6.dp))
+                                Text("Upload Photo", color = Color(0xFF2F93FF))
+                                Text("Tap to select medication photo", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
                 }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Add Medication button
+                item {
+                    val stock = stockText.toIntOrNull()
+                    val minStock = minStockText.toIntOrNull()
+                    val formValid = name.isNotBlank() && dosage.isNotBlank() && stock != null && minStock != null
+
+                    Button(
+                        onClick = {
+                            if (!formValid) {
+                                Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            viewModel.addMedicine(
+                                name = name.trim(),
+                                type = selectedType,
+                                dosage = dosage.trim(),
+                                stock = stock!!,
+                                minStock = minStock!!,
+                                notes = if (notes.isBlank()) null else notes.trim()
+                            )
+                        },
+                        enabled = !isLoading && formValid,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                        } else {
+                            Text("Add Medication", color = Color.White)
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(20.dp)) }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        // Snackbar host at the bottom
-        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(16.dp))
-        }
-    }
+    )
 }

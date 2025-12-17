@@ -108,16 +108,6 @@ fun AppRoute() {
     val showBottomBar = currentRoute in bottomRoutes
 
     Scaffold(
-        topBar = {
-            if (showTopBar) {
-                MyTopAppBar(
-                    currentView = currentView,
-                    canNavigateBack = navController.previousBackStackEntry != null
-                            && currentRoute !in bottomRoutes,
-                    navigateUp = { navController.navigateUp() }
-                )
-            }
-        },
         bottomBar = {
             if (showBottomBar) {
                 MyBottomNavigationBar(
@@ -173,7 +163,7 @@ fun AppRoute() {
                 ProfileView(navController = navController)
             }
             composable(route = AppView.AddMedicineView.name) {
-                AddMedicineView(onBack = { navController.popBackStack() }, viewModel = medicineViewModel)
+                AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(
                 route = "MedicineInfoView/{medicineId}",
