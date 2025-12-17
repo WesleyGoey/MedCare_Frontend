@@ -1,4 +1,3 @@
-// kotlin
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
@@ -22,11 +21,12 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     private val _dosage = MutableStateFlow("")
     val dosage: StateFlow<String> = _dosage.asStateFlow()
 
-    private val _stock = MutableStateFlow<Int>(0)
-    val stock: StateFlow<Int> = _stock.asStateFlow()
+    // keep nullable Int state, but accept nullable setters
+    private val _stock = MutableStateFlow<Int?>(null)
+    val stock: StateFlow<Int?> = _stock.asStateFlow()
 
-    private val _minStock = MutableStateFlow<Int>(0)
-    val minStock: StateFlow<Int> = _minStock.asStateFlow()
+    private val _minStock = MutableStateFlow<Int?>(null)
+    val minStock: StateFlow<Int?> = _minStock.asStateFlow()
 
     private val _medicineType = MutableStateFlow("Tablet")
     val medicineType: StateFlow<String> = _medicineType.asStateFlow()
@@ -53,8 +53,9 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
 
     fun setMedicineName(value: String) { _medicineName.value = value }
     fun setDosage(value: String) { _dosage.value = value }
-    fun setStock(value: Int) { _stock.value = value }
-    fun setMinStock(value: Int) { _minStock.value = value }
+    // accept nullable Int so composable can set null when field cleared
+    fun setStock(value: Int?) { _stock.value = value }
+    fun setMinStock(value: Int?) { _minStock.value = value }
     fun setMedicineType(value: String) { _medicineType.value = value }
     fun setNotes(value: String?) { _notes.value = value }
 
@@ -92,6 +93,15 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             try {
                 val resp = repository.getMedicineById(id)
                 _selectedMedicine.value = resp?.`data`
+                // initialize form fields from selected if needed
+                resp?.`data`?.let { m ->
+                    _medicineName.value = m.name
+                    _dosage.value = m.dosage
+                    _stock.value = m.stock
+                    _minStock.value = m.minStock
+                    _medicineType.value = m.type
+                    _notes.value = m.notes
+                }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "getMedicineById error", e)
                 _errorMessage.value = e.message
@@ -121,11 +131,11 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         name: String = _medicineName.value,
         type: String = _medicineType.value,
         dosage: String = _dosage.value,
-        stock: Int = _stock.value,
-        minStock: Int = _minStock.value,
+        stock: Int = _stock.value?: 0,
+        minStock: Int = _minStock.value?: 0,
         notes: String? = _notes.value
     ) {
-        val validationError = validateForm(name, stock, minStock)
+        val validationError = validateForm(name, _stock.value, _minStock.value)
         if (validationError != null) {
             _errorMessage.value = validationError
             return
@@ -229,8 +239,8 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     fun clearForm() {
         _medicineName.value = ""
         _dosage.value = ""
-        _stock.value = 0
-        _minStock.value = 0
+        _stock.value = null
+        _minStock.value = null
         _medicineType.value = "Tablet"
         _notes.value = null
     }
