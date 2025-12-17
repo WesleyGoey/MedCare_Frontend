@@ -50,7 +50,7 @@ fun ReminderView(
         ) {
             // Title
             Text(
-                text = "Reminders",
+                text = "Reminders Today",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
