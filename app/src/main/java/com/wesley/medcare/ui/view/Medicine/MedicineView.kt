@@ -43,7 +43,7 @@ fun MedicineView(
             ?.collect { shouldRefresh ->
                 if (shouldRefresh) {
                     viewModel.getAllMedicines()
-                    savedStateHandle.set("refreshMedicines", false)
+                    savedStateHandle["refreshMedicines"] = false
                 }
             }
     }
