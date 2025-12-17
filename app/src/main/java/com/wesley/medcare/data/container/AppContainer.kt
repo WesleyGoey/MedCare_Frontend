@@ -11,7 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class AppContainer(private val context: Context) {
     companion object {
-                const val ROOT_URL = "http://10.222.192.93:3000" //hotspot wesley
+//                const val ROOT_URL = "http://10.222.192.93:3000" //hotspot wesley
+        const val ROOT_URL = "http://192.168.1.11:3000" //wifi wesley
         const val BASE_URL = "${ROOT_URL}/api/"
     }
 

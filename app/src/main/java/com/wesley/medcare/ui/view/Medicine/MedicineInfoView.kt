@@ -33,9 +33,9 @@ fun MedicineInfoView(
     val scope = rememberCoroutineScope()
     val medicine by viewModel.selectedMedicine.collectAsState()
 
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    var isDeleting by remember { mutableStateOf(false) }
-    var deleteError by remember { mutableStateOf<String?>(null) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val successMessage by viewModel.successMessage.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(medicineId) {
         viewModel.getMedicineById(medicineId)
@@ -126,7 +126,7 @@ fun MedicineInfoView(
 
         // Delete button triggers confirmation dialog
         OutlinedButton(
-            onClick = { showDeleteConfirm = true },
+            onClick = { showDeleteDialog = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
@@ -141,54 +141,39 @@ fun MedicineInfoView(
         Spacer(Modifier.height(16.dp))
     }
 
-    // Confirmation dialog
-    if (showDeleteConfirm) {
+    if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { if (!isDeleting) showDeleteConfirm = false },
-            title = { Text("Delete medication") },
-            text = {
-                Column {
-                    Text("Are you sure you want to delete \"${medicine?.name ?: "this medication"}\"? This action cannot be undone.")
-                    deleteError?.let { err ->
-                        Spacer(Modifier.height(8.dp))
-                        Text(err, color = Color(0xFFD32F2F))
-                    }
-                }
-            },
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm delete") },
+            text = { Text("Are you sure you want to delete this medicine? This action cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val id = medicine?.id
-                        if (id != null && !isDeleting) {
-                            scope.launch {
-                                isDeleting = true
-                                deleteError = null
-                                try {
-                                    viewModel.deleteMedicine(id)
-                                    // signal previous screen to refresh list
-                                    navController.previousBackStackEntry
-                                        ?.savedStateHandle
-                                        ?.set("refreshMedicines", true)
-                                    navController.popBackStack()
-                                } catch (e: Exception) {
-                                    deleteError = e.message ?: "Failed to delete"
-                                } finally {
-                                    isDeleting = false
-                                    showDeleteConfirm = false
-                                }
-                            }
-                        } else {
-                            showDeleteConfirm = false
-                        }
+                        showDeleteDialog = false
+                        viewModel.deleteMedicine(medicineId)
                     }
                 ) {
-                    if (isDeleting) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text("Delete")
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )
+    }
+
+    LaunchedEffect(successMessage) {
+        if (!successMessage.isNullOrEmpty()) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("refreshMedicines", true)
+            navController.popBackStack()
+        }
+    }
+
+    if (isLoading) {
+        Surface {
+            CircularProgressIndicator()
+        }
     }
 }
