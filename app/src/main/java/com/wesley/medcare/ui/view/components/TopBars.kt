@@ -19,16 +19,16 @@ fun BackTopAppBar(
     title: String = "Back"
 ) {
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(title, color = Color(0xFF457AF9)) },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = "Back",
+                    tint = Color(0xFF457AF9)
                 )
             }
         },
-        // optional styling to match image (transparent / no elevation)
         modifier = Modifier,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent

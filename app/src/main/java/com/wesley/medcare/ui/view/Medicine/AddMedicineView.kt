@@ -74,7 +74,6 @@ fun AddMedicineView(
     var stockText by remember { mutableStateOf(stock?.toString() ?: "") }
     var minStockText by remember { mutableStateOf(minStock?.toString() ?: "") }
 
-    // keep local strings in sync when ViewModel updates (e.g., editing existing medication)
     LaunchedEffect(stock) {
         if (stock != null && stockText != stock.toString()) stockText = stock.toString()
         if (stock == null && stockText.isNotEmpty()) stockText = ""
@@ -120,7 +119,7 @@ fun AddMedicineView(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
-                    .background(Color(0xFFF8F9FA))
+                    .background(Color(0xFFF5F5F5))
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
@@ -135,7 +134,7 @@ fun AddMedicineView(
                             "Basic Information",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF2C3E50)
+                            color = Color(0xFF1A1A2E)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -149,13 +148,13 @@ fun AddMedicineView(
                                 .height(52.dp)
                                 .clip(RoundedCornerShape(12.dp)),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color(0xFFF3F5F7),
-                                unfocusedContainerColor = Color(0xFFF3F5F7),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.Black,
                                 unfocusedTextColor = Color.Black,
-                                cursorColor = Color(0xFF2F93FF)
+                                cursorColor = Color(0xFF457AF9)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -172,13 +171,13 @@ fun AddMedicineView(
                                 .height(52.dp)
                                 .clip(RoundedCornerShape(12.dp)),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color(0xFFF3F5F7),
-                                unfocusedContainerColor = Color(0xFFF3F5F7),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.Black,
                                 unfocusedTextColor = Color.Black,
-                                cursorColor = Color(0xFF2F93FF)
+                                cursorColor = Color(0xFF457AF9)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -201,13 +200,13 @@ fun AddMedicineView(
                                     .clip(RoundedCornerShape(12.dp)),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFF3F5F7),
-                                    unfocusedContainerColor = Color(0xFFF3F5F7),
+                                    focusedContainerColor = Color(0xFFF5F5F5),
+                                    unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
                                     focusedTextColor = Color.Black,
                                     unfocusedTextColor = Color.Black,
-                                    cursorColor = Color(0xFF2F93FF)
+                                    cursorColor = Color(0xFF457AF9)
                                 )
                             )
 
@@ -226,13 +225,13 @@ fun AddMedicineView(
                                     .clip(RoundedCornerShape(12.dp)),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFF3F5F7),
-                                    unfocusedContainerColor = Color(0xFFF3F5F7),
+                                    focusedContainerColor = Color(0xFFF5F5F5),
+                                    unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
                                     focusedTextColor = Color.Black,
                                     unfocusedTextColor = Color.Black,
-                                    cursorColor = Color(0xFF2F93FF)
+                                    cursorColor = Color(0xFF457AF9)
                                 )
                             )
                         }
@@ -253,7 +252,7 @@ fun AddMedicineView(
                             "Medication Type",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF2C3E50)
+                            color = Color(0xFF1A1A2E)
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -267,7 +266,7 @@ fun AddMedicineView(
                                         .padding(vertical = 6.dp)
                                         .height(48.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(if (selected) Color(0xFF2F93FF) else Color(0xFFF3F5F7))
+                                        .background(if (selected) Color(0xFF457AF9) else Color(0xFFF5F5F5))
                                         .clickable { viewModel.setMedicineType(t) }
                                         .padding(horizontal = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -305,7 +304,7 @@ fun AddMedicineView(
                             "Notes (Optional)",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF2C3E50)
+                            color = Color(0xFF1A1A2E)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -318,13 +317,13 @@ fun AddMedicineView(
                                 .height(100.dp)
                                 .clip(RoundedCornerShape(12.dp)),
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color(0xFFF3F5F7),
-                                unfocusedContainerColor = Color(0xFFF3F5F7),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.Black,
                                 unfocusedTextColor = Color.Black,
-                                cursorColor = Color(0xFF2F93FF)
+                                cursorColor = Color(0xFF457AF9)
                             )
                         )
                     }
@@ -340,7 +339,7 @@ fun AddMedicineView(
                         .height(56.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(
-                            brush = if (enabled) Brush.horizontalGradient(listOf(Color(0xFF4F8FFB), Color(0xFF2563EB))) else Brush.horizontalGradient(listOf(Color(0xFFBFCFEF), Color(0xFF9FAFE0)))
+                            color = if (enabled) Color(0xFF457AF9) else Color(0xFFF5F5F5)
                         )
                         .clickable(enabled = enabled) {
                             if (enabled) viewModel.addMedicine()

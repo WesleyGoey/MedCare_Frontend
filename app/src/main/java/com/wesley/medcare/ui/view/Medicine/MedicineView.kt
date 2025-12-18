@@ -91,7 +91,7 @@ fun MedicineView(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            containerColor = Color(0xFF2F93FF),
+            containerColor = Color(0xFF457AF9),
             contentColor = Color.White
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Add Medicine")

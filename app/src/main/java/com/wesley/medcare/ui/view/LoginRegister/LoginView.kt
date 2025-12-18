@@ -115,7 +115,7 @@ fun LoginView(
                 modifier = Modifier
                     .size(88.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF2F93FF))
+                    .background(Color(0xFF457AF9))
                     .shadow(6.dp, RoundedCornerShape(18.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -133,7 +133,7 @@ fun LoginView(
                 text = "MedCare",
                 fontWeight = FontWeight.Bold,
                 fontSize = 26.sp,
-                color = Color(0xFF2F93FF)
+                color = Color(0xFF457AF9)
             )
 
             Spacer(Modifier.height(8.dp))
@@ -169,7 +169,7 @@ fun LoginView(
                     Icon(
                         imageVector = Icons.Default.Email,
                         contentDescription = null,
-                        tint = Color(0xFF2F93FF)
+                        tint = Color(0xFF457AF9)
                     )
                     Spacer(Modifier.height(10.dp))
                     TextField(
@@ -181,7 +181,7 @@ fun LoginView(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             disabledContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
+                            cursorColor = Color(0xFF457AF9),
                             focusedTextColor = Color(0xFF0B1220),
                             unfocusedTextColor = Color(0xFF0B1220),
                             disabledTextColor = Color(0xFF9AA3AE),
@@ -219,7 +219,7 @@ fun LoginView(
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
-                        tint = Color(0xFF2F93FF)
+                        tint = Color(0xFF457AF9)
                     )
                     Spacer(Modifier.height(10.dp))
                     TextField(
@@ -241,7 +241,7 @@ fun LoginView(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             disabledContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF2F93FF),
+                            cursorColor = Color(0xFF457AF9),
                             focusedTextColor = Color(0xFF0B1220),
                             unfocusedTextColor = Color(0xFF0B1220),
                             disabledTextColor = Color(0xFF9AA3AE),
@@ -281,12 +281,7 @@ fun LoginView(
                         .fillMaxWidth()
                         .height(52.dp)
                         .background(
-                            brush = Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFF4DA1FF),
-                                    Color(0xFF1E7BFF)
-                                )
-                            ),
+                            color = Color(0xFF457AF9),
                             shape = RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -327,7 +322,7 @@ fun LoginView(
                 Text("Don't have an account? ", color = Color(0xFF9AA3AE))
                 Text(
                     text = "Sign Up",
-                    color = Color(0xFF2F93FF),
+                    color = Color(0xFF457AF9),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { onSignUpClick() }
                 )

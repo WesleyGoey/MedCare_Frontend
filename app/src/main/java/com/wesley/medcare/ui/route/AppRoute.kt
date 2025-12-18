@@ -182,40 +182,40 @@ fun AppRoute() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MyTopAppBar(
-    currentView: AppView?,
-    canNavigateBack: Boolean,
-    navigateUp: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TopAppBar(
-        title = {
-            Text(
-                text = currentView?.title ?: "MedCare",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        modifier = modifier,
-        navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF2F93FF),
-            titleContentColor = Color.White,
-            navigationIconContentColor = Color.White
-        )
-    )
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun MyTopAppBar(
+//    currentView: AppView?,
+//    canNavigateBack: Boolean,
+//    navigateUp: () -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    TopAppBar(
+//        title = {
+//            Text(
+//                text = currentView?.title ?: "MedCare",
+//                fontSize = 20.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//        },
+//        modifier = modifier,
+//        navigationIcon = {
+//            if (canNavigateBack) {
+//                IconButton(onClick = navigateUp) {
+//                    Icon(
+//                        imageVector = Icons.Filled.ArrowBack,
+//                        contentDescription = "Back"
+//                    )
+//                }
+//            }
+//        },
+//        colors = TopAppBarDefaults.topAppBarColors(
+//            containerColor = Color(0xFF2F93FF),
+//            titleContentColor = Color.White,
+//            navigationIconContentColor = Color.White
+//        )
+//    )
+//}
 
 @Composable
 fun MyBottomNavigationBar(
@@ -225,7 +225,7 @@ fun MyBottomNavigationBar(
 ) {
     NavigationBar(
         containerColor = Color.White,
-        contentColor = Color(0xFF2F93FF)
+        contentColor = Color(0xFF457AF9)
     ) {
         items.forEach { item ->
             NavigationBarItem(

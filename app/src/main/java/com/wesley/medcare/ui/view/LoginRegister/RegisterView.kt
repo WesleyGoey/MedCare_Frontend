@@ -93,7 +93,7 @@ fun RegisterView(
                     modifier = Modifier
                         .size(88.dp)
                         .clip(RoundedCornerShape(18.dp))
-                        .background(Color(0xFF2F93FF))
+                        .background(Color(0xFF457AF9))
                         .shadow(6.dp, RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -111,7 +111,7 @@ fun RegisterView(
                     text = "MedCare",
                     fontWeight = FontWeight.Bold,
                     fontSize = 26.sp,
-                    color = Color(0xFF2F93FF)
+                    color = Color(0xFF457AF9)
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -147,7 +147,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -159,7 +159,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -189,7 +189,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -201,7 +201,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -234,7 +234,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -246,7 +246,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -279,7 +279,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.Email,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -291,7 +291,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -324,7 +324,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -346,7 +346,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -376,7 +376,7 @@ fun RegisterView(
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(10.dp))
                         TextField(
@@ -398,7 +398,7 @@ fun RegisterView(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 disabledContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFF2F93FF),
+                                cursorColor = Color(0xFF457AF9),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 disabledIndicatorColor = Color.Transparent
@@ -448,12 +448,7 @@ fun RegisterView(
                             .fillMaxWidth()
                             .height(52.dp)
                             .background(
-                                brush = Brush.verticalGradient(
-                                    listOf(
-                                        Color(0xFF4DA1FF),
-                                        Color(0xFF1E7BFF)
-                                    )
-                                ),
+                                color = Color(0xFF457AF9),
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center
@@ -494,7 +489,7 @@ fun RegisterView(
                     Text("Already have an account? ", color = Color(0xFF9AA3AE))
                     Text(
                         text = "Sign In",
-                        color = Color(0xFF2F93FF),
+                        color = Color(0xFF457AF9),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { onSignInClick() }
                     )

@@ -53,7 +53,6 @@ fun MedicineInfoView(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header card (name, dosage, icon)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -71,15 +70,15 @@ fun MedicineInfoView(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF2F93FF)),
+                            .background(Color(0xFF457AF9)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("💊")
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text(text = medicine?.name ?: "—", style = MaterialTheme.typography.titleMedium)
+                    Text(text = medicine?.name ?: "—", style = MaterialTheme.typography.titleMedium, color = Color(0XFF1A1A2E))
                     Spacer(Modifier.height(4.dp))
-                    Text(text = medicine?.dosage ?: "—", color = Color.Gray)
+                    Text(text = medicine?.dosage ?: "—", color = Color(0xFF5F6368))
                 }
             }
 
@@ -96,7 +95,7 @@ fun MedicineInfoView(
                         Icon(
                             Icons.Outlined.Inventory,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(8.dp))
                         Text("Stock Information", style = MaterialTheme.typography.titleSmall)
@@ -133,7 +132,7 @@ fun MedicineInfoView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White)
@@ -150,11 +149,11 @@ fun MedicineInfoView(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5A5F))
             ) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFD32F2F))
+                Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFFF5A5F))
                 Spacer(Modifier.width(8.dp))
-                Text("Delete Medication", color = Color(0xFFD32F2F))
+                Text("Delete Medication", color = Color(0xFFFF5A5F))
             }
 
             Spacer(Modifier.height(16.dp))
