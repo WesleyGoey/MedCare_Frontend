@@ -133,11 +133,12 @@ fun AddMedicineView(
                         Text(
                             "Basic Information",
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF1A1A2E)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        Text("Medication Name", color = Color(0xFF5F6368))
+                        Spacer(Modifier.height(6.dp))
                         TextField(
                             value = name,
                             onValueChange = { viewModel.setMedicineName(it) },
@@ -159,8 +160,9 @@ fun AddMedicineView(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text("Dosage", color = Color(0xFF5F6368))
+                        Spacer(Modifier.height(6.dp))
                         TextField(
                             value = dosage,
                             onValueChange = { viewModel.setDosage(it) },
@@ -182,59 +184,72 @@ fun AddMedicineView(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            TextField(
-                                value = stockText,
-                                onValueChange = { new ->
-                                    val filtered = new.filter { it.isDigit() }
-                                    stockText = filtered
-                                    viewModel.setStock(filtered.toIntOrNull())
-                                },
-                                placeholder = { Text("30", color = Color.Gray)},
-                                singleLine = true,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(52.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFF5F5F5),
-                                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    cursorColor = Color(0xFF457AF9)
-                                )
-                            )
 
-                            TextField(
-                                value = minStockText,
-                                onValueChange = { new ->
-                                    val filtered = new.filter { it.isDigit() }
-                                    minStockText = filtered
-                                    viewModel.setMinStock(filtered.toIntOrNull())
-                                },
-                                placeholder = { Text("5", color = Color.Gray) },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(52.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color(0xFFF5F5F5),
-                                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    cursorColor = Color(0xFF457AF9)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Stock", color = Color(0xFF5F6368))
+                                Spacer(Modifier.height(6.dp))
+                                TextField(
+                                    value = stockText,
+                                    onValueChange = { new ->
+                                        val filtered = new.filter { it.isDigit() }
+                                        stockText = filtered
+                                        viewModel.setStock(filtered.toIntOrNull())
+                                    },
+                                    placeholder = { Text("30", color = Color.Gray) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color(0xFF457AF9)
+                                    )
                                 )
-                            )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Min Stock", color = Color(0xFF5F6368))
+                                Spacer(Modifier.height(6.dp))
+                                TextField(
+                                    value = minStockText,
+                                    onValueChange = { new ->
+                                        val filtered = new.filter { it.isDigit() }
+                                        minStockText = filtered
+                                        viewModel.setMinStock(filtered.toIntOrNull())
+                                    },
+                                    placeholder = { Text("5", color = Color.Gray) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color(0xFF457AF9)
+                                    )
+                                )
+                            }
                         }
+
                     }
                 }
 
@@ -339,7 +354,7 @@ fun AddMedicineView(
                         .height(56.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(
-                            color = if (enabled) Color(0xFF457AF9) else Color(0xFFF5F5F5)
+                            color = if (enabled) Color(0xFF457AF9) else Color.Gray
                         )
                         .clickable(enabled = enabled) {
                             if (enabled) viewModel.addMedicine()

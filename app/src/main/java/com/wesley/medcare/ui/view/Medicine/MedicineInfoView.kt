@@ -49,8 +49,9 @@ fun MedicineInfoView(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(Color(0xFFF5F7FA))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -58,7 +59,8 @@ fun MedicineInfoView(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(6.dp)
+                elevation = CardDefaults.cardElevation(6.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
                     modifier = Modifier
@@ -76,19 +78,23 @@ fun MedicineInfoView(
                         Text("💊")
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text(text = medicine?.name ?: "—", style = MaterialTheme.typography.titleMedium, color = Color(0XFF1A1A2E))
+                    Text(
+                        text = medicine?.name ?: "—",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color(0XFF1A1A2E)
+                    )
                     Spacer(Modifier.height(4.dp))
                     Text(text = medicine?.dosage ?: "—", color = Color(0xFF5F6368))
                 }
             }
 
-            // Stock card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -98,17 +104,20 @@ fun MedicineInfoView(
                             tint = Color(0xFF457AF9)
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("Stock Information", style = MaterialTheme.typography.titleSmall)
+                        Text("Stock Information", style = MaterialTheme.typography.titleSmall, color = Color(0xFF1A1A2E))
                     }
                     Spacer(Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Pills Remaining:", color = Color.Gray)
+                        Text("Pills Remaining:", color = Color(0xFF5F6368))
                         Text(
                             "${medicine?.stock ?: 0}",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if ((medicine?.stock ?: 0) <= (medicine?.minStock ?: 0)) Color(
+                                0xFFFF5A5F
+                            ) else Color(0xFF1A1A2E)
                         )
                     }
                     Spacer(Modifier.height(8.dp))
@@ -116,8 +125,12 @@ fun MedicineInfoView(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Minimum Stock:", color = Color.Gray)
-                        Text("${medicine?.minStock ?: "-"}")
+                        Text("Minimum Stock:", color = Color(0xFF5F6368))
+                        Text(
+                            "${medicine?.minStock ?: "-"}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFF1A1A2E)
+                        )
                     }
                 }
             }
