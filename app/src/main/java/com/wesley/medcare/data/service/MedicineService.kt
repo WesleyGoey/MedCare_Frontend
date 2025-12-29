@@ -5,6 +5,7 @@ import com.wesley.medcare.data.dto.Medicine.AddMedicineRequest
 import com.wesley.medcare.data.dto.Medicine.GetAllMedicinesResponse
 import com.wesley.medcare.data.dto.Medicine.GetLowStockResponse
 import com.wesley.medcare.data.dto.Medicine.GetMedicineByIdResponse
+import com.wesley.medcare.data.dto.Medicine.UpdateMedicineRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -31,17 +32,11 @@ interface MedicineService {
         @Body body: AddMedicineRequest
     ): Response<Unit>
 
-    @FormUrlEncoded
     @PATCH("medicines/{id}")
     suspend fun updateMedicine(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
-        @Field("name") name: String,
-        @Field("type") type: String,
-        @Field("dosage") dosage: String,
-        @Field("stock") stock: Int,
-        @Field("minStock") minStock: Int,
-        @Field("notes") notes: String?
+        @Body body: UpdateMedicineRequest // MENGGUNAKAN DTO JSON
     ): Response<Unit>
 
     @DELETE("medicines/{id}")

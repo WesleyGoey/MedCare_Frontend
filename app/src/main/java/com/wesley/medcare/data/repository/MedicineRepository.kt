@@ -7,6 +7,7 @@ import com.wesley.medcare.data.dto.Medicine.AddMedicineRequest
 import com.wesley.medcare.data.dto.Medicine.GetAllMedicinesResponse
 import com.wesley.medcare.data.dto.Medicine.GetLowStockResponse
 import com.wesley.medcare.data.dto.Medicine.GetMedicineByIdResponse
+import com.wesley.medcare.data.dto.Medicine.UpdateMedicineRequest
 import com.wesley.medcare.data.service.MedicineService
 
 class MedicineRepository(
@@ -113,33 +114,40 @@ class MedicineRepository(
         return try {
             val token = getToken()
             if (token.isNullOrEmpty()) {
-                Log.e("MedicineRepository", "Token not found")
+                Log.e("MedicineRepository", "Token is null")
                 return false
             }
 
-            Log.d("MedicineRepository", "Updating medicine: id=$id, name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock, notes=$notes")
+            Log.d("MedicineRepository", "Preparing update: id=$id, name=$name, stock=$stock, minStock=$minStock")
 
-            val response = medicineService.updateMedicine(
-                token = "Bearer $token",
-                id = id,
+            // 1. Bungkus data ke dalam DTO
+            val request = UpdateMedicineRequest(
                 name = name,
                 type = type,
                 dosage = dosage,
                 stock = stock,
                 minStock = minStock,
-                notes = notes ?: "" // Ubah null menjadi empty string untuk FormUrlEncoded
+                notes = if (notes.isNullOrBlank()) null else notes
+            )
+
+            // 2. Kirim menggunakan Service
+            val response = medicineService.updateMedicine(
+                token = "Bearer $token",
+                id = id,
+                body = request
             )
 
             if (response.isSuccessful) {
-                Log.d("MedicineRepository", "Medicine updated successfully")
+                Log.d("MedicineRepository", "Update SUCCESS")
                 true
             } else {
+                // Log error body untuk debugging
                 val errorBody = response.errorBody()?.string()
                 Log.e("MedicineRepository", "Update failed - Code: ${response.code()}, Error: $errorBody")
                 false
             }
         } catch (e: Exception) {
-            Log.e("MedicineRepository", "Error updating medicine", e)
+            Log.e("MedicineRepository", "Exception updating medicine", e)
             false
         }
     }
