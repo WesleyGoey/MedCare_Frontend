@@ -180,14 +180,12 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         val minStock = _minStock.value
         val notes = _notes.value?.trim()
 
-        // Validasi
         val validationError = validateForm(name, stock, minStock)
         if (validationError != null) {
             _errorMessage.value = validationError
             return
         }
 
-        // Tambahkan validasi dosage
         if (dosage.isBlank()) {
             _errorMessage.value = "Dosage is required"
             return
@@ -198,8 +196,6 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             _errorMessage.value = null
             _successMessage.value = null
             try {
-                Log.d("MedicineViewModel", "Updating medicine: id=$id, name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock")
-
                 val success = repository.updateMedicine(
                     id = id,
                     name = name,
@@ -211,8 +207,17 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 )
 
                 if (success) {
+                    // 1. Ambil data terbaru dari repository
+                    val resp = repository.getAllMedicines()
+                    val newList = resp?.`data` ?: emptyList()
+
+                    // 2. Update list utama (gunakan .toList() untuk memastikan instance baru)
+                    _medicines.value = newList.toList()
+
+                    // 3. PENTING: Update juga selectedMedicine agar Detail View sinkron
+                    _selectedMedicine.value = newList.find { it.id == id }
+
                     _successMessage.value = "Medicine updated successfully"
-                    getAllMedicines()
                 } else {
                     _errorMessage.value = "Failed to update medicine"
                 }
