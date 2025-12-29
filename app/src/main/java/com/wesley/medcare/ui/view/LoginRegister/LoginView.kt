@@ -1,50 +1,25 @@
 package com.wesley.medcare.ui.view.LoginRegister
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -52,11 +27,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LoginView(
     modifier: Modifier = Modifier,
@@ -72,8 +47,8 @@ fun LoginView(
     val userState by viewModel.userState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-    // Handle login success/error
     LaunchedEffect(userState, isLoading, loginAttempted) {
         if (loginAttempted && !isLoading) {
             when {
@@ -91,248 +66,186 @@ fun LoginView(
         }
     }
 
-
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Scaffold(
+        containerColor = Color.White
+    ) { _ ->
         Column(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .widthIn(max = 360.dp)
-                .wrapContentHeight()
-                .shadow(12.dp, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .padding(horizontal = 20.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                // Padding horizontal 32dp agar tidak mepet samping
+                .padding(horizontal = 32.dp)
+                // verticalScroll ditambahkan agar device layar kecil tidak terpotong
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            // Arrangement Center membuat konten berada di tengah layar secara vertikal
+            verticalArrangement = Arrangement.Center
         ) {
+            // Padding Top dinamis agar tidak menempel ke status bar
+
+            // Logo Section
             Box(
                 modifier = Modifier
-                    .size(88.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF457AF9))
-                    .shadow(6.dp, RoundedCornerShape(18.dp)),
+                    .size(90.dp) // Ukuran sedikit diperkecil agar pas 1 layar
+                    .shadow(
+                        elevation = 15.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        spotColor = Color(0xFF457AF9).copy(alpha = 0.4f)
+                    )
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color(0xFF457AF9)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.MedicalServices,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(48.dp)
-                )
+                Text("💊", fontSize = 42.sp)
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "MedCare",
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
                 color = Color(0xFF457AF9)
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            // Welcome Section
             Text(
                 text = "Welcome Back!",
-                fontSize = 18.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0B1220)
+                color = Color(0xFF1A1A2E)
             )
-            Spacer(Modifier.height(4.dp))
+
+            Spacer(modifier = Modifier.height(6.dp))
+
             Text(
                 text = "Sign in to continue",
-                fontSize = 13.sp,
-                color = Color(0xFF9AA3AE)
+                fontSize = 15.sp,
+                color = Color(0xFF757575)
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Email
+            // Email Input
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Email", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = null,
-                        tint = Color(0xFF457AF9)
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = { Text("your@email.com") },
-                        enabled = !isLoading,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF457AF9),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            disabledTextColor = Color(0xFF9AA3AE),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-                }
+                Text(
+                    text = "Email",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A2E)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = { Text("your@email.com", color = Color(0xFF757575)) },
+                    leadingIcon = {
+                        Icon(Icons.Outlined.Email, null, tint = Color(0xFF457AF9))
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFECF1FF),
+                        unfocusedContainerColor = Color(0xFFECF1FF),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color(0xFF457AF9)
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Password
+            // Password Input
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Password", fontWeight = FontWeight.SemiBold, color = Color(0xFF272B30))
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF0F7FF))
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFF457AF9)
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        placeholder = { Text("Enter your password") },
-                        enabled = !isLoading,
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6B7280)
-                                )
-                            }
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            cursorColor = Color(0xFF457AF9),
-                            focusedTextColor = Color(0xFF0B1220),
-                            unfocusedTextColor = Color(0xFF0B1220),
-                            disabledTextColor = Color(0xFF9AA3AE),
-                            focusedPlaceholderColor = Color(0xFF9AA3AE),
-                            unfocusedPlaceholderColor = Color(0xFF9AA3AE),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
+                Text(
+                    text = "Password",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A2E)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = { Text("Enter your password", color = Color(0xFF757575)) },
+                    leadingIcon = {
+                        Icon(Icons.Outlined.Lock, null, tint = Color(0xFF457AF9))
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                                contentDescription = null,
+                                tint = Color(0xFF8A94A6)
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFECF1FF),
+                        unfocusedContainerColor = Color(0xFFECF1FF),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    singleLine = true
+                )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
+            // Sign In Button
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
                         loginAttempted = true
                         viewModel.login(email, password)
                     } else {
-                        Toast.makeText(context, "Email dan password harus diisi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Isi semua kolom!", Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .shadow(8.dp, RoundedCornerShape(12.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues()
+                    .height(56.dp)
+                    .shadow(10.dp, RoundedCornerShape(14.dp), spotColor = Color(0xFF457AF9)),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9))
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(
-                            color = Color(0xFF457AF9),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Sign In",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
-                Text("  OR  ", color = Color(0xFF9AA3AE), fontSize = 12.sp)
-                Divider(modifier = Modifier.weight(1f), color = Color(0xFFE6E6E6))
+            // Divider
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFF0F0F0))
+                Text("  OR  ", color = Color(0xFF9E9E9E), fontSize = 12.sp)
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFF0F0F0))
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text("Don't have an account? ", color = Color(0xFF9AA3AE))
+            // Sign Up Row
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                Text("Don't have an account? ", color = Color(0xFF757575), fontSize = 14.sp)
                 Text(
                     text = "Sign Up",
                     color = Color(0xFF457AF9),
                     fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
                     modifier = Modifier.clickable { onSignUpClick() }
                 )
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun LoginPreview() {
-    // Preview without ViewModel
 }
