@@ -36,11 +36,11 @@ interface MedicineService {
     suspend fun updateMedicine(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
-        @Field("name") name: String?,
-        @Field("type") type: String?,
-        @Field("dosage") dosage: String?,
-        @Field("stock") stock: Int?,
-        @Field("minStock") minStock: Int?,
+        @Field("name") name: String,
+        @Field("type") type: String,
+        @Field("dosage") dosage: String,
+        @Field("stock") stock: Int,
+        @Field("minStock") minStock: Int,
         @Field("notes") notes: String?
     ): Response<Unit>
 

@@ -103,11 +103,11 @@ class MedicineRepository(
 
     suspend fun updateMedicine(
         id: Int,
-        name: String?,
-        type: String?,
-        dosage: String?,
-        stock: Int?,
-        minStock: Int?,
+        name: String,
+        type: String,
+        dosage: String,
+        stock: Int,
+        minStock: Int,
         notes: String?
     ): Boolean {
         return try {
@@ -115,12 +115,19 @@ class MedicineRepository(
             val response = medicineService.updateMedicine(
                 "Bearer $token", id, name, type, dosage, stock, minStock, notes
             )
-            response.isSuccessful
+            if (response.isSuccessful) {
+                Log.d("MedicineRepository", "Medicine updated successfully")
+                true
+            } else {
+                Log.e("MedicineRepository", "Update failed: ${response.errorBody()?.string()}")
+                false
+            }
         } catch (e: Exception) {
             Log.e("MedicineRepository", "Error updating medicine", e)
             false
         }
     }
+
 
     suspend fun deleteMedicine(id: Int): Boolean {
         return try {

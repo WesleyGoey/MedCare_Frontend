@@ -138,9 +138,10 @@ fun MedicineInfoView(
             Spacer(Modifier.weight(1f))
 
             // Edit button
+            // Ganti bagian Edit button di MedicineInfoView
             Button(
                 onClick = {
-                    navController.navigate("AddMedicineView/${medicine?.id ?: ""}")
+                    navController.navigate("EditMedicineView/${medicine?.id ?: ""}")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,6 +153,7 @@ fun MedicineInfoView(
                 Spacer(Modifier.width(8.dp))
                 Text("Edit Medication", color = Color.White)
             }
+
 
             Spacer(Modifier.height(12.dp))
 

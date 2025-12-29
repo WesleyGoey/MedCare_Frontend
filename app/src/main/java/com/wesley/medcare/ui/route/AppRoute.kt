@@ -43,6 +43,7 @@ import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Medicine.EditMedicineView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
@@ -59,7 +60,8 @@ enum class AppView(
     ReminderView("Remind", Icons.Filled.Notifications),
     HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
-    AddMedicineView("Add Medication")
+    AddMedicineView("Add Medication"),
+    EditMedicineView("Edit Medication")
 }
 
 data class BottomNavItem(
@@ -177,6 +179,20 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
+            composable(
+                route = "EditMedicineView/{medicineId}",
+                arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
+                EditMedicineView(
+                    medicineId = medicineId,
+                    navController = navController
+                )
+            }
+
+
+
+
 
         }
     }

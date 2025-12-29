@@ -172,16 +172,15 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun updateMedicine(
-        id: Int,
-        name: String? = _medicineName.value,
-        type: String? = _medicineType.value,
-        dosage: String? = _dosage.value,
-        stock: Int? = _stock.value,
-        minStock: Int? = _minStock.value,
-        notes: String? = _notes.value
-    ) {
-        val validationError = validateForm(name ?: "", stock, minStock)
+    fun updateMedicine(id: Int) {
+        val name = _medicineName.value
+        val type = _medicineType.value
+        val dosage = _dosage.value
+        val stock = _stock.value
+        val minStock = _minStock.value
+        val notes = _notes.value
+
+        val validationError = validateForm(name, stock, minStock)
         if (validationError != null) {
             _errorMessage.value = validationError
             return
@@ -197,8 +196,8 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                     name = name,
                     type = type,
                     dosage = dosage,
-                    stock = stock,
-                    minStock = minStock,
+                    stock = stock!!,
+                    minStock = minStock!!,
                     notes = notes
                 )
                 if (success) {
@@ -209,10 +208,13 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "updateMedicine error", e)
-                _errorMessage.value = e.message
-            } finally { _isLoading.value = false }
+                _errorMessage.value = e.message ?: "An error occurred"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
+
 
     fun deleteMedicine(id: Int) {
         viewModelScope.launch {
