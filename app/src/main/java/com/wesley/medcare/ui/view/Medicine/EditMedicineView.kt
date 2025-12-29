@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.wesley.medcare.ui.view.components.BackTopAppBar
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +50,8 @@ fun EditMedicineView(
     val selectedType by viewModel.medicineType.collectAsState()
     val notes by viewModel.notes.collectAsState()
 
-    val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
+    val medicineTypes =
+        listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
 
     // 1. Fetch Data Awal
     LaunchedEffect(medicineId) {
@@ -93,28 +95,13 @@ fun EditMedicineView(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearForm()
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
+        topBar = { BackTopAppBar(title = "Back", onBack = { navController.popBackStack() }) }
     ) { paddingValues ->
         if (isLoading && medicine == null) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -123,97 +110,144 @@ fun EditMedicineView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(Color(0xFFF5F7FA))
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
                 Text(
                     text = "Edit Medication",
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A),
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A2E),
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
                 Text(
                     text = "Update medication information",
                     fontSize = 14.sp,
-                    color = Color(0xFF6B7280),
-                    modifier = Modifier.padding(bottom = 24.dp)
+                    color = Color(0xFF5F6368),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 // --- Form Section ---
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Basic Information", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 16.dp))
-
+                        Text(
+                            "Basic Information",
+                            fontSize = 16.sp,
+                            color = Color(0xFF1A1A2E),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
                         // Name
-                        Text("Medication Name", fontSize = 14.sp, color = Color(0xFF6B7280), modifier = Modifier.padding(bottom = 8.dp))
+                        Text(
+                            "Medication Name",
+                            fontSize = 14.sp,
+                            color = Color(0xFF5F6368),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
                         OutlinedTextField(
                             value = medicineName,
                             onValueChange = { viewModel.setMedicineName(it) },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = Color(0xFFE5E7EB),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedTextColor = Color(0xFF1A1A2E),
+                                unfocusedTextColor = Color(0xFF1A1A2E),
+                                cursorColor = Color(0xFF457AF9)
                             )
                         )
 
                         // Dosage
-                        Text("Dosage", fontSize = 14.sp, color = Color(0xFF6B7280), modifier = Modifier.padding(bottom = 8.dp))
+                        Text(
+                            "Dosage",
+                            fontSize = 14.sp,
+                            color = Color(0xFF5F6368),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
                         OutlinedTextField(
                             value = dosage,
                             onValueChange = { viewModel.setDosage(it) },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = Color(0xFFE5E7EB),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedTextColor = Color(0xFF1A1A2E),
+                                unfocusedTextColor = Color(0xFF1A1A2E),
+                                cursorColor = Color(0xFF457AF9)
                             )
                         )
 
                         // Stock Row
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Stock", fontSize = 14.sp, color = Color(0xFF6B7280), modifier = Modifier.padding(bottom = 8.dp))
+                                Text(
+                                    "Stock",
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF5F6368),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
                                 OutlinedTextField(
                                     value = stock?.toString() ?: "",
                                     onValueChange = { viewModel.setStock(it.toIntOrNull()) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = Color(0xFFE5E7EB),
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedTextColor = Color(0xFF1A1A2E),
+                                        unfocusedTextColor = Color(0xFF1A1A2E),
+                                        cursorColor = Color(0xFF457AF9)
                                     )
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Min. Stock", fontSize = 14.sp, color = Color(0xFF6B7280), modifier = Modifier.padding(bottom = 8.dp))
+                                Text(
+                                    "Min. Stock",
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF5F6368),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
                                 OutlinedTextField(
                                     value = minStock?.toString() ?: "",
                                     onValueChange = { viewModel.setMinStock(it.toIntOrNull()) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = Color(0xFFE5E7EB),
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedTextColor = Color(0xFF1A1A2E),
+                                        unfocusedTextColor = Color(0xFF1A1A2E),
+                                        cursorColor = Color(0xFF457AF9)
                                     )
                                 )
                             }
@@ -223,29 +257,48 @@ fun EditMedicineView(
 
                 // Type Section
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Medication Type", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 12.dp))
+                        Text(
+                            "Medication Type",
+                            fontSize = 16.sp,
+                            color = Color(0xFF1A1A2E),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
                         medicineTypes.forEach { type ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { viewModel.setMedicineType(type) }
                                     .background(
-                                        if (selectedType == type) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.White,
-                                        shape = RoundedCornerShape(8.dp)
+                                        if (selectedType == type) Color(0xFF457AF9)
+                                        else Color(0xFFF5F5F5),
+                                        shape = RoundedCornerShape(16.dp)
                                     )
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = type, color = if (selectedType == type) MaterialTheme.colorScheme.primary else Color(0xFF1A1A1A))
+                                Text(
+                                    text = type,
+                                    color = if (selectedType == type) Color.White
+                                    else Color(0xFF1A1A2E)
+                                )
                                 if (selectedType == type) {
-                                    Icon(Icons.Default.Check, contentDescription = "Selected", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             }
                             if (type != medicineTypes.last()) Spacer(modifier = Modifier.height(8.dp))
@@ -255,52 +308,91 @@ fun EditMedicineView(
 
                 // Notes Section
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Notes", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Text(
+                                text = "Notes",
+                                fontSize = 16.sp,
+                                color = Color(0xFF1A1A2E)
+                            )
+                            Text(
+                                text = " (Optional)",
+                                fontSize = 14.sp,
+                                color = Color(0xFF5F6368)
+                            )
+                        }
                         OutlinedTextField(
                             value = notes ?: "",
                             onValueChange = { viewModel.setNotes(it) },
-                            placeholder = { Text("Optional notes...") },
-                            modifier = Modifier.fillMaxWidth().height(100.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            maxLines = 4,
+                            placeholder = { Text("e.g., Take after meals", color = Color(0xFF9CA3AF)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = Color(0xFFE5E7EB),
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
-                            )
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedTextColor = Color(0xFF1A1A2E),
+                                unfocusedTextColor = Color(0xFF1A1A2E),
+                                cursorColor = Color(0xFF457AF9)
+                            ),
+                            maxLines = 4
                         )
                     }
                 }
 
-                // Button Update
                 Button(
                     onClick = {
-                        // Validasi sederhana sebelum kirim
                         if (medicineName.isBlank() || dosage.isBlank() || stock == null || minStock == null) {
-                            Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Please fill all required fields",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             viewModel.updateMedicine(medicineId)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF457AF9),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color(0xFF457AF9).copy(alpha = 0.5f),
+                        disabledContentColor = Color.White.copy(alpha = 0.7f)
+                    )
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
                     } else {
-                        Text("Save Changes", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "Save Changes",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

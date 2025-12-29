@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.wesley.medcare.ui.view.components.BackTopAppBar
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +45,8 @@ fun AddMedicineView(
     val selectedType by viewModel.medicineType.collectAsState()
     val notes by viewModel.notes.collectAsState()
 
-    val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
+    val medicineTypes =
+        listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
 
     // Handle success message
     LaunchedEffect(successMessage) {
@@ -65,47 +67,29 @@ fun AddMedicineView(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.clearForm()
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
-            )
+            BackTopAppBar(title = "Back", onBack = { navController.popBackStack() })
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color(0xFFF5F7FA))
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             Text(
                 text = "Add Medication",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A),
+                color = Color(0xFF1A1A2E),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             Text(
                 text = "Enter medication information",
                 fontSize = 14.sp,
-                color = Color(0xFF6B7280),
-                modifier = Modifier.padding(bottom = 24.dp)
+                color = Color(0xFF5F6368),
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             // Basic Information Section
@@ -115,7 +99,7 @@ fun AddMedicineView(
                     .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
+                    containerColor = Color.White
                 ),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
@@ -125,8 +109,7 @@ fun AddMedicineView(
                     Text(
                         text = "Basic Information",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1A1A1A),
+                        color = Color(0xFF1A1A2E),
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
@@ -134,7 +117,7 @@ fun AddMedicineView(
                     Text(
                         text = "Medication Name",
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280),
+                        color = Color(0xFF5F6368),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     OutlinedTextField(
@@ -144,12 +127,15 @@ fun AddMedicineView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         )
                     )
 
@@ -157,7 +143,7 @@ fun AddMedicineView(
                     Text(
                         text = "Dosage",
                         fontSize = 14.sp,
-                        color = Color(0xFF6B7280),
+                        color = Color(0xFF5F6368),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     OutlinedTextField(
@@ -167,12 +153,15 @@ fun AddMedicineView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         )
                     )
 
@@ -185,7 +174,7 @@ fun AddMedicineView(
                             Text(
                                 text = "Stock",
                                 fontSize = 14.sp,
-                                color = Color(0xFF6B7280),
+                                color = Color(0xFF5F6368),
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             OutlinedTextField(
@@ -196,12 +185,15 @@ fun AddMedicineView(
                                 placeholder = { Text("30", color = Color(0xFF9CA3AF)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = Color(0xFFE5E7EB),
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedContainerColor = Color(0xFFF5F5F5),
+                                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                                    focusedTextColor = Color(0xFF1A1A2E),
+                                    unfocusedTextColor = Color(0xFF1A1A2E),
+                                    cursorColor = Color(0xFF457AF9)
                                 )
                             )
                         }
@@ -214,7 +206,7 @@ fun AddMedicineView(
                                 Text(
                                     text = "Min. Stock",
                                     fontSize = 14.sp,
-                                    color = Color(0xFF6B7280)
+                                    color = Color(0xFF5F6368)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.Info,
@@ -233,12 +225,15 @@ fun AddMedicineView(
                                 placeholder = { Text("5", color = Color(0xFF9CA3AF)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = Color(0xFFE5E7EB),
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedContainerColor = Color(0xFFF5F5F5),
+                                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                                    focusedTextColor = Color(0xFF1A1A2E),
+                                    unfocusedTextColor = Color(0xFF1A1A2E),
+                                    cursorColor = Color(0xFF457AF9)
                                 )
                             )
                         }
@@ -253,7 +248,7 @@ fun AddMedicineView(
                     .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
+                    containerColor = Color.White
                 ),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
@@ -263,8 +258,7 @@ fun AddMedicineView(
                     Text(
                         text = "Medication Type",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1A1A1A),
+                        color = Color(0xFF1A1A2E),
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
@@ -274,11 +268,9 @@ fun AddMedicineView(
                                 .fillMaxWidth()
                                 .clickable { viewModel.setMedicineType(type) }
                                 .background(
-                                    if (selectedType == type) MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.1f
-                                    )
-                                    else Color.White,
-                                    shape = RoundedCornerShape(8.dp)
+                                    if (selectedType == type) Color(0xFF457AF9)
+                                    else Color(0xFFF5F5F5),
+                                    shape = RoundedCornerShape(16.dp)
                                 )
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -287,14 +279,14 @@ fun AddMedicineView(
                             Text(
                                 text = type,
                                 fontSize = 14.sp,
-                                color = if (selectedType == type) MaterialTheme.colorScheme.primary
-                                else Color(0xFF1A1A1A)
+                                color = if (selectedType == type) Color.White
+                                else Color(0xFF1A1A2E)
                             )
                             if (selectedType == type) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = Color.White,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -313,7 +305,7 @@ fun AddMedicineView(
                     .padding(bottom = 24.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
+                    containerColor = Color.White
                 ),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
@@ -327,13 +319,12 @@ fun AddMedicineView(
                         Text(
                             text = "Notes",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1A1A1A)
+                            color = Color(0xFF1A1A2E)
                         )
                         Text(
                             text = " (Optional)",
                             fontSize = 14.sp,
-                            color = Color(0xFF9CA3AF)
+                            color = Color(0xFF5F6368)
                         )
                     }
 
@@ -344,34 +335,50 @@ fun AddMedicineView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         maxLines = 4
                     )
                 }
             }
 
-            // Add Medicine Button
             Button(
                 onClick = {
                     when {
                         medicineName.isBlank() -> {
-                            Toast.makeText(context, "Medicine name cannot be empty", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Medicine name cannot be empty",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
+
                         dosage.isBlank() -> {
-                            Toast.makeText(context, "Dosage cannot be empty", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Dosage cannot be empty", Toast.LENGTH_SHORT)
+                                .show()
                         }
+
                         stock == null -> {
-                            Toast.makeText(context, "Stock must be a number", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Stock must be a number", Toast.LENGTH_SHORT)
+                                .show()
                         }
+
                         minStock == null -> {
-                            Toast.makeText(context, "Minimum stock must be a number", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Minimum stock must be a number",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
+
                         else -> {
                             viewModel.addMedicine()
                         }
@@ -381,15 +388,19 @@ fun AddMedicineView(
                     .fillMaxWidth()
                     .height(52.dp),
                 enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF457AF9),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF457AF9).copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.7f)
                 )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         color = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
                 } else {
                     Text(
@@ -399,8 +410,6 @@ fun AddMedicineView(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
