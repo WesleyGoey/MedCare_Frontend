@@ -111,15 +111,31 @@ class MedicineRepository(
         notes: String?
     ): Boolean {
         return try {
-            val token = getToken() ?: return false
+            val token = getToken()
+            if (token.isNullOrEmpty()) {
+                Log.e("MedicineRepository", "Token not found")
+                return false
+            }
+
+            Log.d("MedicineRepository", "Updating medicine: id=$id, name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock, notes=$notes")
+
             val response = medicineService.updateMedicine(
-                "Bearer $token", id, name, type, dosage, stock, minStock, notes
+                token = "Bearer $token",
+                id = id,
+                name = name,
+                type = type,
+                dosage = dosage,
+                stock = stock,
+                minStock = minStock,
+                notes = notes ?: "" // Ubah null menjadi empty string untuk FormUrlEncoded
             )
+
             if (response.isSuccessful) {
                 Log.d("MedicineRepository", "Medicine updated successfully")
                 true
             } else {
-                Log.e("MedicineRepository", "Update failed: ${response.errorBody()?.string()}")
+                val errorBody = response.errorBody()?.string()
+                Log.e("MedicineRepository", "Update failed - Code: ${response.code()}, Error: $errorBody")
                 false
             }
         } catch (e: Exception) {
@@ -127,7 +143,6 @@ class MedicineRepository(
             false
         }
     }
-
 
     suspend fun deleteMedicine(id: Int): Boolean {
         return try {

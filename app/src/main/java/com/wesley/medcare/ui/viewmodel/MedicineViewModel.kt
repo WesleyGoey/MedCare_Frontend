@@ -173,16 +173,23 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateMedicine(id: Int) {
-        val name = _medicineName.value
+        val name = _medicineName.value.trim()
         val type = _medicineType.value
-        val dosage = _dosage.value
+        val dosage = _dosage.value.trim()
         val stock = _stock.value
         val minStock = _minStock.value
-        val notes = _notes.value
+        val notes = _notes.value?.trim()
 
+        // Validasi
         val validationError = validateForm(name, stock, minStock)
         if (validationError != null) {
             _errorMessage.value = validationError
+            return
+        }
+
+        // Tambahkan validasi dosage
+        if (dosage.isBlank()) {
+            _errorMessage.value = "Dosage is required"
             return
         }
 
@@ -191,6 +198,8 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             _errorMessage.value = null
             _successMessage.value = null
             try {
+                Log.d("MedicineViewModel", "Updating medicine: id=$id, name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock")
+
                 val success = repository.updateMedicine(
                     id = id,
                     name = name,
@@ -200,21 +209,21 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                     minStock = minStock!!,
                     notes = notes
                 )
+
                 if (success) {
-                    _successMessage.value = "Medicine updated"
+                    _successMessage.value = "Medicine updated successfully"
                     getAllMedicines()
                 } else {
                     _errorMessage.value = "Failed to update medicine"
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "updateMedicine error", e)
-                _errorMessage.value = e.message ?: "An error occurred"
+                _errorMessage.value = e.message ?: "An error occurred while updating"
             } finally {
                 _isLoading.value = false
             }
         }
     }
-
 
     fun deleteMedicine(id: Int) {
         viewModelScope.launch {

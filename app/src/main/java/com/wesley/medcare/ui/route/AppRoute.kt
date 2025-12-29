@@ -179,19 +179,18 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
+            // Di file AppRoute.kt atau yang sejenisnya
             composable(
                 route = "EditMedicineView/{medicineId}",
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
                 EditMedicineView(
-                    medicineId = medicineId,
-                    navController = navController
+                    navController = navController,
+                    viewModel = medicineViewModel, // gunakan shared viewModel
+                    medicineId = medicineId
                 )
             }
-
-
-
 
 
         }
