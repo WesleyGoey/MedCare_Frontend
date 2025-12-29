@@ -37,12 +37,12 @@ import androidx.navigation.navArgument
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
-import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.EditMedicineView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
@@ -185,11 +185,7 @@ fun AppRoute() {
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
-                EditMedicineView(
-                    navController = navController,
-                    viewModel = medicineViewModel, // gunakan shared viewModel
-                    medicineId = medicineId
-                )
+                EditMedicineView(medicineId = medicineId, navController = navController)
             }
 
 

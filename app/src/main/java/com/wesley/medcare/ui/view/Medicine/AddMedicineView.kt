@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.view.Medicine
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,337 +17,298 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.wesley.medcare.ui.view.components.BackTopAppBar
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
+import kotlin.toString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicineView(
-    navController: NavController,
-    viewModel: MedicineViewModel
+    navController: NavHostController = rememberNavController(),
+    viewModel: MedicineViewModel = viewModel()
 ) {
-    var medicineName by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("") }
-    var minStock by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("Tablet") }
-    var notes by remember { mutableStateOf("") }
-    var showTypeMenu by remember { mutableStateOf(false) }
+    // Reset form saat view dibuka
+    LaunchedEffect(Unit) {
+        viewModel.clearForm()
+        viewModel.resetState()
+    }
 
-    val medicineTypes = listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
+    val medicineName by viewModel.medicineName.collectAsState()
+    val dosage by viewModel.dosage.collectAsState()
+    val stock by viewModel.stock.collectAsState()
+    val minStock by viewModel.minStock.collectAsState()
+    val medicineType by viewModel.medicineType.collectAsState()
+    val notes by viewModel.notes.collectAsState()
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val successMessage by viewModel.successMessage.collectAsState()
+
+    val context = LocalContext.current
+
+    // Handle success
+    LaunchedEffect(successMessage) {
+        if (!successMessage.isNullOrEmpty()) {
+            Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
+            viewModel.resetSuccessMessage()
+            navController.previousBackStackEntry?.savedStateHandle?.set("refreshMedicines", true)
+            navController.popBackStack()
+        }
+    }
+
+    // Handle error
+    LaunchedEffect(errorMessage) {
+        if (!errorMessage.isNullOrEmpty()) {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            viewModel.resetState()
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+            BackTopAppBar(
+                title = "Add Medicine",
+                onBack = { navController.navigateUp() }
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color(0xFFF5F7FA))
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            // Judul dan Subjudul
-            Text(
-                text = "Add Medication",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A),
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            Text(
-                text = "Add a new medication to your list",
-                fontSize = 14.sp,
-                color = Color(0xFF6B7280),
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            // Basic Information Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
-                ),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Basic Information",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1A1A1A),
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    // Medication Name
-                    Text(
-                        text = "Medication Name",
-                        fontSize = 14.sp,
-                        color = Color(0xFF6B7280),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    OutlinedTextField(
-                        value = medicineName,
-                        onValueChange = { medicineName = it },
-                        placeholder = { Text("e.g., Paracetamol", color = Color(0xFF9CA3AF)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        )
-                    )
-
-                    // Dosage
-                    Text(
-                        text = "Dosage",
-                        fontSize = 14.sp,
-                        color = Color(0xFF6B7280),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    OutlinedTextField(
-                        value = dosage,
-                        onValueChange = { dosage = it },
-                        placeholder = { Text("e.g., 500mg", color = Color(0xFF9CA3AF)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        )
-                    )
-
-                    // Stock and Min Stock Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Stock",
-                                fontSize = 14.sp,
-                                color = Color(0xFF6B7280),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            OutlinedTextField(
-                                value = stock,
-                                onValueChange = { stock = it },
-                                placeholder = { Text("30", color = Color(0xFF9CA3AF)) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = Color(0xFFE5E7EB),
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White
-                                )
-                            )
-                        }
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Text(
-                                    text = "Min. Stock",
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF6B7280)
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Info",
-                                    tint = Color(0xFF9CA3AF),
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .padding(start = 4.dp)
-                                )
-                            }
-                            OutlinedTextField(
-                                value = minStock,
-                                onValueChange = { minStock = it },
-                                placeholder = { Text("5", color = Color(0xFF9CA3AF)) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = Color(0xFFE5E7EB),
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White
-                                )
-                            )
-                        }
-                    }
-                }
+            // Medicine Name
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Medicine Name",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF272B30),
+                    fontSize = 14.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = medicineName,
+                    onValueChange = { viewModel.setMedicineName(it) },
+                    placeholder = { Text("e.g., Paracetamol") },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF457AF9),
+                        unfocusedBorderColor = Color(0xFFE0E0E0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
 
-            // Medication Type Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
-                ),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+            Spacer(Modifier.height(16.dp))
+
+            // Medicine Type Dropdown
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Medicine Type",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF272B30),
+                    fontSize = 14.sp
+                )
+                Spacer(Modifier.height(8.dp))
+
+                var expanded by remember { mutableStateOf(false) }
+                val types = listOf("Tablet", "Capsule", "Syrup", "Injection", "Other")
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded && !isLoading }
                 ) {
-                    Text(
-                        text = "Medication Type",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1A1A1A),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    medicineTypes.forEach { type ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedType = type }
-                                .background(
-                                    if (selectedType == type) MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.1f
-                                    )
-                                    else Color.White,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = type,
-                                fontSize = 14.sp,
-                                color = if (selectedType == type) MaterialTheme.colorScheme.primary
-                                else Color(0xFF1A1A1A)
-                            )
-                            if (selectedType == type) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        if (type != medicineTypes.last()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
-            }
-
-            // Notes Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF9FAFB)
-                ),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    ) {
-                        Text(
-                            text = "Notes",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1A1A1A)
-                        )
-                        Text(
-                            text = " (Optional)",
-                            fontSize = 14.sp,
-                            color = Color(0xFF9CA3AF)
-                        )
-                    }
-
                     OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        placeholder = { Text("e.g., Take after meals", color = Color(0xFF9CA3AF)) },
+                        value = medicineType,
+                        onValueChange = {},
+                        readOnly = true,
+                        enabled = !isLoading,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
-                        shape = RoundedCornerShape(8.dp),
+                            .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
+                            focusedBorderColor = Color(0xFF457AF9),
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White
                         ),
-                        maxLines = 4
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        types.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    viewModel.setMedicineType(type)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Dosage
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Dosage",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF272B30),
+                    fontSize = 14.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = dosage,
+                    onValueChange = { viewModel.setDosage(it) },
+                    placeholder = { Text("e.g., 500mg") },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF457AF9),
+                        unfocusedBorderColor = Color(0xFFE0E0E0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Stock and Min Stock Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Stock",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF272B30),
+                        fontSize = 14.sp
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = stock?.toString() ?: "",
+                        onValueChange = { viewModel.setStock(it.toIntOrNull()) },
+                        placeholder = { Text("0") },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF457AF9),
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Min Stock",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF272B30),
+                        fontSize = 14.sp
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = minStock?.toString() ?: "",
+                        onValueChange = { viewModel.setMinStock(it.toIntOrNull()) },
+                        placeholder = { Text("0") },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF457AF9),
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             }
 
-            // Add Medication Button
-            Button(
-                onClick = {
-                    // Handle add medication
-                    navController.navigateUp()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 24.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
+            Spacer(Modifier.height(16.dp))
+
+            // Notes
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Add Medication",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    "Notes (Optional)",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF272B30),
+                    fontSize = 14.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = notes ?: "",
+                    onValueChange = { viewModel.setNotes(it.ifBlank { null }) },
+                    placeholder = { Text("Additional information") },
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    maxLines = 4,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF457AF9),
+                        unfocusedBorderColor = Color(0xFFE0E0E0),
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 )
             }
+
+            Spacer(Modifier.weight(1f))
+
+            // Submit Button
+            Button(
+                onClick = { viewModel.addMedicine() },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Add Medicine", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
