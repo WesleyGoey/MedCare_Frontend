@@ -211,7 +211,7 @@ fun AddMedicineView(
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Info",
-                                    tint = Color(0xFF9CA3AF),
+                                    tint = Color(0xFF457AF9),
                                     modifier = Modifier
                                         .size(16.dp)
                                         .padding(start = 4.dp)

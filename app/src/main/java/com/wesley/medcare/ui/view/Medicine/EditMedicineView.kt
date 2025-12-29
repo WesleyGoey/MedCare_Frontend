@@ -229,10 +229,17 @@ fun EditMedicineView(
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Min. Stock",
+                                    text = "Min. Stock",
                                     fontSize = 14.sp,
-                                    color = Color(0xFF5F6368),
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    color = Color(0xFF5F6368)
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Info",
+                                    tint = Color(0xFF457AF9),
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .padding(start = 4.dp)
                                 )
                                 OutlinedTextField(
                                     value = minStock?.toString() ?: "",
