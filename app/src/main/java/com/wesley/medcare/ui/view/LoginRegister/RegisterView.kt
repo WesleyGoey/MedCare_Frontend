@@ -91,15 +91,20 @@ fun RegisterView(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Full Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = name, onValueChange = { name = it },
                         placeholder = { Text("Enter your full name", color = Color(0xFF757575)) },
                         leadingIcon = { Icon(Icons.Outlined.Person, null, tint = Color(0xFF457AF9)) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFECF1FF), unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         singleLine = true
                     )
@@ -111,15 +116,20 @@ fun RegisterView(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Email", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = email, onValueChange = { email = it },
                         placeholder = { Text("your@email.com", color = Color(0xFF757575)) },
                         leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Color(0xFF457AF9)) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFECF1FF), unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -132,15 +142,20 @@ fun RegisterView(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Age", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = age, onValueChange = { age = it },
                         placeholder = { Text("Your age", color = Color(0xFF757575)) },
                         leadingIcon = { Icon(Icons.Outlined.CalendarToday, null, tint = Color(0xFF457AF9)) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFECF1FF), unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -153,7 +168,7 @@ fun RegisterView(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = password, onValueChange = { password = it },
                         placeholder = { Text("Create a password", color = Color(0xFF757575)) },
                         leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Color(0xFF457AF9)) },
@@ -165,9 +180,14 @@ fun RegisterView(
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFECF1FF), unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         singleLine = true
                     )
@@ -179,7 +199,7 @@ fun RegisterView(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Confirm Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = confirmPassword, onValueChange = { confirmPassword = it },
                         placeholder = { Text("Confirm your password", color = Color(0xFF757575)) },
                         leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Color(0xFF457AF9)) },
@@ -191,9 +211,14 @@ fun RegisterView(
                         visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFECF1FF), unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)

@@ -72,20 +72,14 @@ fun LoginView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Padding horizontal 32dp agar tidak mepet samping
                 .padding(horizontal = 32.dp)
-                // verticalScroll ditambahkan agar device layar kecil tidak terpotong
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Arrangement Center membuat konten berada di tengah layar secara vertikal
             verticalArrangement = Arrangement.Center
         ) {
-            // Padding Top dinamis agar tidak menempel ke status bar
-
-            // Logo Section
             Box(
                 modifier = Modifier
-                    .size(90.dp) // Ukuran sedikit diperkecil agar pas 1 layar
+                    .size(90.dp)
                     .shadow(
                         elevation = 15.dp,
                         shape = RoundedCornerShape(24.dp),
@@ -109,7 +103,6 @@ fun LoginView(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Welcome Section
             Text(
                 text = "Welcome Back!",
                 fontSize = 26.sp,
@@ -136,7 +129,7 @@ fun LoginView(
                     color = Color(0xFF1A1A2E)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
+                OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("your@email.com", color = Color(0xFF757575)) },
@@ -145,11 +138,13 @@ fun LoginView(
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
                         focusedContainerColor = Color(0xFFECF1FF),
                         unfocusedContainerColor = Color(0xFFECF1FF),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = Color(0xFF1A1A2E),
+                        unfocusedTextColor = Color(0xFF1A1A2E),
                         cursorColor = Color(0xFF457AF9)
                     ),
                     singleLine = true,
@@ -168,7 +163,7 @@ fun LoginView(
                     color = Color(0xFF1A1A2E)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
+                OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = { Text("Enter your password", color = Color(0xFF757575)) },
@@ -187,11 +182,14 @@ fun LoginView(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(14.dp),
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
                         focusedContainerColor = Color(0xFFECF1FF),
                         unfocusedContainerColor = Color(0xFFECF1FF),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        focusedTextColor = Color(0xFF1A1A2E),
+                        unfocusedTextColor = Color(0xFF1A1A2E),
+                        cursorColor = Color(0xFF457AF9)
                     ),
                     singleLine = true
                 )
