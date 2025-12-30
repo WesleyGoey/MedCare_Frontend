@@ -15,7 +15,7 @@ class AppContainer(private val context: Context) {
     companion object {
 
 //        const val ROOT_URL = "http://10.222.192.93:3000" //hotspot wesley
-        const val ROOT_URL = "http://192.168.1.4:3000" //wifi wesley
+        const val ROOT_URL = "http://192.168.1.5:3000" //wifi wesley
 //        const val ROOT_URL = "http://10.0.188.86:3000" //staff uc
 //        const val ROOT_URL = "http://192.168.1.72:3000" //mrn
         const val BASE_URL = "${ROOT_URL}/api/"
