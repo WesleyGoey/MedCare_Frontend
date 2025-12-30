@@ -2,6 +2,7 @@ package com.wesley.medcare.ui.view.LoginRegister
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wesley.medcare.R // Pastikan import R untuk mengakses drawable
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -77,6 +80,7 @@ fun LoginView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // --- PERUBAHAN LOGO DI SINI ---
             Box(
                 modifier = Modifier
                     .size(90.dp)
@@ -86,10 +90,14 @@ fun LoginView(
                         spotColor = Color(0xFF457AF9).copy(alpha = 0.4f)
                     )
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF457AF9)),
+                    .background(Color.White), // Background diganti putih agar logo terlihat jelas
                 contentAlignment = Alignment.Center
             ) {
-                Text("💊", fontSize = 42.sp)
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.fillMaxSize() // Logo akan mengisi Box dengan sudut melengkung
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

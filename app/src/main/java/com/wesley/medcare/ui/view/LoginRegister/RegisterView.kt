@@ -2,6 +2,7 @@ package com.wesley.medcare.ui.view.LoginRegister
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wesley.medcare.R // Import R untuk akses drawable
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -72,15 +75,21 @@ fun RegisterView(
             contentPadding = PaddingValues(vertical = 50.dp)
         ) {
             item {
-                // Logo & Header
+                // --- LOGO BARU DI SINI ---
                 Box(
                     modifier = Modifier
                         .size(80.dp)
                         .shadow(15.dp, RoundedCornerShape(24.dp), spotColor = Color(0xFF457AF9).copy(0.4f))
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF457AF9)),
+                        .background(Color.White), // Background putih agar logo biru terlihat bagus
                     contentAlignment = Alignment.Center
-                ) { Text("💊", fontSize = 38.sp) }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "App Logo",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("MedCare", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF457AF9))

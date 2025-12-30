@@ -1,6 +1,7 @@
 package com.wesley.medcare.ui.view.Medicine
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image // Tambahan import
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource // Tambahan import
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.wesley.medcare.R // Pastikan import R tersedia
 import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import kotlinx.coroutines.launch
@@ -145,10 +148,15 @@ fun MedicineView(
                                         modifier = Modifier
                                             .size(56.dp)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(Color(0xFF457AF9)),
+                                            .background(Color.White), // Diubah ke Putih agar logo biru kontras
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("💊", fontSize = 24.sp)
+                                        // MENGGANTI EMOJI DENGAN LOGO
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo),
+                                            contentDescription = "Medicine Logo",
+                                            modifier = Modifier.fillMaxSize()
+                                        )
                                     }
 
                                     Spacer(modifier = Modifier.width(16.dp))
