@@ -37,9 +37,11 @@ fun RegisterView(
 ) {
     var name by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var registerAttempted by remember { mutableStateOf(false) }
@@ -73,21 +75,21 @@ fun RegisterView(
                 // Logo & Header
                 Box(
                     modifier = Modifier
-                        .size(90.dp)
+                        .size(80.dp)
                         .shadow(15.dp, RoundedCornerShape(24.dp), spotColor = Color(0xFF457AF9).copy(0.4f))
                         .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF457AF9)),
                     contentAlignment = Alignment.Center
-                ) { Text("💊", fontSize = 42.sp) }
+                ) { Text("💊", fontSize = 38.sp) }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("MedCare", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF457AF9))
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("Create Account", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
-                Text("Sign up to get started", fontSize = 15.sp, color = Color(0xFF757575))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Create Account", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
+                Text("Sign up to get started", fontSize = 14.sp, color = Color(0xFF757575))
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- FULL NAME ---
+                // --- 1. FULL NAME ---
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Full Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -112,7 +114,59 @@ fun RegisterView(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- EMAIL ---
+                // --- 2. AGE ---
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Age", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = age, onValueChange = { age = it },
+                        placeholder = { Text("Enter your age", color = Color(0xFF757575)) },
+                        leadingIcon = { Icon(Icons.Outlined.CalendarToday, null, tint = Color(0xFF457AF9)) },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- 3. PHONE ---
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Phone Number", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = phone, onValueChange = { phone = it },
+                        placeholder = { Text("Enter phone number", color = Color(0xFF757575)) },
+                        leadingIcon = { Icon(Icons.Outlined.Phone, null, tint = Color(0xFF457AF9)) },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color(0xFFECF1FF),
+                            unfocusedContainerColor = Color(0xFFECF1FF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Color(0xFF457AF9)
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- 4. EMAIL ---
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Email", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -138,33 +192,7 @@ fun RegisterView(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- AGE ---
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("Age", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = age, onValueChange = { age = it },
-                        placeholder = { Text("Your age", color = Color(0xFF757575)) },
-                        leadingIcon = { Icon(Icons.Outlined.CalendarToday, null, tint = Color(0xFF457AF9)) },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = Color(0xFFECF1FF),
-                            unfocusedContainerColor = Color(0xFFECF1FF),
-                            focusedTextColor = Color(0xFF1A1A2E),
-                            unfocusedTextColor = Color(0xFF1A1A2E),
-                            cursorColor = Color(0xFF457AF9)
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // --- PASSWORD ---
+                // --- 5. PASSWORD ---
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -195,7 +223,7 @@ fun RegisterView(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- CONFIRM PASSWORD ---
+                // --- 6. CONFIRM PASSWORD ---
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Confirm Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -231,11 +259,16 @@ fun RegisterView(
                 Button(
                     onClick = {
                         val ageInt = age.toIntOrNull()
-                        if (name.isNotBlank() && email.isNotBlank() && ageInt != null && password == confirmPassword) {
+                        if (name.isNotBlank() && email.isNotBlank() && ageInt != null && phone.isNotBlank() && password == confirmPassword) {
                             registerAttempted = true
-                            viewModel.register(name, ageInt, "08123456789", email, password)
+                            viewModel.register(name, ageInt, phone, email, password)
                         } else {
-                            Toast.makeText(context, "Please check your inputs", Toast.LENGTH_SHORT).show()
+                            val msg = when {
+                                password != confirmPassword -> "Passwords do not match"
+                                ageInt == null -> "Invalid age"
+                                else -> "Please fill all fields"
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
                     },
                     enabled = !isLoading,
@@ -251,15 +284,6 @@ fun RegisterView(
                     } else {
                         Text("Create Account", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // --- DIVIDER ---
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFF0F0F0))
-                    Text("  OR  ", color = Color(0xFF9E9E9E), fontSize = 12.sp)
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFF0F0F0))
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

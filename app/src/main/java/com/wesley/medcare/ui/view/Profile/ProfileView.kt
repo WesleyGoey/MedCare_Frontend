@@ -62,7 +62,7 @@ fun ProfileView(
                 )
             }
 
-            // --- BLUE PROFILE CARD ---
+            // --- BLUE PROFILE CARD (Rekomendasi Urutan Terbaik) ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -97,10 +97,33 @@ fun ProfileView(
                                 Icon(Icons.Default.Person, null, modifier = Modifier.padding(18.dp), tint = Color(0xFF457AF9))
                             }
                         }
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = userState.name ?: "User", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text(text = userState.email ?: "", fontSize = 15.sp, color = Color.White.copy(alpha = 0.85f))
-                        Text(text = "Age: ${userState.age ?: "-"} years", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(top = 4.dp))
+
+                        // 1. NAME (Identitas Utama)
+                        Text(text = userState.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                        // 2. AGE (Data Medis Penting)
+                        Text(
+                            text = "${userState.age} years old",
+                            fontSize = 15.sp,
+                            color = Color.White.copy(alpha = 0.9f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+
+                        // 3. PHONE (Kontak Darurat Utama)
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                            Icon(Icons.Default.Phone, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = userState.phone, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+                        }
+
+                        // 4. EMAIL (Data Akun/Pelengkap)
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                            Icon(Icons.Default.Email, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = userState.email, fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
+                        }
                     }
                 }
             }
@@ -123,7 +146,7 @@ fun ProfileView(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // 1. Alarm Sound
+                    // Alarm Sound
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -140,7 +163,7 @@ fun ProfileView(
 
                     HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
 
-                    // 2. Notification Sound (DITAMBAHKAN KEMBALI)
+                    // Notification Sound
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable { }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -157,7 +180,7 @@ fun ProfileView(
 
                     HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
 
-                    // 3. Push Notifications Toggle
+                    // Push Notifications Toggle
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -184,7 +207,7 @@ fun ProfileView(
 
                     HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
 
-                    // 4. Low Stock Alerts Toggle
+                    // Low Stock Alerts Toggle
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
