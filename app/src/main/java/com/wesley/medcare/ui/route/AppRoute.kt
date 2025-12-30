@@ -57,11 +57,15 @@ enum class AppView(
     RegisterView("Register"),
     HomeView("Home", Icons.Filled.Home, Icons.Outlined.Home),
     MedicineView("Meds", Icons.Filled.MedicalServices, Icons.Outlined.MedicalServices),
+    AddMedicineView("Add Medication"),
+    MedicineInfoView("MedicineInfoView"),
+    EditMedicineView("Edit Medication"),
     ReminderView("Remind", Icons.Filled.Alarm, Icons.Outlined.Alarm),
     HistoryView("History", Icons.Filled.History, Icons.Outlined.History),
     ProfileView("Profile", Icons.Filled.Person, Icons.Outlined.Person),
-    AddMedicineView("Add Medication"),
-    EditMedicineView("Edit Medication")
+    EditProfileView("Edit Profile")
+
+
 }
 
 data class BottomNavItem(
@@ -144,20 +148,12 @@ fun AppRoute() {
             composable(route = AppView.MedicineView.name) {
                 MedicineView(navController = navController, viewModel = medicineViewModel)
             }
-            composable(route = AppView.ReminderView.name) {
-                ReminderView(navController = navController)
-            }
-            composable(route = AppView.HistoryView.name) {
-                HistoryView(navController = navController)
-            }
-            composable(route = AppView.ProfileView.name) {
-                ProfileView(navController = navController)
-            }
             composable(route = AppView.AddMedicineView.name) {
                 AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(
-                route = "MedicineInfoView/{medicineId}",
+                // Mengganti "MedicineInfoView/{medicineId}" menjadi format Enum
+                route = "${AppView.MedicineInfoView.name}/{medicineId}",
                 arguments = listOf(
                     navArgument("medicineId") { type = NavType.IntType }
                 )
@@ -168,14 +164,29 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
-            // Di file AppRoute.kt atau yang sejenisnya
             composable(
-                route = "EditMedicineView/{medicineId}",
+                route = "${AppView.EditMedicineView.name}/{medicineId}",
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
                 EditMedicineView(medicineId = medicineId, navController = navController)
             }
+            composable(route = AppView.ReminderView.name) {
+                ReminderView(navController = navController)
+            }
+            composable(route = AppView.HistoryView.name) {
+                HistoryView(navController = navController)
+            }
+            composable(route = AppView.ProfileView.name) {
+                ProfileView(navController = navController)
+            }
+            composable(route = AppView.EditProfileView.name) {
+                EditProfileView(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
+            }
+
         }
     }
 }

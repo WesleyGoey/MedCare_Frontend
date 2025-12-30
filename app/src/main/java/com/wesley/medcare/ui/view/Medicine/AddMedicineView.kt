@@ -48,6 +48,14 @@ fun AddMedicineView(
     val medicineTypes =
         listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
 
+    // SCROLL: State untuk mengontrol posisi scroll
+    val scrollState = rememberScrollState()
+
+    // Amankan data: bersihkan form saat layar pertama kali dibuka
+    LaunchedEffect(Unit) {
+        viewModel.clearForm()
+    }
+
     // Handle success message
     LaunchedEffect(successMessage) {
         if (!successMessage.isNullOrEmpty()) {
@@ -75,7 +83,7 @@ fun AddMedicineView(
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState) // Menggunakan scrollState yang didefinisikan
                 .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             Text(

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,15 +26,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
+import kotlinx.coroutines.launch
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // Menghilangkan error merah pada paddingValues
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MedicineView(
     navController: NavHostController = rememberNavController(),
     viewModel: MedicineViewModel = viewModel()
 ) {
-    val medicines by viewModel.medicines.collectAsState()
+    // SORT: Urutkan ID terbaru ke paling atas
+    val rawMedicines by viewModel.medicines.collectAsState()
+    val medicines = remember(rawMedicines) { rawMedicines.sortedByDescending { it.id } }
     val isLoading by viewModel.isLoading.collectAsState()
+
+    // SCROLL: Tambahkan state untuk kontrol posisi list
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     LaunchedEffect(savedStateHandle) {
@@ -41,6 +49,10 @@ fun MedicineView(
             if (shouldRefresh) {
                 viewModel.getAllMedicines()
                 savedStateHandle["refreshMedicines"] = false
+                // SCROLL: Otomatis scroll ke atas setelah refresh
+                scope.launch {
+                    listState.animateScrollToItem(0)
+                }
             }
         }
     }
@@ -58,7 +70,7 @@ fun MedicineView(
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
-                    .offset(y = 20.dp) // Geser ke bawah sebanyak 30dp (atur angka ini sesuai selera)
+                    .offset(y = 20.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -67,22 +79,22 @@ fun MedicineView(
                 )
             }
         }
-    ) { _ -> // Menggunakan underscore agar parameter tidak dianggap tidak terpakai
+    ) { _ ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
         ) {
             LazyColumn(
+                state = listState, // Pasangkan state scroll
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(top = 0.dp, bottom = 16.dp)
             ) {
-                // --- SECTION HEADER ---
                 item {
-                    Column(modifier = Modifier.padding(top = 40.dp)) { // 40dp agar tidak kena status bar HP
+                    Column(modifier = Modifier.padding(top = 40.dp)) {
                         Text(
                             text = "Medications",
                             fontSize = 28.sp,
@@ -118,7 +130,7 @@ fun MedicineView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    navController.navigate("MedicineInfoView/${med.id}")
+                                    navController.navigate("${AppView.MedicineInfoView.name}/${med.id}")
                                 },
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),

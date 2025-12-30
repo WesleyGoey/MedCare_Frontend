@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BackTopAppBar(
     title: String = "Back",
-    onBack: () -> Unit                                                                                                                                                                                                      
+    onBack: () -> Unit
 ) {
     // Use a Surface + Row so we can control exact paddings/height.
     Surface(modifier = Modifier.fillMaxWidth()) {

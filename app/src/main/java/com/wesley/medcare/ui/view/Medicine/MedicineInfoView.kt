@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.view.components.BackTopAppBar
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 
@@ -43,8 +44,16 @@ fun MedicineInfoView(
     val successMessage by viewModel.successMessage.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // Simpan scroll state dalam variabel agar bisa dikontrol
+    val scrollState = rememberScrollState()
+
     LaunchedEffect(medicineId) {
         viewModel.getMedicineById(medicineId)
+    }
+
+    // Scroll otomatis ke atas jika data medicine berubah (misal setelah edit)
+    LaunchedEffect(medicine) {
+        scrollState.animateScrollTo(0)
     }
 
     LaunchedEffect(successMessage) {
@@ -64,7 +73,7 @@ fun MedicineInfoView(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState) // Menggunakan scrollState yang sudah didefinisikan
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -79,9 +88,9 @@ fun MedicineInfoView(
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth() // TAMBAHKAN INI agar Column memenuhi lebar Card
+                        .fillMaxWidth()
                         .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally // Sekarang ini akan bekerja sempurna di tengah
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
@@ -177,7 +186,7 @@ fun MedicineInfoView(
                         val scheduleItems = listOf(
                             "📅" to "Every day",
                             "💊" to "Dose: 1 x ${medicine?.dosage ?: "500mg"}",
-                            "📝" to "Minum setelah makan"
+                            "📝" to (medicine?.notes ?: "Minum setelah makan")
                         )
 
                         scheduleItems.forEach { (icon, label) ->
@@ -283,7 +292,9 @@ fun MedicineInfoView(
 
             // --- SECTION 4: ACTIONS ---
             Button(
-                onClick = { navController.navigate("EditMedicineView/${medicine?.id}") },
+                onClick = {
+                    navController.navigate("${AppView.EditMedicineView.name}/${medicine?.id}")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

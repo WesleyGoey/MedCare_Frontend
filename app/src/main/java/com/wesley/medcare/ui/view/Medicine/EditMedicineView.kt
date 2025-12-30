@@ -53,16 +53,17 @@ fun EditMedicineView(
     val medicineTypes =
         listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
 
+    // SCROLL: State untuk kontrol posisi layar
+    val scrollState = rememberScrollState()
+
     // 1. Fetch Data Awal
     LaunchedEffect(medicineId) {
         viewModel.getMedicineById(medicineId)
     }
 
     // 2. Isi Form saat data medicine berhasil diambil
-    // Menggunakan key(medicine) agar hanya jalan saat object medicine berubah
     LaunchedEffect(medicine) {
         medicine?.let { m ->
-            // Cek apakah form masih kosong/default untuk menghindari overwrite saat user mengetik
             if (viewModel.medicineName.value.isEmpty()) {
                 viewModel.setMedicineName(m.name)
                 viewModel.setDosage(m.dosage)
@@ -78,10 +79,7 @@ fun EditMedicineView(
     LaunchedEffect(successMessage) {
         if (!successMessage.isNullOrEmpty()) {
             Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
-
-            // Trigger refresh di layar daftar obat
             navController.previousBackStackEntry?.savedStateHandle?.set("refreshMedicines", true)
-
             viewModel.resetSuccessMessage()
             navController.popBackStack()
         }
@@ -104,7 +102,7 @@ fun EditMedicineView(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Color(0xFF457AF9))
             }
         } else {
             Column(
@@ -112,7 +110,7 @@ fun EditMedicineView(
                     .fillMaxSize()
                     .background(Color(0xFFF5F7FA))
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState) // Menggunakan scrollState yang didefinisikan
                     .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
                 Text(

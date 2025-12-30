@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -70,7 +71,11 @@ fun ProfileView(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF457AF9)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                ) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -80,7 +85,16 @@ fun ProfileView(
                             .clickable { /* Edit Action */ },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.Edit, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Outlined.Edit,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clickable {
+                                    navController.navigate(AppView.EditProfileView.name)
+                                }
+                        )
                     }
 
                     Column(
@@ -93,16 +107,30 @@ fun ProfileView(
                             color = Color.White
                         ) {
                             if (isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.padding(25.dp), color = Color(0xFF457AF9), strokeWidth = 3.dp)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.padding(25.dp),
+                                    color = Color(0xFF457AF9),
+                                    strokeWidth = 3.dp
+                                )
                             } else {
-                                Icon(Icons.Default.Person, null, modifier = Modifier.padding(18.dp), tint = Color(0xFF457AF9))
+                                Icon(
+                                    Icons.Default.Person,
+                                    null,
+                                    modifier = Modifier.padding(18.dp),
+                                    tint = Color(0xFF457AF9)
+                                )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // 1. NAME (Identitas Utama)
-                        Text(text = userState.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(
+                            text = userState.name,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
 
                         // 2. AGE (Data Medis Penting)
                         Text(
@@ -113,17 +141,41 @@ fun ProfileView(
                         )
 
                         // 3. PHONE (Kontak Darurat Utama)
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-                            Icon(Icons.Default.Phone, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 6.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Phone,
+                                null,
+                                tint = Color.White.copy(alpha = 0.8f),
+                                modifier = Modifier.size(14.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = userState.phone, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+                            Text(
+                                text = userState.phone,
+                                fontSize = 14.sp,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
                         }
 
                         // 4. EMAIL (Data Akun/Pelengkap)
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                            Icon(Icons.Default.Email, null, tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Email,
+                                null,
+                                tint = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier.size(14.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = userState.email, fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
+                            Text(
+                                text = userState.email,
+                                fontSize = 13.sp,
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
                         }
                     }
                 }
@@ -149,49 +201,128 @@ fun ProfileView(
 
                     // Alarm Sound
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable { }.padding(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { }
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF457AF9)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Alarm, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.Alarm,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                        Column(modifier = Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text("Alarm Sound", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A2E))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 14.dp)
+                        ) {
+                            Text(
+                                "Alarm Sound",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1A1A2E)
+                            )
                             Text("Default Alarm", fontSize = 12.sp, color = Color(0xFF757575))
                         }
-                        Icon(Icons.Default.ChevronRight, null, tint = Color(0xFFE0E0E0), modifier = Modifier.size(24.dp))
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            null,
+                            tint = Color(0xFFE0E0E0),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
 
                     HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
 
                     // Notification Sound
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable { }.padding(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { }
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF457AF9)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.NotificationsActive, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.NotificationsActive,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                        Column(modifier = Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text("Notification Sound", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A2E))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 14.dp)
+                        ) {
+                            Text(
+                                "Notification Sound",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1A1A2E)
+                            )
                             Text("Gentle Chime", fontSize = 12.sp, color = Color(0xFF757575))
                         }
-                        Icon(Icons.Default.ChevronRight, null, tint = Color(0xFFE0E0E0), modifier = Modifier.size(24.dp))
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            null,
+                            tint = Color(0xFFE0E0E0),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
 
                     HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
 
                     // Push Notifications Toggle
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF457AF9)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Notifications, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.Notifications,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                        Column(modifier = Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text("Push Notifications", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A2E))
-                            Text("Get medication alerts", fontSize = 12.sp, color = Color(0xFF757575))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 14.dp)
+                        ) {
+                            Text(
+                                "Push Notifications",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1A1A2E)
+                            )
+                            Text(
+                                "Get medication alerts",
+                                fontSize = 12.sp,
+                                color = Color(0xFF757575)
+                            )
                         }
                         Switch(
                             checked = pushEnabled,
@@ -210,15 +341,40 @@ fun ProfileView(
 
                     // Low Stock Alerts Toggle
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF457AF9)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Inventory2, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.Inventory2,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                        Column(modifier = Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text("Low Stock Alerts", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A2E))
-                            Text("Alert when running low", fontSize = 12.sp, color = Color(0xFF757575))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 14.dp)
+                        ) {
+                            Text(
+                                "Low Stock Alerts",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1A1A2E)
+                            )
+                            Text(
+                                "Alert when running low",
+                                fontSize = 12.sp,
+                                color = Color(0xFF757575)
+                            )
                         }
                         Switch(
                             checked = stockEnabled,
@@ -257,9 +413,19 @@ fun ProfileView(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Logout, null, tint = Color(0xFFFF5A5F), modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Default.Logout,
+                        null,
+                        tint = Color(0xFFFF5A5F),
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("Log Out", color = Color(0xFFFF5A5F), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        "Log Out",
+                        color = Color(0xFFFF5A5F),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
