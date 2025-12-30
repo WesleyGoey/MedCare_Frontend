@@ -82,10 +82,12 @@ class UserRepository(
     }
 
     fun clearToken() {
-        prefs.edit { remove("auth_token") }
+        prefs.edit {
+            remove("auth_token")
+        }
     }
 
     fun isLoggedIn(): Boolean {
-        return getToken() != null
+        return !getToken().isNullOrBlank()
     }
 }

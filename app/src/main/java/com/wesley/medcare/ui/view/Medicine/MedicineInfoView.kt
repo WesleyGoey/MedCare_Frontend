@@ -332,7 +332,7 @@ fun MedicineInfoView(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel", color = Color(0xFF5F6368))
+                        Text("Cancel")
                     }
                 }
             )

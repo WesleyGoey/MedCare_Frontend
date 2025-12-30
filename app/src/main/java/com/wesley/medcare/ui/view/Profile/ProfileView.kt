@@ -34,6 +34,7 @@ fun ProfileView(
 ) {
     val userState by userViewModel.userState.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var pushEnabled by remember { mutableStateOf(true) }
     var stockEnabled by remember { mutableStateOf(true) }
@@ -238,9 +239,15 @@ fun ProfileView(
 
             // --- LOGOUT BUTTON ---
             Button(
+                // Di ProfileView.kt
                 onClick = {
-                    userViewModel.resetError()
-                    navController.navigate("login") { popUpTo(0) }
+                    // Jalankan fungsi logout
+                    userViewModel.logout(context)
+
+                    // Pindah ke login dan hapus SEMUA history (stack)
+                    navController.navigate("LoginView") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

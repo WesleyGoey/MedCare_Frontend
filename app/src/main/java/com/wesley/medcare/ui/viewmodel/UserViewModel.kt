@@ -2,6 +2,7 @@
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -138,8 +139,23 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    fun logout(context: Context) {
+        try {
+            // 1. Hapus token di repository (Prefs di dalam repo)
+            repository.clearToken()
 
-    // Reset error flags/messages
+            // 2. Pastikan shared preferences benar-benar bersih
+            val sharedPref = context.getSharedPreferences("medcare_prefs", Context.MODE_PRIVATE)
+            sharedPref.edit().clear().apply()
+
+            // 3. Reset state user di memori UI agar UI kembali ke kondisi awal
+            _userState.value = User()
+
+            Log.d("UserViewModel", "Logout clean & successful")
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "Error during logout: ${e.message}")
+        }
+    }
     fun resetError() {
         _userState.value = _userState.value.copy(isError = false, errorMessage = null)
     }
