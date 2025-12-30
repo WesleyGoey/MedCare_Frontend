@@ -179,8 +179,6 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
-<<<<<<< HEAD
-=======
             // Di file AppRoute.kt atau yang sejenisnya
             composable(
                 route = "EditMedicineView/{medicineId}",
@@ -189,47 +187,9 @@ fun AppRoute() {
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
                 EditMedicineView(medicineId = medicineId, navController = navController)
             }
-
-
->>>>>>> wes
         }
     }
 }
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun MyTopAppBar(
-//    currentView: AppView?,
-//    canNavigateBack: Boolean,
-//    navigateUp: () -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    TopAppBar(
-//        title = {
-//            Text(
-//                text = currentView?.title ?: "MedCare",
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.SemiBold
-//            )
-//        },
-//        modifier = modifier,
-//        navigationIcon = {
-//            if (canNavigateBack) {
-//                IconButton(onClick = navigateUp) {
-//                    Icon(
-//                        imageVector = Icons.Filled.ArrowBack,
-//                        contentDescription = "Back"
-//                    )
-//                }
-//            }
-//        },
-//        colors = TopAppBarDefaults.topAppBarColors(
-//            containerColor = Color(0xFF2F93FF),
-//            titleContentColor = Color.White,
-//            navigationIconContentColor = Color.White
-//        )
-//    )
-//}
 
 @Composable
 fun MyBottomNavigationBar(
