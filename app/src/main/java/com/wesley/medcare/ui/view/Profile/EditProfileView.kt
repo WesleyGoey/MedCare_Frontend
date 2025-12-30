@@ -31,12 +31,13 @@ fun EditProfileView(
 ) {
     val userState by userViewModel.userState.collectAsState()
 
-    // State untuk Input (Inisialisasi dari data userState)
+    // SCROLL: State untuk kontrol posisi scroll
+    val scrollState = rememberScrollState()
+
     var name by remember { mutableStateOf(userState.name) }
     var email by remember { mutableStateOf(userState.email) }
     var age by remember { mutableStateOf(userState.age.toString()) }
 
-    // State untuk Password
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -52,12 +53,11 @@ fun EditProfileView(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color(0xFFF5F7FA))
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState) // Menggunakan scrollState
                 .padding(horizontal = 20.dp)
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            // --- HEADER ---
             Text(
                 text = "Edit Profile",
                 fontSize = 26.sp,
@@ -71,7 +71,6 @@ fun EditProfileView(
                 modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
             )
 
-            // --- PHOTO PROFILE ---
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -86,7 +85,6 @@ fun EditProfileView(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- MAIN FORM CARD ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -95,7 +93,6 @@ fun EditProfileView(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
 
-                    // --- FIELD: FULL NAME ---
                     Text("Full Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E), modifier = Modifier.padding(bottom = 8.dp))
                     OutlinedTextField(
                         value = name,
@@ -112,7 +109,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // --- FIELD: EMAIL ADDRESS ---
                     Text("Email Address", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E), modifier = Modifier.padding(bottom = 8.dp))
                     OutlinedTextField(
                         value = email,
@@ -129,7 +125,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // --- FIELD: AGE ---
                     Text("Age", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E), modifier = Modifier.padding(bottom = 8.dp))
                     OutlinedTextField(
                         value = age,
@@ -146,11 +141,9 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- PASSWORD SECTION ---
                     Text("Change Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Current Password
                     OutlinedTextField(
                         value = currentPassword,
                         onValueChange = { currentPassword = it },
@@ -166,7 +159,6 @@ fun EditProfileView(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // New Password
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
@@ -182,7 +174,6 @@ fun EditProfileView(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Confirm New Password
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
@@ -201,7 +192,6 @@ fun EditProfileView(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- BOTTOM BUTTONS ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)

@@ -37,6 +37,9 @@ fun ProfileView(
     val isLoading by userViewModel.isLoading.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
+    // SCROLL: State untuk kontrol posisi scroll
+    val scrollState = rememberScrollState()
+
     var pushEnabled by remember { mutableStateOf(true) }
     var stockEnabled by remember { mutableStateOf(true) }
 
@@ -51,7 +54,7 @@ fun ProfileView(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState) // Menggunakan state scroll
                 .padding(horizontal = 20.dp)
         ) {
             // --- SECTION HEADER ---
@@ -64,7 +67,7 @@ fun ProfileView(
                 )
             }
 
-            // --- BLUE PROFILE CARD (Rekomendasi Urutan Terbaik) ---
+            // --- BLUE PROFILE CARD ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -82,18 +85,14 @@ fun ProfileView(
                             .size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White.copy(alpha = 0.2f))
-                            .clickable { /* Edit Action */ },
+                            .clickable { navController.navigate(AppView.EditProfileView.name) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Outlined.Edit,
                             null,
                             tint = Color.White,
-                            modifier = Modifier
-                                .size(18.dp)
-                                .clickable {
-                                    navController.navigate(AppView.EditProfileView.name)
-                                }
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
@@ -124,7 +123,6 @@ fun ProfileView(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // 1. NAME (Identitas Utama)
                         Text(
                             text = userState.name,
                             fontSize = 22.sp,
@@ -132,7 +130,6 @@ fun ProfileView(
                             color = Color.White
                         )
 
-                        // 2. AGE (Data Medis Penting)
                         Text(
                             text = "${userState.age} years old",
                             fontSize = 15.sp,
@@ -140,7 +137,6 @@ fun ProfileView(
                             modifier = Modifier.padding(top = 2.dp)
                         )
 
-                        // 3. PHONE (Kontak Darurat Utama)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(top = 6.dp)
@@ -159,7 +155,6 @@ fun ProfileView(
                             )
                         }
 
-                        // 4. EMAIL (Data Akun/Pelengkap)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(top = 4.dp)
@@ -395,12 +390,8 @@ fun ProfileView(
 
             // --- LOGOUT BUTTON ---
             Button(
-                // Di ProfileView.kt
                 onClick = {
-                    // Jalankan fungsi logout
                     userViewModel.logout(context)
-
-                    // Pindah ke login dan hapus SEMUA history (stack)
                     navController.navigate("LoginView") {
                         popUpTo(0) { inclusive = true }
                     }

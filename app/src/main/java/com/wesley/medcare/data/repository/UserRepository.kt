@@ -68,7 +68,7 @@ class UserRepository(
         return userService.getProfile("Bearer $authToken")
     }
 
-    suspend fun editProfile(request: UpdateUserRequest): Response<GetProfileResponse> {
+    suspend fun updateProfile(request: UpdateUserRequest): Response<GetProfileResponse> {
         val authToken = getToken() ?: throw Exception("No token found")
         return userService.editProfile("Bearer $authToken", request)
     }

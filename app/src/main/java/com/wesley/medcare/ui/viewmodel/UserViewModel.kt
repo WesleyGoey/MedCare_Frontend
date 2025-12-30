@@ -139,6 +139,31 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    // Tambahkan fungsi ini di dalam UserViewModel.kt
+
+    fun updateProfile(name: String, age: Int, phone: String, email: String, currentPassword: String?, newPassword: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Asumsi repository memiliki fungsi updateProfile
+                // Sesuaikan parameter dengan kebutuhan API-mu
+                val response = repository.updateProfile(name, age, phone, email, currentPassword, newPassword)
+
+                if (response.isSuccessful) {
+                    // Refresh data profil lokal setelah sukses update
+                    getProfile()
+                    _userState.value = _userState.value.copy(isError = false, errorMessage = "Profile updated successfully")
+                } else {
+                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Update failed: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Gagal update profil")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
     fun logout(context: Context) {
         try {
             // 1. Hapus token di repository (Prefs di dalam repo)
