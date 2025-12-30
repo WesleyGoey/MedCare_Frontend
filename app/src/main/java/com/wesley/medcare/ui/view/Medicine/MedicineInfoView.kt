@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Inventory
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -217,7 +218,7 @@ fun MedicineInfoView(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                Icons.Outlined.Inventory,
+                                Icons.Outlined.Inventory2,
                                 null,
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
