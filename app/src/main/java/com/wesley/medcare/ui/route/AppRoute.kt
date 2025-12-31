@@ -1,71 +1,67 @@
+// kotlin
 package com.wesley.medcare.ui.route
 
 import android.app.Application
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MedicalServices
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
-import com.wesley.medcare.ui.view.Medicine.*
+import com.wesley.medcare.ui.view.Medicine.HomeView
+import com.wesley.medcare.ui.view.Medicine.MedicineView
+import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
+import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Medicine.AddMedicineView
+import com.wesley.medcare.ui.view.Medicine.EditMedicineView
+import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
-// --- ENUM APPVIEW DENGAN IKON TERPISAH (SELECTED & UNSELECTED) ---
 enum class AppView(
     val title: String,
-    val selectedIcon: ImageVector? = null,
-    val unselectedIcon: ImageVector? = null
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     LoginView("Login"),
     RegisterView("Register"),
-    HomeView("Home", Icons.Filled.Home, Icons.Outlined.Home),
-    MedicineView("Meds", Icons.Filled.MedicalServices, Icons.Outlined.MedicalServices),
+    HomeView("Home", Icons.Filled.Home),
+    MedicineView("Meds", Icons.Filled.MedicalServices),
+    ReminderView("Remind", Icons.Filled.Notifications),
+    HistoryView("History", Icons.Filled.History),
+    ProfileView("Profile", Icons.Filled.Person),
     AddMedicineView("Add Medication"),
-    MedicineInfoView("MedicineInfoView"),
-    EditMedicineView("Edit Medication"),
-    ReminderView("Remind", Icons.Filled.Alarm, Icons.Outlined.Alarm),
-    HistoryView("History", Icons.Filled.History, Icons.Outlined.History),
-    ProfileView("Profile", Icons.Filled.Person, Icons.Outlined.Person),
-    EditProfileView("Edit Profile")
-
-
+    EditMedicineView("Edit Medication")
 }
 
 data class BottomNavItem(
@@ -73,15 +69,19 @@ data class BottomNavItem(
     val label: String
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AppRoute() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    // Initialize UserViewModel
     val userViewModel: UserViewModel = remember {
         UserViewModel(context.applicationContext as Application)
     }
 
+    // Initialize MedicineViewModel using AndroidViewModelFactory so it's lifecycle-aware
     val medicineViewModel: MedicineViewModel = viewModel(
         factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
             context.applicationContext as Application
@@ -91,6 +91,7 @@ fun AppRoute() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
+    val currentView = AppView.entries.find { it.name == currentRoute }
 
     val bottomNavItems = listOf(
         BottomNavItem(AppView.HomeView, "Home"),
@@ -100,7 +101,13 @@ fun AppRoute() {
         BottomNavItem(AppView.ProfileView, "Profile")
     )
 
-    val showBottomBar = currentRoute in bottomNavItems.map { it.view.name }
+    val showTopBar = currentRoute !in listOf(
+        AppView.LoginView.name,
+        AppView.RegisterView.name
+    )
+
+    val bottomRoutes = bottomNavItems.map { it.view.name }
+    val showBottomBar = currentRoute in bottomRoutes
 
     Scaffold(
         bottomBar = {
@@ -148,12 +155,20 @@ fun AppRoute() {
             composable(route = AppView.MedicineView.name) {
                 MedicineView(navController = navController, viewModel = medicineViewModel)
             }
+            composable(route = AppView.ReminderView.name) {
+                ReminderView(navController = navController)
+            }
+            composable(route = AppView.HistoryView.name) {
+                HistoryView(navController = navController)
+            }
+            composable(route = AppView.ProfileView.name) {
+                ProfileView(navController = navController)
+            }
             composable(route = AppView.AddMedicineView.name) {
                 AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(
-                // Mengganti "MedicineInfoView/{medicineId}" menjadi format Enum
-                route = "${AppView.MedicineInfoView.name}/{medicineId}",
+                route = "MedicineInfoView/{medicineId}",
                 arguments = listOf(
                     navArgument("medicineId") { type = NavType.IntType }
                 )
@@ -164,32 +179,57 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
+<<<<<<< HEAD
+=======
+            // Di file AppRoute.kt atau yang sejenisnya
             composable(
-                route = "${AppView.EditMedicineView.name}/{medicineId}",
+                route = "EditMedicineView/{medicineId}",
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
                 EditMedicineView(medicineId = medicineId, navController = navController)
             }
-            composable(route = AppView.ReminderView.name) {
-                ReminderView(navController = navController)
-            }
-            composable(route = AppView.HistoryView.name) {
-                HistoryView(navController = navController)
-            }
-            composable(route = AppView.ProfileView.name) {
-                ProfileView(navController = navController)
-            }
-            composable(route = AppView.EditProfileView.name) {
-                EditProfileView(
-                    navController = navController,
-                    userViewModel = userViewModel
-                )
-            }
 
+
+>>>>>>> wes
         }
     }
 }
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun MyTopAppBar(
+//    currentView: AppView?,
+//    canNavigateBack: Boolean,
+//    navigateUp: () -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    TopAppBar(
+//        title = {
+//            Text(
+//                text = currentView?.title ?: "MedCare",
+//                fontSize = 20.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//        },
+//        modifier = modifier,
+//        navigationIcon = {
+//            if (canNavigateBack) {
+//                IconButton(onClick = navigateUp) {
+//                    Icon(
+//                        imageVector = Icons.Filled.ArrowBack,
+//                        contentDescription = "Back"
+//                    )
+//                }
+//            }
+//        },
+//        colors = TopAppBarDefaults.topAppBarColors(
+//            containerColor = Color(0xFF2F93FF),
+//            titleContentColor = Color.White,
+//            navigationIconContentColor = Color.White
+//        )
+//    )
+//}
 
 @Composable
 fun MyBottomNavigationBar(
@@ -199,15 +239,20 @@ fun MyBottomNavigationBar(
 ) {
     NavigationBar(
         containerColor = Color.White,
-        tonalElevation = 0.dp // Dibuat flat agar menyatu dengan background
+        contentColor = Color(0xFF457AF9)
     ) {
         items.forEach { item ->
-            val isSelected = currentDestination?.hierarchy?.any {
-                it.route == item.view.name
-            } == true
-
             NavigationBarItem(
-                selected = isSelected,
+                icon = {
+                    Icon(
+                        imageVector = item.view.icon!!,
+                        contentDescription = item.label
+                    )
+                },
+                label = { Text(item.label) },
+                selected = currentDestination?.hierarchy?.any {
+                    it.route == item.view.name
+                } == true,
                 onClick = {
                     navController.navigate(item.view.name) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -216,26 +261,7 @@ fun MyBottomNavigationBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                },
-                icon = {
-                    Icon(
-                        imageVector = if (isSelected) item.view.selectedIcon!! else item.view.unselectedIcon!!,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(26.dp), // Ukuran ikon seragam
-                        tint = if (isSelected) Color(0xFF457AF9) else Color(0xFF8A94A6) // Perubahan warna
-                    )
-                },
-                label = {
-                    Text(
-                        text = item.label,
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) Color(0xFF457AF9) else Color(0xFF8A94A6) // Perubahan warna teks
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent // Menghilangkan background kapsul/pill
-                )
+                }
             )
         }
     }
