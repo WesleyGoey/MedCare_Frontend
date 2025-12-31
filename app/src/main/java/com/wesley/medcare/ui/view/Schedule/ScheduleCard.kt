@@ -1,137 +1,125 @@
 package com.wesley.medcare.ui.view.Schedule
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wesley.medcare.data.dto.Schedule.DetailData
 
 @Composable
 fun ScheduleCard(
-    time: String,
-    medicine: String,
+    medicineName: String,
     dosage: String,
-    status: String,
-    onMarkAsTaken: () -> Unit,
-    modifier: Modifier = Modifier
+    time: String,
+    scheduleType: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = modifier.fillMaxWidth()
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .padding(18.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Time icon with background
+            // Icon rounded square
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF5B8DEF)),
+                    .size(64.dp)
+                    .shadow(6.dp, RoundedCornerShape(14.dp))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF4DA1FF),
+                                Color(0xFF2F93FF)
+                            )
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.AccessTime,
-                    contentDescription = "Time",
+                    contentDescription = "schedule icon",
                     tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(34.dp)
                 )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Time display
-            Text(
-                text = time,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Status pill
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFF3F4F6)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = status,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    color = Color(0xFF6B7280),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    text = medicineName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF202630)
                 )
-            }
-        }
-
-        // Medicine name and dosage
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-        ) {
-            Text(
-                text = medicine,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF111827)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = dosage,
-                fontSize = 16.sp,
-                color = Color(0xFF9CA3AF)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Mark as Taken button
-            Button(
-                onClick = onMarkAsTaken,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5B8DEF)),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Mark as Taken",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = "$dosage  •  $time",
+                    color = Color(0xFF8D99A6),
+                    fontSize = 14.sp
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFEFF7FF)
+                ) {
+                    Text(
+                        text = scheduleType,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = Color(0xFF2F93FF),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
 }
 
-@Composable
-@Preview(showBackground = true, backgroundColor = 0xFFF5F7FA)
-fun ScheduleCardPreview() {
-    Box(modifier = Modifier.padding(16.dp)) {
-        ScheduleCard(
-            time = "8:00 PM",
-            medicine = "Lisinopril",
-            dosage = "10mg",
-            status = "Pending",
-            onMarkAsTaken = {}
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//private fun ScheduleCardPreview() {
+//    ScheduleCard(
+//        medicineName = "Metformin",
+//        dosage = "500mg",
+//        time = "08:00",
+//        scheduleType = "Daily"
+//    )
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun ScheduleCardPreview_Weekly() {
+//    ScheduleCard(
+//        medicineName = "Aspirin",
+//        dosage = "81mg",
+//        time = "20:00",
+//        scheduleType = "Weekly"
+//    )
+//}
+//

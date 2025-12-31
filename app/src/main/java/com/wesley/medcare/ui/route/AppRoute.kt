@@ -44,7 +44,9 @@ import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
+import com.wesley.medcare.ui.view.Schedule.AddReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
+import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -59,7 +61,8 @@ enum class AppView(
     ReminderView("Remind", Icons.Filled.Notifications),
     HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
-    AddMedicineView("Add Medication")
+    AddMedicineView("Add Medication"),
+    AddReminderView("Add Reminder")
 }
 
 data class BottomNavItem(
@@ -81,6 +84,12 @@ fun AppRoute() {
 
     // Initialize MedicineViewModel using AndroidViewModelFactory so it's lifecycle-aware
     val medicineViewModel: MedicineViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
+            context.applicationContext as Application
+        )
+    )
+
+    val scheduleViewModel: ScheduleViewModel = viewModel(
         factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
             context.applicationContext as Application
         )
@@ -187,6 +196,7 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
+
         }
     }
 }
