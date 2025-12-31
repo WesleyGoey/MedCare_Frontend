@@ -55,10 +55,10 @@ fun ProfileView(
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
                 .verticalScroll(scrollState) // Menggunakan state scroll
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             // --- SECTION HEADER ---
-            Column(modifier = Modifier.padding(top = 40.dp, bottom = 24.dp)) {
+            Column(modifier = Modifier.padding(top = 20.dp, bottom = 24.dp)) {
                 Text(
                     text = "Profile",
                     fontSize = 28.sp,
@@ -419,7 +419,6 @@ fun ProfileView(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

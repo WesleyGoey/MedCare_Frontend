@@ -94,10 +94,10 @@ fun MedicineView(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 0.dp, bottom = 16.dp)
+                contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp)
             ) {
                 item {
-                    Column(modifier = Modifier.padding(top = 40.dp)) {
+                    Column(modifier = Modifier.padding(top = 20.dp)) {
                         Text(
                             text = "Medications",
                             fontSize = 28.sp,
