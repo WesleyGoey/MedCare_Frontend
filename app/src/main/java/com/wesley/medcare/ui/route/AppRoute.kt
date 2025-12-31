@@ -37,12 +37,13 @@ import androidx.navigation.navArgument
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
-import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Medicine.AddMedicineView
+import com.wesley.medcare.ui.view.Medicine.EditMedicineView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
 import com.wesley.medcare.ui.view.Schedule.AddReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
@@ -61,8 +62,7 @@ enum class AppView(
     ReminderView("Remind", Icons.Filled.Notifications),
     HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
-    AddMedicineView("Add Medication"),
-    AddReminderView("Add Reminder")
+    AddMedicineView("Add Medication")
 }
 
 data class BottomNavItem(
@@ -117,16 +117,6 @@ fun AppRoute() {
     val showBottomBar = currentRoute in bottomRoutes
 
     Scaffold(
-        topBar = {
-            if (showTopBar) {
-                MyTopAppBar(
-                    currentView = currentView,
-                    canNavigateBack = navController.previousBackStackEntry != null
-                            && currentRoute !in bottomRoutes,
-                    navigateUp = { navController.navigateUp() }
-                )
-            }
-        },
         bottomBar = {
             if (showBottomBar) {
                 MyBottomNavigationBar(
@@ -182,7 +172,7 @@ fun AppRoute() {
                 ProfileView(navController = navController)
             }
             composable(route = AppView.AddMedicineView.name) {
-                AddMedicineView(onBack = { navController.popBackStack() }, viewModel = medicineViewModel)
+                AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(
                 route = "MedicineInfoView/{medicineId}",
@@ -196,7 +186,6 @@ fun AppRoute() {
                     medicineId = medicineId
                 )
             }
-
         }
     }
 }
@@ -244,7 +233,7 @@ fun MyBottomNavigationBar(
 ) {
     NavigationBar(
         containerColor = Color.White,
-        contentColor = Color(0xFF2F93FF)
+        contentColor = Color(0xFF457AF9)
     ) {
         items.forEach { item ->
             NavigationBarItem(

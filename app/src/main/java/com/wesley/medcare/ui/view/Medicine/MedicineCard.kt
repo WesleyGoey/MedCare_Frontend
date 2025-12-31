@@ -48,7 +48,7 @@ fun MedicineCard(
                             brush = Brush.verticalGradient(
                                 listOf(
                                     Color(0xFF4DA1FF),
-                                    Color(0xFF2F93FF)
+                                    Color(0xFF457AF9)
                                 )
                             ),
                             shape = RoundedCornerShape(14.dp)
@@ -70,12 +70,12 @@ fun MedicineCard(
                         text = name,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF202630)
+                        color = Color(0xFF2B2F38)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "$dosageText  \u2022  $pillsLeftText",
-                        color = Color(0xFF8D99A6),
+                        color = Color(0xFF8A94A6),
                         fontSize = 14.sp
                     )
                 }
@@ -93,10 +93,10 @@ fun MedicineCard(
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = Color(0xFF8D99A6)
+                        tint = Color(0xFF8A94A6)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("No schedule set", color = Color(0xFF8D99A6), fontSize = 15.sp)
+                    Text("No schedule set", color = Color(0xFF8A94A6), fontSize = 15.sp)
                 }
             } else {
                 Column {
@@ -104,12 +104,12 @@ fun MedicineCard(
                         Icon(
                             imageVector = Icons.Default.AccessTime,
                             contentDescription = null,
-                            tint = Color(0xFF2F93FF)
+                            tint = Color(0xFF457AF9)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "Daily Schedule",
-                            color = Color(0xFF2F93FF),
+                            color = Color(0xFF457AF9),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         )
@@ -119,13 +119,13 @@ fun MedicineCard(
                         scheduleTimes.forEach { time ->
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = Color(0xFFEFF7FF),
+                                color = Color(0xFFBFD1FF),
                                 shadowElevation = 0.dp,
                                 modifier = Modifier
                                     .defaultMinSize(minHeight = 44.dp)
                                     .border(
                                         width = 1.dp,
-                                        color = Color(0xFFD9E9FF),
+                                        color = Color(0xFF4C7FFA),
                                         shape = RoundedCornerShape(16.dp)
                                     )
                             ) {
@@ -135,7 +135,7 @@ fun MedicineCard(
                                 ) {
                                     Text(
                                         text = time,
-                                        color = Color(0xFF2F93FF),
+                                        color = Color(0xFF457AF9),
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 15.sp
                                     )

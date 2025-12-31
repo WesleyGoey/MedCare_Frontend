@@ -1,8 +1,6 @@
-// app/src/main/java/com/wesley/medcare/ui/viewmodel/MedicineViewModel.kt
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,53 +8,66 @@ import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.data.dto.Medicine.MedicineDataWithSchedule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MedicineViewModel(application: Application) : AndroidViewModel(application) {
 
-    // initialize container with application context to avoid the repository init error
     private val repository = AppContainer(application).medicineRepository
 
-    // form/state flows (private mutable + public read-only)
     private val _medicineName = MutableStateFlow("")
-    val medicineName: StateFlow<String> = _medicineName
+    val medicineName: StateFlow<String> = _medicineName.asStateFlow()
 
     private val _dosage = MutableStateFlow("")
-    val dosage: StateFlow<String> = _dosage
+    val dosage: StateFlow<String> = _dosage.asStateFlow()
 
-    private val _stock = MutableStateFlow("")
-    val stock: StateFlow<String> = _stock
+    // keep nullable Int state, but accept nullable setters
+    private val _stock = MutableStateFlow<Int?>(null)
+    val stock: StateFlow<Int?> = _stock.asStateFlow()
 
-    private val _minStock = MutableStateFlow("")
-    val minStock: StateFlow<String> = _minStock
+    private val _minStock = MutableStateFlow<Int?>(null)
+    val minStock: StateFlow<Int?> = _minStock.asStateFlow()
 
     private val _medicineType = MutableStateFlow("Tablet")
-    val medicineType: StateFlow<String> = _medicineType
+    val medicineType: StateFlow<String> = _medicineType.asStateFlow()
 
     private val _notes = MutableStateFlow<String?>(null)
-    val notes: StateFlow<String?> = _notes
+    val notes: StateFlow<String?> = _notes.asStateFlow()
 
     private val _medicines = MutableStateFlow<List<MedicineDataWithSchedule>>(emptyList())
-    val medicines: StateFlow<List<MedicineDataWithSchedule>> = _medicines
+    val medicines: StateFlow<List<MedicineDataWithSchedule>> = _medicines.asStateFlow()
 
     private val _selectedMedicine = MutableStateFlow<MedicineDataWithSchedule?>(null)
-    val selectedMedicine: StateFlow<MedicineDataWithSchedule?> = _selectedMedicine
+    val selectedMedicine: StateFlow<MedicineDataWithSchedule?> = _selectedMedicine.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     private val _successMessage = MutableStateFlow<String?>(null)
-    val successMessage: StateFlow<String?> = _successMessage
+    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-//    private val _medicineSchedules = MutableStateFlow<List<Schedule>>(emptyList())
-//    val medicineSchedules = _medicineSchedules.asStateFlow()
+    init { getAllMedicines() }
 
-    fun clearMessages() {
-        _errorMessage.value = null
-        _successMessage.value = null
+    fun setMedicineName(value: String) { _medicineName.value = value }
+    fun setDosage(value: String) { _dosage.value = value }
+    // accept nullable Int so composable can set null when field cleared
+    fun setStock(value: Int?) { _stock.value = value }
+    fun setMinStock(value: Int?) { _minStock.value = value }
+    fun setMedicineType(value: String) { _medicineType.value = value }
+    fun setNotes(value: String?) { _notes.value = value }
+
+    fun resetSuccessMessage() { _successMessage.value = null }
+
+    private fun validateForm(name: String, stock: Int?, minStock: Int?): String? {
+        if (name.isBlank()) return "Medication name is required"
+        if (stock == null) return "Stock must be a number"
+        if (minStock == null) return "Minimum stock must be a number"
+        if (stock < 0) return "Stock cannot be negative"
+        if (minStock < 0) return "Minimum stock cannot be negative"
+        return null
     }
 
     fun getAllMedicines() {
@@ -82,6 +93,15 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             try {
                 val resp = repository.getMedicineById(id)
                 _selectedMedicine.value = resp?.`data`
+                // initialize form fields from selected if needed
+                resp?.`data`?.let { m ->
+                    _medicineName.value = m.name
+                    _dosage.value = m.dosage
+                    _stock.value = m.stock
+                    _minStock.value = m.minStock
+                    _medicineType.value = m.type
+                    _notes.value = m.notes
+                }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "getMedicineById error", e)
                 _errorMessage.value = e.message
@@ -90,10 +110,6 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
-//    fun getSchedulesByMedicineId(medicineId: String): Flow<List<Schedule>> {
-//        return scheduleDao.getSchedulesByMedicineId(medicineId)
-//    }
-
 
     fun getLowStock() {
         viewModelScope.launch {
@@ -112,42 +128,43 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun addMedicine(
-        context: Context,
-        name: String,
-        type: String,
-        dosage: String,
-        stock: Int,
-        minStock: Int,
-        notes: String?
+        name: String = _medicineName.value,
+        type: String = _medicineType.value,
+        dosage: String = _dosage.value,
+        stock: Int = _stock.value?: 0,
+        minStock: Int = _minStock.value?: 0,
+        notes: String? = _notes.value
     ) {
-        Log.d("MedicineViewModel", "addMedicine called: name=$name, type=$type, dosage=$dosage, stock=$stock, minStock=$minStock")
+        val validationError = validateForm(name, _stock.value, _minStock.value)
+        if (validationError != null) {
+            _errorMessage.value = validationError
+            return
+        }
 
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             _successMessage.value = null
+
             try {
-                Log.d("MedicineViewModel", "Calling repository.addMedicine...")
-                val success = repository.addMedicine(
+                repository.addMedicine(
                     name = name,
                     type = type,
                     dosage = dosage,
                     stock = stock,
                     minStock = minStock,
                     notes = notes
-                )
-                Log.d("MedicineViewModel", "Repository response: success=$success")
-
-                if (success) {
-                    clearForm()
-                    _successMessage.value = "Medicine added"
-                    getAllMedicines()
-                } else {
-                    _errorMessage.value = "Failed to add medicine"
-                    Log.e("MedicineViewModel", "Repository returned false")
+                ).also { success ->
+                    if (success) {
+                        clearForm()
+                        _successMessage.value = "Medicine added"
+                        getAllMedicines()
+                    } else {
+                        _errorMessage.value = "Failed to add medicine"
+                    }
                 }
             } catch (e: Exception) {
-                Log.e("MedicineViewModel", "addMedicine error: ${e.message}", e)
+                Log.e("MedicineViewModel", "addMedicine error", e)
                 _errorMessage.value = e.message ?: "An error occurred"
             } finally {
                 _isLoading.value = false
@@ -155,17 +172,25 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateMedicine(id: Int) {
+        val name = _medicineName.value.trim()
+        val type = _medicineType.value
+        val dosage = _dosage.value.trim()
+        val stock = _stock.value
+        val minStock = _minStock.value
+        val notes = _notes.value?.trim()
 
-    fun updateMedicine(
-        context: Context,
-        id: Int,
-        name: String?,
-        type: String?,
-        dosage: String?,
-        stock: Int?,
-        minStock: Int?,
-        notes: String?
-    ) {
+        val validationError = validateForm(name, stock, minStock)
+        if (validationError != null) {
+            _errorMessage.value = validationError
+            return
+        }
+
+        if (dosage.isBlank()) {
+            _errorMessage.value = "Dosage is required"
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -176,19 +201,29 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                     name = name,
                     type = type,
                     dosage = dosage,
-                    stock = stock,
-                    minStock = minStock,
+                    stock = stock!!,
+                    minStock = minStock!!,
                     notes = notes
                 )
+
                 if (success) {
-                    _successMessage.value = "Medicine updated"
-                    getAllMedicines()
+                    // 1. Ambil data terbaru dari repository
+                    val resp = repository.getAllMedicines()
+                    val newList = resp?.`data` ?: emptyList()
+
+                    // 2. Update list utama (gunakan .toList() untuk memastikan instance baru)
+                    _medicines.value = newList.toList()
+
+                    // 3. PENTING: Update juga selectedMedicine agar Detail View sinkron
+                    _selectedMedicine.value = newList.find { it.id == id }
+
+                    _successMessage.value = "Medicine updated successfully"
                 } else {
                     _errorMessage.value = "Failed to update medicine"
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "updateMedicine error", e)
-                _errorMessage.value = e.message
+                _errorMessage.value = e.message ?: "An error occurred while updating"
             } finally {
                 _isLoading.value = false
             }
@@ -217,12 +252,17 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun clearForm() {
+    fun clearForm() {
         _medicineName.value = ""
         _dosage.value = ""
-        _stock.value = ""
-        _minStock.value = ""
+        _stock.value = null
+        _minStock.value = null
         _medicineType.value = "Tablet"
         _notes.value = null
+    }
+    fun resetState() {
+        _successMessage.value = null
+        _errorMessage.value = null
+        _isLoading.value = false
     }
 }
