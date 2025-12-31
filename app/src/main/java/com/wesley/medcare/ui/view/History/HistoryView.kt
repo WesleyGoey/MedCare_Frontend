@@ -1,6 +1,8 @@
 package com.wesley.medcare.ui.view.History
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -24,14 +26,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
+// Color Palette
 private val Teal500 = Color(0xFF2FB6A3)
-private val TealAlpha20 = Color(0xFF2FB6A3).copy(alpha = 0.2f)
-private val Yellow500 = Color(0xFFFFC107)
+private val TealBorder = Color(0xFF2FB6A3).copy(alpha = 0.25f)
+private val TealLightBg = Color(0xFFF0F9F8)
+
 private val Red500 = Color(0xFFFF5A5F)
-private val RedAlpha20 = Color(0xFFFF5A5F).copy(alpha = 0.2f)
-private val GrayText = Color(0xFF757575)
+private val RedBorder = Color(0xFFFF5A5F).copy(alpha = 0.25f)
+private val RedLightBg = Color(0xFFFFF5F5)
+
+private val Yellow500 = Color(0xFFFFC107)
+private val GrayText = Color(0xFF8A94A6)
 private val DarkText = Color(0xFF1A1A2E)
-private val GrayBackground = Color(0xFFF5F7FA) // Sesuai ProfileView
+private val GrayBackground = Color(0xFFF5F7FA)
 
 @Composable
 fun HistoryView(
@@ -42,12 +49,12 @@ fun HistoryView(
         modifier = Modifier
             .fillMaxSize()
             .background(GrayBackground),
-        // Padding horizontal 24.dp agar sejajar dengan Medicine/Profile View
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        // Padding horizontal 24.dp agar sejajar dengan Medicine/ProfileView
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
-            Column(modifier = Modifier.padding(top = 20.dp)) {
+            Column(modifier = Modifier.padding(top = 16.dp)) {
                 Text(
                     text = "History",
                     fontSize = 28.sp,
@@ -70,6 +77,7 @@ fun HistoryView(
                 SummaryCard(
                     icon = Icons.Default.TrendingUp,
                     iconColor = Teal500,
+                    borderColor = TealBorder,
                     value = "85%",
                     label = "Compliance",
                     modifier = Modifier.weight(1f)
@@ -77,6 +85,7 @@ fun HistoryView(
                 SummaryCard(
                     icon = Icons.Default.DateRange,
                     iconColor = Red500,
+                    borderColor = RedBorder,
                     value = "2",
                     label = "Missed",
                     modifier = Modifier.weight(1f)
@@ -98,6 +107,7 @@ fun HistoryView(
 fun SummaryCard(
     icon: ImageVector,
     iconColor: Color,
+    borderColor: Color,
     value: String,
     label: String,
     modifier: Modifier = Modifier
@@ -106,7 +116,9 @@ fun SummaryCard(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        // Elevasi dikembalikan ke 2.dp sesuai permintaan awal
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, borderColor)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -143,7 +155,8 @@ fun WeeklyComplianceCard() {
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0).copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
@@ -174,9 +187,9 @@ fun WeeklyComplianceCard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LegendItem(color = Teal500, label = "90-100%")
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 LegendItem(color = Yellow500, label = "70-89%")
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 LegendItem(color = Red500, label = "Below 70%")
             }
         }
@@ -236,7 +249,8 @@ fun RecentActivityCard() {
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0).copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
@@ -260,27 +274,29 @@ fun RecentActivityCard() {
 
 @Composable
 fun ActivityItem(time: String, medicine: String, isTaken: Boolean) {
-    val bgColor = if (isTaken) TealAlpha20 else RedAlpha20
+    val bgColor = if (isTaken) TealLightBg else RedLightBg
+    val borderColor = if (isTaken) TealBorder else RedBorder
     val iconColor = if (isTaken) Teal500 else Red500
     val icon = if (isTaken) Icons.Default.Check else Icons.Default.Close
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(bgColor)
-            .padding(16.dp),
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(text = time, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
-            Text(text = medicine, fontSize = 13.sp, color = GrayText)
+            Text(text = time, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+            Text(text = medicine, fontSize = 14.sp, color = GrayText)
         }
 
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(36.dp)
                 .clip(CircleShape)
                 .background(iconColor),
             contentAlignment = Alignment.Center
@@ -293,10 +309,4 @@ fun ActivityItem(time: String, medicine: String, isTaken: Boolean) {
             )
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true, showSystemUi = true)
-private fun HistoryPreview() {
-    HistoryView()
 }
