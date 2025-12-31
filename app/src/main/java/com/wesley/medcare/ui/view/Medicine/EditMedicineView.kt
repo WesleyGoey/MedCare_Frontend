@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
@@ -20,8 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.wesley.medcare.ui.view.components.BackTopAppBar
@@ -49,6 +50,9 @@ fun EditMedicineView(
     val minStock by viewModel.minStock.collectAsState()
     val selectedType by viewModel.medicineType.collectAsState()
     val notes by viewModel.notes.collectAsState()
+
+    // State untuk kontrol Popup Info
+    var showStockInfo by remember { mutableStateOf(false) }
 
     val medicineTypes =
         listOf("Tablet", "Capsule", "Syrup", "Drops", "Ointment", "Patch", "Custom Type")
@@ -110,7 +114,7 @@ fun EditMedicineView(
                     .fillMaxSize()
                     .background(Color(0xFFF5F7FA))
                     .padding(paddingValues)
-                    .verticalScroll(scrollState) // Menggunakan scrollState yang didefinisikan
+                    .verticalScroll(scrollState)
                     .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
                 Text(
@@ -235,14 +239,44 @@ fun EditMedicineView(
                                         fontSize = 14.sp,
                                         color = Color(0xFF5F6368)
                                     )
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = "Info",
-                                        tint = Color(0xFF457AF9),
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .padding(start = 4.dp)
-                                    )
+                                    // BAGIAN INFO YANG DITAMBAHKAN
+                                    Box {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = "Info",
+                                            tint = Color(0xFF457AF9),
+                                            modifier = Modifier
+                                                .size(20.dp) // Ukuran disamakan dengan AddMedicineView
+                                                .padding(start = 4.dp)
+                                                .clickable { showStockInfo = !showStockInfo }
+                                        )
+                                        if (showStockInfo) {
+                                            Popup(
+                                                alignment = Alignment.TopStart,
+                                                offset = IntOffset(x = -255, y = 220),
+                                                onDismissRequest = { showStockInfo = false }
+                                            ) {
+                                                Card(
+                                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF457AF9)),
+                                                    shape = RoundedCornerShape(16.dp),
+                                                    modifier = Modifier.width(170.dp),
+                                                    elevation = CardDefaults.cardElevation(8.dp)
+                                                ) {
+                                                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                                                        Icon(Icons.Default.Info, null, tint = Color.White, modifier = Modifier.size(16.dp).padding(top = 2.dp))
+                                                        Spacer(Modifier.width(8.dp))
+                                                        Text(
+                                                            text = "When stock reaches this number, you'll receive a low stock alert notification.",
+                                                            color = Color.White,
+                                                            fontSize = 12.sp,
+                                                            lineHeight = 16.sp,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 OutlinedTextField(
                                     value = minStock?.toString() ?: "",
