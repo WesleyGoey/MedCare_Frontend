@@ -3,7 +3,9 @@ package com.wesley.medcare.ui.route
 
 import android.app.Application
 import android.widget.Toast
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -44,7 +47,9 @@ import com.wesley.medcare.ui.view.Schedule.ReminderView
 import com.wesley.medcare.ui.view.History.HistoryView
 import com.wesley.medcare.ui.view.Medicine.AddMedicineView
 import com.wesley.medcare.ui.view.Medicine.EditMedicineView
+import com.wesley.medcare.ui.view.Medicine.EditProfileView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
+import com.wesley.medcare.ui.view.Schedule.AddReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
@@ -57,11 +62,14 @@ enum class AppView(
     RegisterView("Register"),
     HomeView("Home", Icons.Filled.Home),
     MedicineView("Meds", Icons.Filled.MedicalServices),
+    AddMedicineView("Add Medication"),
+    MedicineInfoView("Medication Info"),
+    EditMedicineView("Edit Medication"),
     ReminderView("Remind", Icons.Filled.Notifications),
+    AddReminderView("Add Reminder"),
     HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
-    AddMedicineView("Add Medication"),
-    EditMedicineView("Edit Medication")
+    EditProfileView("Edit Profile")
 }
 
 data class BottomNavItem(
@@ -158,32 +166,32 @@ fun AppRoute() {
             composable(route = AppView.ReminderView.name) {
                 ReminderView(navController = navController)
             }
+
+            composable(route = AppView.AddReminderView.name) {
+                AddReminderView(onBack = { navController.popBackStack() })
+            }
             composable(route = AppView.HistoryView.name) {
                 HistoryView(navController = navController)
             }
             composable(route = AppView.ProfileView.name) {
                 ProfileView(navController = navController)
             }
+            composable(route = AppView.EditProfileView.name) {
+                EditProfileView(navController = navController)
+            }
             composable(route = AppView.AddMedicineView.name) {
                 AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
             composable(
-                route = "MedicineInfoView/{medicineId}",
-                arguments = listOf(
-                    navArgument("medicineId") { type = NavType.IntType }
-                )
+                route = "${AppView.MedicineInfoView.name}/{medicineId}",
+                arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
-                MedicineInfoView(
-                    navController = navController,
-                    medicineId = medicineId
-                )
+                MedicineInfoView(navController = navController, medicineId = medicineId)
             }
-<<<<<<< HEAD
-=======
-            // Di file AppRoute.kt atau yang sejenisnya
+
             composable(
-                route = "EditMedicineView/{medicineId}",
+                route = "${AppView.EditMedicineView.name}/{medicineId}",
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
@@ -191,7 +199,6 @@ fun AppRoute() {
             }
 
 
->>>>>>> wes
         }
     }
 }
@@ -237,22 +244,22 @@ fun MyBottomNavigationBar(
     currentDestination: NavDestination?,
     items: List<BottomNavItem>
 ) {
+    // Definisi warna berdasarkan palet yang diberikan
+    val activeColor = Color(0xFF457AF9)   // Biru Aktif
+    val inactiveColor = Color(0xFF8A94A6) // Abu-abu Inaktif
+
     NavigationBar(
         containerColor = Color.White,
-        contentColor = Color(0xFF457AF9)
+        tonalElevation = 8.dp, // Memberikan bayangan halus di atas bar
+        modifier = Modifier.height(80.dp) // Menyesuaikan tinggi agar proporsional dengan ikon
     ) {
         items.forEach { item ->
+            val isSelected = currentDestination?.hierarchy?.any {
+                it.route == item.view.name
+            } == true
+
             NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = item.view.icon!!,
-                        contentDescription = item.label
-                    )
-                },
-                label = { Text(item.label) },
-                selected = currentDestination?.hierarchy?.any {
-                    it.route == item.view.name
-                } == true,
+                selected = isSelected,
                 onClick = {
                     navController.navigate(item.view.name) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -261,7 +268,31 @@ fun MyBottomNavigationBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                icon = {
+                    Icon(
+                        imageVector = item.view.icon!!,
+                        contentDescription = item.label,
+                        modifier = Modifier.size(26.dp), // Ukuran ikon sesuai gambar
+                        tint = if (isSelected) activeColor else inactiveColor
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        fontSize = 12.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) activeColor else inactiveColor
+                    )
+                },
+                // Menghilangkan pill indicator agar tampilan persis seperti gambar
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = Color.Transparent,
+                    selectedIconColor = activeColor,
+                    unselectedIconColor = inactiveColor,
+                    selectedTextColor = activeColor,
+                    unselectedTextColor = inactiveColor
+                )
             )
         }
     }

@@ -51,22 +51,39 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-//    fun getSchedulesByDate(date: String) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            _errorMessage.value = null
-//            try {
-//                val response = repository.getScheduleWithDetailsByDate(date)
-//                _schedules.value = response?.data ?: emptyList()
-//            } catch (e: Exception) {
-//                Log.e("ScheduleViewModel", "getSchedulesByDate error", e)
-//                _errorMessage.value = e.message
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
-//
+
+    fun getSchedulesByDate(date: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val response = repository.getScheduleWithDetailsByDate(date)
+                _schedules.value = response?.data ?: emptyList()
+            } catch (e: Exception) {
+                Log.e("ScheduleViewModel", "Error fetching by date", e)
+                _errorMessage.value = "Gagal memuat jadwal"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun markAsTaken(detailId: Int, date: String) {
+        viewModelScope.launch {
+            // Logika: Panggil API untuk menandai selesai.
+            // Jika API belum ada, kita bisa asumsikan ini sukses dan refresh data.
+            try {
+                // Contoh jika ada service delete atau update status:
+                // repository.deleteScheduleDetails(detailId)
+
+                _successMessage.value = "Obat berhasil diminum!"
+                getSchedulesByDate(date) // Refresh data
+            } catch (e: Exception) {
+                _errorMessage.value = "Gagal memperbarui status"
+            }
+        }
+    }
+
 //    fun getScheduleById(scheduleId: Int) {
 //        viewModelScope.launch {
 //            _isLoading.value = true
