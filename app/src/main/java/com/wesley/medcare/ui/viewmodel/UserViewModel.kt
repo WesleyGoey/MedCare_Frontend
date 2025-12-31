@@ -1,13 +1,12 @@
-// kotlin
 package com.wesley.medcare.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wesley.medcare.data.container.AppContainer
+import com.wesley.medcare.data.dto.User.UpdateUserRequest
 import com.wesley.medcare.ui.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +15,6 @@ import java.io.IOException
 
 class UserViewModel(application: Application) : AndroidViewModel(application) {
 
-    // State for user data (token, profile, etc.)
     private val repository = AppContainer(application).userRepository
 
     private val _userState = MutableStateFlow(User())
@@ -34,6 +32,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                 result.onSuccess { loginResponse ->
                     val token = loginResponse.data.token
                     if (!token.isNullOrBlank()) {
+                        // Success: Clear any previous error
                         _userState.value = _userState.value.copy(
                             isError = false,
                             errorMessage = null
@@ -41,19 +40,19 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         _userState.value = _userState.value.copy(
                             isError = true,
-                            errorMessage = "Login failed: missing token"
+                            errorMessage = "Login failed: Token not found"
                         )
                     }
                 }.onFailure { exception ->
                     _userState.value = _userState.value.copy(
                         isError = true,
-                        errorMessage = exception.message ?: "Login gagal. Cek email/password."
+                        errorMessage = exception.message ?: "Login failed. Please check your email and password."
                     )
                 }
             } catch (e: Exception) {
                 _userState.value = _userState.value.copy(
                     isError = true,
-                    errorMessage = e.message ?: "Login gagal. Cek email/password."
+                    errorMessage = e.message ?: "An unexpected error occurred during login."
                 )
             } finally {
                 _isLoading.value = false
@@ -68,23 +67,25 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = repository.register(name, age, phone, email, password)
                 if (response.isSuccessful) {
-                    // registration succeeded — update state accordingly
-                    _userState.value = _userState.value.copy(isError = false, errorMessage = null)
+                    _userState.value = _userState.value.copy(
+                        isError = false,
+                        errorMessage = "Registration successful"
+                    )
                 } else {
                     _userState.value = _userState.value.copy(
                         isError = true,
-                        errorMessage = "Register failed: ${response.code()}"
+                        errorMessage = "Registration failed. Status code: ${response.code()}"
                     )
                 }
             } catch (e: IOException) {
                 _userState.value = _userState.value.copy(
                     isError = true,
-                    errorMessage = "Tidak ada koneksi internet."
+                    errorMessage = "No internet connection. Please check your network."
                 )
             } catch (e: Exception) {
                 _userState.value = _userState.value.copy(
                     isError = true,
-                    errorMessage = e.message ?: "Registrasi gagal."
+                    errorMessage = e.message ?: "Registration failed due to an unknown error."
                 )
             } finally {
                 _isLoading.value = false
@@ -99,10 +100,8 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = repository.getProfile()
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    val data = body?.`data`
+                    val data = response.body()?.data
                     if (data != null) {
-                        // update userState with profile fields (adjust field names if your User model differs)
                         _userState.value = _userState.value.copy(
                             name = data.name,
                             email = data.email,
@@ -111,28 +110,17 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                             isError = false,
                             errorMessage = null
                         )
-                    } else {
-                        _userState.value = _userState.value.copy(
-                            isError = true,
-                            errorMessage = "Empty profile data"
-                        )
                     }
                 } else {
                     _userState.value = _userState.value.copy(
                         isError = true,
-                        errorMessage = "Get profile failed: ${response.message()}"
+                        errorMessage = "Failed to load profile. Error code: ${response.code()}"
                     )
                 }
-            } catch (e: IOException) {
-                _userState.value = _userState.value.copy(
-                    isError = true,
-                    errorMessage = "Tidak ada koneksi internet."
-                )
             } catch (e: Exception) {
-                Log.e("UserViewModel", "getProfile error", e)
                 _userState.value = _userState.value.copy(
                     isError = true,
-                    errorMessage = e.message ?: "Gagal mengambil profil."
+                    errorMessage = e.message ?: "Network connection problem."
                 )
             } finally {
                 _isLoading.value = false
@@ -140,47 +128,73 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Tambahkan fungsi ini di dalam UserViewModel.kt
+    // Update user profile
+    fun updateProfile(
+        name: String,
+        age: Int,
+        phone: String,
+        currentPassword: String?,
+        newPassword: String?
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val request = UpdateUserRequest(
+                    name = name,
+                    age = age,
+                    phone = phone,
+                    currentPassword = currentPassword,
+                    newPassword = newPassword
+                )
 
-//    fun updateProfile(name: String, age: Int, phone: String, email: String, currentPassword: String?, newPassword: String?) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            try {
-//                // Asumsi repository memiliki fungsi updateProfile
-//                // Sesuaikan parameter dengan kebutuhan API-mu
-//                val response = repository.updateProfile(name, age, phone, email, currentPassword, newPassword)
-//
-//                if (response.isSuccessful) {
-//                    // Refresh data profil lokal setelah sukses update
-//                    getProfile()
-//                    _userState.value = _userState.value.copy(isError = false, errorMessage = "Profile updated successfully")
-//                } else {
-//                    _userState.value = _userState.value.copy(isError = true, errorMessage = "Update failed: ${response.code()}")
-//                }
-//            } catch (e: Exception) {
-//                _userState.value = _userState.value.copy(isError = true, errorMessage = e.message ?: "Gagal update profil")
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
+                val response = repository.updateProfile(request)
+
+                if (response.isSuccessful) {
+                    // Refresh profile data to keep UI synced
+                    getProfile()
+                    _userState.value = _userState.value.copy(
+                        isError = false,
+                        errorMessage = "Profile updated successfully"
+                    )
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: ""
+                    val displayError = if (errorMsg.contains("password", ignoreCase = true)) {
+                        "Current password is incorrect"
+                    } else {
+                        "Failed to update profile. Please try again."
+                    }
+                    _userState.value = _userState.value.copy(
+                        isError = true,
+                        errorMessage = displayError
+                    )
+                }
+            } catch (e: Exception) {
+                _userState.value = _userState.value.copy(
+                    isError = true,
+                    errorMessage = e.message ?: "System error occurred during update."
+                )
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Logout user
     fun logout(context: Context) {
         try {
-            // 1. Hapus token di repository (Prefs di dalam repo)
             repository.clearToken()
-
-            // 2. Pastikan shared preferences benar-benar bersih
             val sharedPref = context.getSharedPreferences("medcare_prefs", Context.MODE_PRIVATE)
             sharedPref.edit().clear().apply()
 
-            // 3. Reset state user di memori UI agar UI kembali ke kondisi awal
+            // Reset UI state
             _userState.value = User()
-
-            Log.d("UserViewModel", "Logout clean & successful")
+            Log.d("UserViewModel", "Logout successful")
         } catch (e: Exception) {
             Log.e("UserViewModel", "Error during logout: ${e.message}")
         }
     }
+
+    // Clear error state (called from UI after showing Toast/Snackbar)
     fun resetError() {
         _userState.value = _userState.value.copy(isError = false, errorMessage = null)
     }

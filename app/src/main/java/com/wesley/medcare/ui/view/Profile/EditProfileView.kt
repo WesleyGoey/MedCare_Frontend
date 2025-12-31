@@ -1,6 +1,7 @@
 package com.wesley.medcare.ui.view.Medicine
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -33,16 +35,17 @@ fun EditProfileView(
     navController: NavHostController,
     userViewModel: UserViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val userState by userViewModel.userState.collectAsState()
+    val isLoading by userViewModel.isLoading.collectAsState()
     val scrollState = rememberScrollState()
 
-    // State Fields - Logika Age: jika 0 maka "" agar placeholder terlihat
+    // State Fields untuk TextField
     var name by remember { mutableStateOf(userState.name) }
     var age by remember {
         mutableStateOf(if (userState.age == 0) "" else userState.age.toString())
     }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf(userState.email) }
+    var phone by remember { mutableStateOf(userState.phone) }
 
     // Password States
     var currentPassword by remember { mutableStateOf("") }
@@ -53,6 +56,31 @@ fun EditProfileView(
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    // LOGIKA 1: Ambil data profil saat layar dibuka
+    LaunchedEffect(Unit) {
+        userViewModel.getProfile()
+    }
+
+    // LOGIKA 2: Sinkronisasi data userState ke TextField (Pre-filled)
+    LaunchedEffect(userState) {
+        if (userState.name.isNotEmpty()) {
+            name = userState.name
+            age = if (userState.age == 0) "" else userState.age.toString()
+            phone = userState.phone
+        }
+    }
+
+    // LOGIKA 3: Listener Feedback (Toast & Navigasi)
+    LaunchedEffect(userState.errorMessage) {
+        userState.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            if (message == "Profile updated successfully") {
+                navController.popBackStack()
+            }
+            userViewModel.resetError()
+        }
+    }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = Color.Transparent,
@@ -83,7 +111,6 @@ fun EditProfileView(
             Text(text = "Edit Profile", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
             Text(text = "Update your personal information", fontSize = 14.sp, color = Color(0xFF757575), modifier = Modifier.padding(top = 4.dp, bottom = 24.dp))
 
-            // Profile Image Section
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier.size(100.dp).clip(CircleShape).background(Color(0xFF457AF9)),
@@ -103,8 +130,6 @@ fun EditProfileView(
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-
-                    // 1. FULL NAME
                     Text("Full Name", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -119,7 +144,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 2. AGE
                     Text("Age", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -135,7 +159,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 3. PHONE
                     Text("Phone Number", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -147,22 +170,6 @@ fun EditProfileView(
                         colors = fieldColors,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 4. EMAIL
-                    Text("Email", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = email, onValueChange = { email = it },
-                        placeholder = { Text("your@email.com", color = Color(0xFF757575)) },
-                        leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Color(0xFF457AF9)) },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = fieldColors,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                 }
             }
@@ -180,7 +187,6 @@ fun EditProfileView(
                     Text("Change Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // CURRENT PASSWORD
                     Text("Current Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -201,7 +207,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // NEW PASSWORD
                     Text("New Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -222,7 +227,6 @@ fun EditProfileView(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // CONFIRM PASSWORD
                     Text("Confirm New Password", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -254,18 +258,47 @@ fun EditProfileView(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                    enabled = !isLoading
                 ) {
                     Text("Cancel", color = Color(0xFF5F6368), fontWeight = FontWeight.Bold)
                 }
 
                 Button(
-                    onClick = { /* Implement simpan */ },
+                    onClick = {
+                        // LOGIKA VALIDASI PASSWORD
+                        val isChangingPassword = currentPassword.isNotEmpty() || newPassword.isNotEmpty() || confirmPassword.isNotEmpty()
+
+                        if (isChangingPassword) {
+                            if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                                Toast.makeText(context, "Semua kolom password harus diisi untuk ganti password", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (newPassword != confirmPassword) {
+                                Toast.makeText(context, "Password baru dan konfirmasi tidak cocok", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                        }
+
+                        // Kirim data ke ViewModel
+                        userViewModel.updateProfile(
+                            name = name,
+                            age = age.toIntOrNull() ?: 0,
+                            phone = phone,
+                            currentPassword = if (isChangingPassword) currentPassword else null,
+                            newPassword = if (isChangingPassword) newPassword else null
+                        )
+                    },
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
+                    enabled = !isLoading
                 ) {
-                    Text("Save Changes", color = Color.White, fontWeight = FontWeight.Bold)
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Save Changes", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(40.dp))
