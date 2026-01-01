@@ -64,11 +64,12 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
     fun setNotes(value: String?) { _notes.value = value }
 
     fun resetSuccessMessage() { _successMessage.value = null }
+    fun resetErrorMessage() { _errorMessage.value = null } // Tambahan untuk reset error di UI
 
     private fun validateForm(name: String, stock: Int?, minStock: Int?): String? {
-        if (name.isBlank()) return "Medication name is required"
-        if (stock == null) return "Stock must be a number"
-        if (minStock == null) return "Minimum stock must be a number"
+        if (name.isBlank()) return "Medicine name is required"
+        if (stock == null) return "Stock must be a valid number"
+        if (minStock == null) return "Minimum stock must be a valid number"
         if (stock < 0) return "Stock cannot be negative"
         if (minStock < 0) return "Minimum stock cannot be negative"
         return null
@@ -85,7 +86,7 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 _medicines.value = resp?.data ?: emptyList()
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "getAllMedicines error", e)
-                _errorMessage.value = e.message ?: "Failed to load medicines"
+                _errorMessage.value = "Failed to load medicines. Please check your connection."
             } finally {
                 _isLoading.value = false
             }
@@ -96,12 +97,11 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            _selectedMedicine.value = null // Reset agar detail screen trigger loading
+            _selectedMedicine.value = null
             try {
                 val resp = repository.getMedicineById(id)
                 _selectedMedicine.value = resp?.data
 
-                // Prefill form fields dari data yang di-fetch
                 resp?.data?.let { m ->
                     _medicineName.value = m.name
                     _dosage.value = m.dosage
@@ -112,7 +112,7 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "getMedicineById error", e)
-                _errorMessage.value = e.message
+                _errorMessage.value = "Failed to retrieve medicine details"
             } finally {
                 _isLoading.value = false
             }
@@ -143,13 +143,13 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 if (success) {
                     clearForm()
                     _successMessage.value = "Medicine added successfully"
-                    getAllMedicines() // Refresh list utama
+                    getAllMedicines()
                 } else {
-                    _errorMessage.value = "Failed to add medicine"
+                    _errorMessage.value = "Failed to add medicine. Please try again."
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "addMedicine error", e)
-                _errorMessage.value = e.message ?: "An error occurred"
+                _errorMessage.value = e.message ?: "An unexpected error occurred while adding medicine"
             } finally {
                 _isLoading.value = false
             }
@@ -179,18 +179,16 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
                 )
 
                 if (success) {
-                    // Update SelectedMedicine supaya InfoView langsung berubah
                     val updatedData = repository.getMedicineById(id)?.data
                     _selectedMedicine.value = updatedData
-
                     _successMessage.value = "Medicine updated successfully"
-                    getAllMedicines() // Refresh list untuk MedicineView
+                    getAllMedicines()
                 } else {
                     _errorMessage.value = "Failed to update medicine"
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "updateMedicine error", e)
-                _errorMessage.value = e.message ?: "An error occurred while updating"
+                _errorMessage.value = e.message ?: "An error occurred while updating medicine"
             } finally {
                 _isLoading.value = false
             }
@@ -205,14 +203,14 @@ class MedicineViewModel(application: Application) : AndroidViewModel(application
             try {
                 val success = repository.deleteMedicine(id)
                 if (success) {
-                    _successMessage.value = "Medicine deleted"
+                    _successMessage.value = "Medicine deleted successfully"
                     getAllMedicines()
                 } else {
                     _errorMessage.value = "Failed to delete medicine"
                 }
             } catch (e: Exception) {
                 Log.e("MedicineViewModel", "deleteMedicine error", e)
-                _errorMessage.value = e.message
+                _errorMessage.value = "An error occurred while deleting medicine"
             } finally {
                 _isLoading.value = false
             }
