@@ -10,11 +10,13 @@ import com.wesley.medcare.data.dto.Schedule.TimeDetailData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class ScheduleViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = AppContainer(application).scheduleRepository
-
+    private val historyRepository = AppContainer(application).historyRepository
     private val _schedules = MutableStateFlow<List<DetailData>>(emptyList())
     val schedules: StateFlow<List<DetailData>> = _schedules
 
@@ -60,8 +62,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
                 val response = repository.getScheduleWithDetailsByDate(date)
                 _schedules.value = response?.data ?: emptyList()
             } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "Error fetching by date", e)
-                _errorMessage.value = "Gagal memuat jadwal"
+                _errorMessage.value = "Failed to load schedules"
             } finally {
                 _isLoading.value = false
             }
@@ -70,17 +71,24 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
 
     fun markAsTaken(detailId: Int, date: String) {
         viewModelScope.launch {
-            // Logika: Panggil API untuk menandai selesai.
-            // Jika API belum ada, kita bisa asumsikan ini sukses dan refresh data.
-            try {
-                // Contoh jika ada service delete atau update status:
-                // repository.deleteScheduleDetails(detailId)
+            _isLoading.value = true
 
-                _successMessage.value = "Obat berhasil diminum!"
-                getSchedulesByDate(date) // Refresh data
-            } catch (e: Exception) {
-                _errorMessage.value = "Gagal memperbarui status"
+            // Mengambil waktu saat ini (LocalTime) untuk timeTaken
+            val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+
+            val success = historyRepository.markAsTaken(
+                detailId = detailId,
+                date = date,
+                timeTaken = currentTime
+            )
+
+            if (success) {
+                _successMessage.value = "Medicine recorded successfully!"
+                getSchedulesByDate(date) // Refresh list
+            } else {
+                _errorMessage.value = "Failed to record medicine"
             }
+            _isLoading.value = false
         }
     }
 

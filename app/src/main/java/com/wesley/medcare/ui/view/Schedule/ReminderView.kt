@@ -38,18 +38,28 @@ fun ReminderView(
     val context = LocalContext.current
     val reminders by viewModel.schedules.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val successMessage by viewModel.successMessage.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    // State Tanggal
     var pickedDate by remember { mutableStateOf(LocalDate.now()) }
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy")
+    val displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", Locale.ENGLISH)
 
-    // Fetch data otomatis saat tanggal berubah
     LaunchedEffect(pickedDate) {
         viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
     }
 
-    // Dialog Tanggal
+    LaunchedEffect(successMessage, errorMessage) {
+        successMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
+
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
@@ -66,7 +76,7 @@ fun ReminderView(
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(30.dp))
+                Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(30.dp))
             }
         },
         containerColor = Color(0xFFF5F7FA)
@@ -78,17 +88,9 @@ fun ReminderView(
                 .padding(horizontal = 20.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Jadwal Obat",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A2E)
-            )
-
+            Text("Medication Schedule", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Card Pemilih Tanggal
             DateSelectorCard(
                 formattedDate = pickedDate.format(displayFormatter),
                 onClick = { datePickerDialog.show() }
@@ -102,7 +104,7 @@ fun ReminderView(
                 }
             } else if (reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Tidak ada jadwal untuk tanggal ini", color = Color.Gray)
+                    Text("No medication for today", color = Color.Gray)
                 }
             } else {
                 LazyColumn(
@@ -128,29 +130,21 @@ fun ReminderView(
 @Composable
 fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF457AF9).copy(alpha = 0.1f)),
+                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF457AF9).copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.CalendarToday, null, tint = Color(0xFF457AF9), modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Tanggal Terpilih", fontSize = 11.sp, color = Color.Gray)
+                Text("Selected Date", fontSize = 11.sp, color = Color.Gray)
                 Text(formattedDate, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
             Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.Gray)
@@ -166,25 +160,11 @@ fun ReminderTimelineItem(
     onMarkAsTaken: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        // Garis Timeline Samping
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF457AF9).copy(alpha = 0.2f))
-                    .border(2.dp, Color(0xFF457AF9), CircleShape)
-            )
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(100.dp)
-                    .background(Color(0xFF457AF9).copy(alpha = 0.1f))
-            )
+            Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color(0xFF457AF9).copy(alpha = 0.2f)).border(2.dp, Color(0xFF457AF9), CircleShape))
+            Box(modifier = Modifier.width(2.dp).height(110.dp).background(Color(0xFF457AF9).copy(alpha = 0.1f)))
         }
-
         Spacer(modifier = Modifier.width(16.dp))
-
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -192,24 +172,18 @@ fun ReminderTimelineItem(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.AccessTime, null, tint = Color(0xFF457AF9), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(time, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
-                    Text("Belum Diminum", fontSize = 12.sp, color = Color(0xFF457AF9))
+                    Text("Pending", fontSize = 12.sp, color = Color(0xFF457AF9))
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(medicineName, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
                 Text(dosage, fontSize = 14.sp, color = Color.Gray)
-
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Button(
                     onClick = onMarkAsTaken,
                     modifier = Modifier.fillMaxWidth(),
@@ -218,7 +192,7 @@ fun ReminderTimelineItem(
                 ) {
                     Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Tandai Selesai")
+                    Text("Mark as Taken")
                 }
             }
         }
