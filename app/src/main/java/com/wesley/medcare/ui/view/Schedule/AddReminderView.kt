@@ -46,9 +46,6 @@ fun AddReminderView(
     var showMedicineDropdown by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
-    // Karena konsep baru adalah pasti harian
-    val scheduleType = "DAILY"
-
     var showDatePicker by remember { mutableStateOf(false) }
     var timeSlots by remember { mutableStateOf(listOf("08:00")) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
@@ -214,10 +211,10 @@ fun AddReminderView(
                             timeSlots.isEmpty() -> Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
                             else -> {
                                 val details = timeSlots.map { TimeDetailData(time = it) }
+                                // PERBAIKAN: Menghapus scheduleType dari parameter call
                                 scheduleViewModel.createSchedule(
                                     medicineId = selectedMedicineId,
                                     startDate = selectedDate.toString(),
-                                    scheduleType = scheduleType, // Otomatis "DAILY"
                                     details = details
                                 )
                             }
@@ -238,7 +235,7 @@ fun AddReminderView(
         }
     }
 
-    // Dialogs
+    // Dialogs (DatePicker & TimePicker tetap sama)
     if (showTimePickerDialog) {
         TimePickerDialog(
             initialTime = if (selectedTimeIndex >= 0) timeSlots[selectedTimeIndex] else "08:00",
@@ -261,7 +258,6 @@ fun AddReminderView(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        // Perbaikan konversi milidetik ke LocalDate
                         selectedDate = java.time.Instant.ofEpochMilli(it)
                             .atZone(java.time.ZoneId.systemDefault())
                             .toLocalDate()
@@ -273,6 +269,7 @@ fun AddReminderView(
     }
 }
 
+// TimePickerDialog tetap sama seperti sebelumnya
 @Composable
 fun TimePickerDialog(
     initialTime: String,
@@ -293,13 +290,10 @@ fun TimePickerDialog(
             },
             hour,
             minute,
-            true // 24-hour format
+            true
         )
         timePickerDialog.setOnDismissListener { onDismiss() }
         timePickerDialog.show()
-
-        onDispose {
-            timePickerDialog.dismiss()
-        }
+        onDispose { timePickerDialog.dismiss() }
     }
 }

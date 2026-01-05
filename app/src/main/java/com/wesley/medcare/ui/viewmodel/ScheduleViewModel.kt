@@ -92,47 +92,38 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-//    fun getScheduleById(scheduleId: Int) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            _errorMessage.value = null
-//            try {
-//                val response = repository.getScheduleWithDetailsById(scheduleId)
-//                _selectedSchedule.value = response?.data
-//            } catch (e: Exception) {
-//                Log.e("ScheduleViewModel", "getScheduleById error", e)
-//                _errorMessage.value = e.message
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
+    private val _editingScheduleDetails = MutableStateFlow<List<DetailData>>(emptyList())
+    val editingScheduleDetails: StateFlow<List<DetailData>> = _editingScheduleDetails
+
+    fun getScheduleById(scheduleId: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val response = repository.getScheduleWithDetailsById(scheduleId)
+                // Backend mengembalikan List<DetailData> untuk 1 scheduleId
+                _editingScheduleDetails.value = response?.data ?: emptyList()
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch schedule data"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
     fun createSchedule(
         medicineId: Int,
         startDate: String,
-        scheduleType: String,
         details: List<TimeDetailData>
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            _successMessage.value = null
             try {
-                // Normalize scheduleType to uppercase to match backend expectations
-                val normalizedType = scheduleType.uppercase()
-
-                // Validate scheduleType before sending
-                if (normalizedType != "DAILY" && normalizedType != "WEEKLY") {
-                    _errorMessage.value = "Invalid schedule type. Must be DAILY or WEEKLY"
-                    _isLoading.value = false
-                    return@launch
-                }
-
+                // Kita tidak perlu lagi kirim scheduleType karena backend sudah pasti DAILY
                 val success = repository.createScheduleWithDetails(
                     medicineId = medicineId,
                     startDate = startDate,
-                    scheduleType = normalizedType,
+                    scheduleType = "DAILY", // Kirim default atau hapus param di repository
                     details = details
                 )
                 if (success) {
@@ -142,7 +133,6 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
                     _errorMessage.value = "Failed to add schedule"
                 }
             } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "addSchedule error", e)
                 _errorMessage.value = e.message ?: "Failed to add schedule"
             } finally {
                 _isLoading.value = false
@@ -153,27 +143,28 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
 
     fun updateSchedule(
         scheduleId: Int,
-        medicineId: Int?,
-        startDate: String?,
-        scheduleType: String?,
-        details: List<com.wesley.medcare.data.dto.Medicine.DetailData>?
+        medicineId: Int,
+        startDate: String,
+        details: List<TimeDetailData>
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            _successMessage.value = null
             try {
+                // Panggil repository tanpa scheduleType
                 val success = repository.updateScheduleWithDetails(
-                    scheduleId, medicineId, startDate, scheduleType, details
+                    scheduleId = scheduleId,
+                    medicineId = medicineId,
+                    startDate = startDate,
+                    details = details
                 )
                 if (success) {
                     _successMessage.value = "Schedule updated successfully"
-                    getAllSchedules()
+                    getAllSchedules() // Refresh list utama
                 } else {
                     _errorMessage.value = "Failed to update schedule"
                 }
             } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "updateSchedule error", e)
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
@@ -181,25 +172,29 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+
+    // Fungsi Delete (Soft Delete di Backend)
     fun deleteSchedule(scheduleId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
-            _successMessage.value = null
-            try {
-                val success = repository.deleteScheduleWithDetails(scheduleId)
-                if (success) {
-                    _successMessage.value = "Schedule deleted successfully"
-                    getAllSchedules()
-                } else {
-                    _errorMessage.value = "Failed to delete schedule"
-                }
-            } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "deleteSchedule error", e)
-                _errorMessage.value = e.message
-            } finally {
-                _isLoading.value = false
+            val success = repository.deleteScheduleWithDetails(scheduleId)
+            if (success) {
+                _successMessage.value = "Schedule deleted successfully"
+                // Refresh data setelah delete
+                getAllSchedules()
+            } else {
+                _errorMessage.value = "Failed to delete schedule"
             }
+            _isLoading.value = false
         }
     }
+
+    fun validateAndCreateSchedule(medicineId: Int, startDate: String, details: List<TimeDetailData>) {
+        if (details.size > 3) {
+            _errorMessage.value = "Maximum 3 reminder times allowed"
+            return
+        }
+        createSchedule(medicineId, startDate, details)
+    }
 }
+

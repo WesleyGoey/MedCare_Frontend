@@ -100,26 +100,3 @@ fun ScheduleCard(
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//private fun ScheduleCardPreview() {
-//    ScheduleCard(
-//        medicineName = "Metformin",
-//        dosage = "500mg",
-//        time = "08:00",
-//        scheduleType = "Daily"
-//    )
-//}
-//
-//@Preview(showBackground = true)
-//@Composable
-//private fun ScheduleCardPreview_Weekly() {
-//    ScheduleCard(
-//        medicineName = "Aspirin",
-//        dosage = "81mg",
-//        time = "20:00",
-//        scheduleType = "Weekly"
-//    )
-//}
-//
