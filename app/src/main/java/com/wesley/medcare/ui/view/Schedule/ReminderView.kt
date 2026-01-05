@@ -45,6 +45,7 @@ fun ReminderView(
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", Locale.ENGLISH)
 
+    // Load data setiap kali tanggal berubah
     LaunchedEffect(pickedDate) {
         viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
     }
@@ -118,6 +119,10 @@ fun ReminderView(
                             dosage = item.medicine.dosage,
                             onMarkAsTaken = {
                                 viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
+                            },
+                            onCardClick = {
+                                // PERUBAHAN: Navigasi ke EditReminderView menggunakan scheduleId
+                                navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
                             }
                         )
                     }
@@ -130,14 +135,19 @@ fun ReminderView(
 @Composable
 fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF457AF9).copy(alpha = 0.1f)),
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF457AF9).copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.CalendarToday, null, tint = Color(0xFF457AF9), modifier = Modifier.size(20.dp))
@@ -157,16 +167,30 @@ fun ReminderTimelineItem(
     time: String,
     medicineName: String,
     dosage: String,
-    onMarkAsTaken: () -> Unit
+    onMarkAsTaken: () -> Unit,
+    onCardClick: () -> Unit // Tambahkan parameter baru
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color(0xFF457AF9).copy(alpha = 0.2f)).border(2.dp, Color(0xFF457AF9), CircleShape))
-            Box(modifier = Modifier.width(2.dp).height(110.dp).background(Color(0xFF457AF9).copy(alpha = 0.1f)))
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF457AF9).copy(alpha = 0.2f))
+                    .border(2.dp, Color(0xFF457AF9), CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(110.dp)
+                    .background(Color(0xFF457AF9).copy(alpha = 0.1f))
+            )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onCardClick() }, // PERUBAHAN: Membuat Card bisa diklik
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -176,7 +200,9 @@ fun ReminderTimelineItem(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.AccessTime, null, tint = Color(0xFF457AF9), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(time, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        // Format jam agar lebih cantik jika dari DB (ISO string)
+                        val formattedTime = if (time.contains("T")) time.split("T")[1].substring(0, 5) else time
+                        Text(formattedTime, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Text("Pending", fontSize = 12.sp, color = Color(0xFF457AF9))
                 }
@@ -185,7 +211,7 @@ fun ReminderTimelineItem(
                 Text(dosage, fontSize = 14.sp, color = Color.Gray)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = onMarkAsTaken,
+                    onClick = onMarkAsTaken, // Tombol ini tetap untuk fungsi Check
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
                     shape = RoundedCornerShape(10.dp)
