@@ -6,6 +6,7 @@ data class MedicineData(
     val minStock: Int,
     val name: String,
     val notes: String?,
+    val status: Boolean,
     val stock: Int,
     val type: String,
     val userId: Int

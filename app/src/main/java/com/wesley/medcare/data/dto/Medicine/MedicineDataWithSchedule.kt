@@ -7,6 +7,7 @@ data class MedicineDataWithSchedule(
     val name: String,
     val notes: String?,
     val schedules: List<ScheduleData>,
+    val status: Boolean,
     val stock: Int,
     val type: String,
     val userId: Int
