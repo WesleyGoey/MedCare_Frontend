@@ -2,10 +2,12 @@ package com.wesley.medcare.ui.view.Schedule
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -42,11 +44,17 @@ fun AddReminderView(
     val successMessage by scheduleViewModel.successMessage.collectAsState()
     val errorMessage by scheduleViewModel.errorMessage.collectAsState()
 
+    // State Variables
     var selectedMedicineId by remember { mutableIntStateOf(0) }
     var selectedMedicineName by remember { mutableStateOf("") }
     var showMedicineDropdown by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var scheduleType by remember { mutableStateOf("DAILY") }
+
+    // State untuk pemilihan hari (Weekly)
+    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    var selectedDays by remember { mutableStateOf(setOf<String>()) }
+
     var showDatePicker by remember { mutableStateOf(false) }
     var timeSlots by remember { mutableStateOf(listOf("08:00")) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
@@ -60,7 +68,7 @@ fun AddReminderView(
         successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             scheduleViewModel.clearMessages()
-            navController.popBackStack()
+            onBack() // Navigasi kembali setelah sukses
         }
     }
 
@@ -74,9 +82,9 @@ fun AddReminderView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Reminder") },
+                title = { Text("Add Reminder", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { onBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -97,54 +105,27 @@ fun AddReminderView(
             // Medicine Selector
             item {
                 Column {
-                    Text(
-                        "Medicine",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF202630)
-                    )
+                    Text("Medicine", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
                     Spacer(Modifier.height(8.dp))
                     Box {
                         OutlinedButton(
                             onClick = { showMedicineDropdown = !showMedicineDropdown },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color(0xFFF0F7FF)
-                            )
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF0F7FF))
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    if (selectedMedicineName.isEmpty()) "Select medicine" else selectedMedicineName,
-                                    color = if (selectedMedicineName.isEmpty()) Color.Gray else Color(0xFF202630)
-                                )
-                                Icon(
-                                    Icons.Default.KeyboardArrowDown,
-                                    contentDescription = null,
-                                    tint = Color(0xFF2F93FF)
-                                )
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(if (selectedMedicineName.isEmpty()) "Select medicine" else selectedMedicineName, color = if (selectedMedicineName.isEmpty()) Color.Gray else Color(0xFF202630))
+                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF2F93FF))
                             }
                         }
-                        DropdownMenu(
-                            expanded = showMedicineDropdown,
-                            onDismissRequest = { showMedicineDropdown = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
-                        ) {
+                        DropdownMenu(expanded = showMedicineDropdown, onDismissRequest = { showMedicineDropdown = false }, modifier = Modifier.fillMaxWidth(0.9f)) {
                             medicines.forEach { medicine ->
-                                DropdownMenuItem(
-                                    text = { Text("${medicine.name} (${medicine.dosage})") },
-                                    onClick = {
-                                        selectedMedicineId = medicine.id
-                                        selectedMedicineName = medicine.name
-                                        showMedicineDropdown = false
-                                    }
-                                )
+                                DropdownMenuItem(text = { Text("${medicine.name} (${medicine.dosage})") }, onClick = {
+                                    selectedMedicineId = medicine.id
+                                    selectedMedicineName = medicine.name
+                                    showMedicineDropdown = false
+                                })
                             }
                         }
                     }
@@ -154,37 +135,17 @@ fun AddReminderView(
             // Date Selector
             item {
                 Column {
-                    Text(
-                        "Start Date",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF202630)
-                    )
+                    Text("Start Date", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(
                         onClick = { showDatePicker = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color(0xFFF0F7FF)
-                        )
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF0F7FF))
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                selectedDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
-                                color = Color(0xFF202630)
-                            )
-                            Icon(
-                                Icons.Default.CalendarToday,
-                                contentDescription = null,
-                                tint = Color(0xFF2F93FF)
-                            )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(selectedDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), color = Color(0xFF202630))
+                            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color(0xFF2F93FF))
                         }
                     }
                 }
@@ -193,106 +154,92 @@ fun AddReminderView(
             // Schedule Type
             item {
                 Column {
-                    Text(
-                        "Schedule Type",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF202630)
-                    )
+                    Text("Schedule Type", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         FilterChip(
                             selected = scheduleType == "DAILY",
                             onClick = { scheduleType = "DAILY" },
                             label = { Text("Daily") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF2F93FF),
-                                selectedLabelColor = Color.White
-                            )
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF2F93FF), selectedLabelColor = Color.White)
                         )
                         FilterChip(
                             selected = scheduleType == "WEEKLY",
                             onClick = { scheduleType = "WEEKLY" },
                             label = { Text("Weekly") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF2F93FF),
-                                selectedLabelColor = Color.White
-                            )
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF2F93FF), selectedLabelColor = Color.White)
                         )
                     }
                 }
             }
 
-            // Time Slots
-            item {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Time",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            color = Color(0xFF202630)
-                        )
-                        TextButton(
-                            onClick = {
-                                selectedTimeIndex = -1
-                                showTimePickerDialog = true
-                            }
+            // Day Selector (Hanya tampil jika Weekly)
+            if (scheduleType == "WEEKLY") {
+                item {
+                    Column {
+                        Text("Repeat on", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(Modifier.width(4.dp))
-                            Text("Add Time")
+                            daysOfWeek.forEach { day ->
+                                val isSelected = selectedDays.contains(day)
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isSelected) Color(0xFF2F93FF) else Color(0xFFF0F7FF))
+                                        .clickable {
+                                            selectedDays = if (isSelected) selectedDays - day else selectedDays + day
+                                        }
+                                        .border(1.dp, if (isSelected) Color(0xFF2F93FF) else Color(0xFFD9E9FF), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = day.take(1),
+                                        color = if (isSelected) Color.White else Color(0xFF202630),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
                 }
             }
 
+            // Time Slots Header
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Time", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
+                    TextButton(onClick = { selectedTimeIndex = -1; showTimePickerDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Add Time")
+                    }
+                }
+            }
+
+            // Time Slots List
             items(timeSlots) { time ->
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            selectedTimeIndex = timeSlots.indexOf(time)
-                            showTimePickerDialog = true
-                        },
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        selectedTimeIndex = timeSlots.indexOf(time)
+                        showTimePickerDialog = true
+                    },
                     shape = RoundedCornerShape(12.dp),
                     color = Color(0xFFEFF7FF),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD9E9FF))
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.AccessTime,
-                                contentDescription = null,
-                                tint = Color(0xFF2F93FF)
-                            )
+                            Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color(0xFF2F93FF))
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                time,
-                                fontSize = 16.sp,
-                                color = Color(0xFF202630),
-                                fontWeight = FontWeight.Medium
-                            )
+                            Text(time, fontSize = 16.sp, color = Color(0xFF202630), fontWeight = FontWeight.Medium)
                         }
-                        IconButton(onClick = {
-                            timeSlots = timeSlots.filter { it != time }
-                        }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = Color(0xFFE53935)
-                            )
+                        IconButton(onClick = { timeSlots = timeSlots.filter { it != time } }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFE53935))
                         }
                     }
                 }
@@ -304,12 +251,9 @@ fun AddReminderView(
                 Button(
                     onClick = {
                         when {
-                            selectedMedicineId == 0 -> {
-                                Toast.makeText(context, "Please select a medicine", Toast.LENGTH_SHORT).show()
-                            }
-                            timeSlots.isEmpty() -> {
-                                Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
-                            }
+                            selectedMedicineId == 0 -> Toast.makeText(context, "Please select a medicine", Toast.LENGTH_SHORT).show()
+                            timeSlots.isEmpty() -> Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
+                            scheduleType == "WEEKLY" && selectedDays.isEmpty() -> Toast.makeText(context, "Please select at least one day", Toast.LENGTH_SHORT).show()
                             else -> {
                                 val details = timeSlots.map { TimeDetailData(time = it) }
                                 scheduleViewModel.createSchedule(
@@ -322,28 +266,21 @@ fun AddReminderView(
                         }
                     },
                     enabled = !isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2F93FF)
-                    ),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text("Save Reminder", fontSize = 16.sp)
+                        Text("Save Reminder", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
     }
 
-    // Time Picker Dialog
+    // Dialogs (DatePicker & TimePicker) tetap sama seperti sebelumnya
     if (showTimePickerDialog) {
         TimePickerDialog(
             initialTime = if (selectedTimeIndex >= 0) timeSlots[selectedTimeIndex] else "08:00",
@@ -354,16 +291,11 @@ fun AddReminderView(
                     timeSlots = timeSlots + time
                 }
                 showTimePickerDialog = false
-                selectedTimeIndex = -1
             },
-            onDismiss = {
-                showTimePickerDialog = false
-                selectedTimeIndex = -1
-            }
+            onDismiss = { showTimePickerDialog = false }
         )
     }
 
-    // Date Picker Dialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(
@@ -374,18 +306,9 @@ fun AddReminderView(
                         selectedDate = LocalDate.ofEpochDay(it / (24 * 60 * 60 * 1000))
                     }
                     showDatePicker = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
+                }) { Text("OK") }
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        ) { DatePicker(state = datePickerState) }
     }
 }
 
@@ -395,51 +318,27 @@ fun TimePickerDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val parts = initialTime.split(":")
-    var hour by remember { mutableIntStateOf(parts[0].toIntOrNull() ?: 8) }
-    var minute by remember { mutableIntStateOf(parts[1].toIntOrNull() ?: 0) }
+    val context = LocalContext.current
+    val timeParts = initialTime.split(":")
+    val hour = timeParts[0].toIntOrNull() ?: 8
+    val minute = timeParts[1].toIntOrNull() ?: 0
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Time") },
-        text = {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = hour.toString().padStart(2, '0'),
-                    onValueChange = {
-                        it.toIntOrNull()?.let { h ->
-                            if (h in 0..23) hour = h
-                        }
-                    },
-                    modifier = Modifier.width(80.dp)
-                )
-                Text(" : ", fontSize = 24.sp, modifier = Modifier.padding(horizontal = 8.dp))
-                OutlinedTextField(
-                    value = minute.toString().padStart(2, '0'),
-                    onValueChange = {
-                        it.toIntOrNull()?.let { m ->
-                            if (m in 0..59) minute = m
-                        }
-                    },
-                    modifier = Modifier.width(80.dp)
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val timeString = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
-                onConfirm(timeString)
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+    DisposableEffect(Unit) {
+        val timePickerDialog = android.app.TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                onConfirm(formattedTime)
+            },
+            hour,
+            minute,
+            true // 24-hour format
+        )
+        timePickerDialog.setOnDismissListener { onDismiss() }
+        timePickerDialog.show()
+
+        onDispose {
+            timePickerDialog.dismiss()
         }
-    )
+    }
 }
