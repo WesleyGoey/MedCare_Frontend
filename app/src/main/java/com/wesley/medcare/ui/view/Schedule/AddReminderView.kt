@@ -1,13 +1,10 @@
 package com.wesley.medcare.ui.view.Schedule
 
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -49,11 +45,9 @@ fun AddReminderView(
     var selectedMedicineName by remember { mutableStateOf("") }
     var showMedicineDropdown by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var scheduleType by remember { mutableStateOf("DAILY") }
 
-    // State untuk pemilihan hari (Weekly)
-    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    var selectedDays by remember { mutableStateOf(setOf<String>()) }
+    // Karena konsep baru adalah pasti harian
+    val scheduleType = "DAILY"
 
     var showDatePicker by remember { mutableStateOf(false) }
     var timeSlots by remember { mutableStateOf(listOf("08:00")) }
@@ -68,7 +62,7 @@ fun AddReminderView(
         successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             scheduleViewModel.clearMessages()
-            onBack() // Navigasi kembali setelah sukses
+            onBack()
         }
     }
 
@@ -115,24 +109,34 @@ fun AddReminderView(
                             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF0F7FF))
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(if (selectedMedicineName.isEmpty()) "Select medicine" else selectedMedicineName, color = if (selectedMedicineName.isEmpty()) Color.Gray else Color(0xFF202630))
+                                Text(
+                                    if (selectedMedicineName.isEmpty()) "Select medicine" else selectedMedicineName,
+                                    color = if (selectedMedicineName.isEmpty()) Color.Gray else Color(0xFF202630)
+                                )
                                 Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF2F93FF))
                             }
                         }
-                        DropdownMenu(expanded = showMedicineDropdown, onDismissRequest = { showMedicineDropdown = false }, modifier = Modifier.fillMaxWidth(0.9f)) {
+                        DropdownMenu(
+                            expanded = showMedicineDropdown,
+                            onDismissRequest = { showMedicineDropdown = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
                             medicines.forEach { medicine ->
-                                DropdownMenuItem(text = { Text("${medicine.name} (${medicine.dosage})") }, onClick = {
-                                    selectedMedicineId = medicine.id
-                                    selectedMedicineName = medicine.name
-                                    showMedicineDropdown = false
-                                })
+                                DropdownMenuItem(
+                                    text = { Text("${medicine.name} (${medicine.dosage})") },
+                                    onClick = {
+                                        selectedMedicineId = medicine.id
+                                        selectedMedicineName = medicine.name
+                                        showMedicineDropdown = false
+                                    }
+                                )
                             }
                         }
                     }
                 }
             }
 
-            // Date Selector
+            // Start Date Selector
             item {
                 Column {
                     Text("Start Date", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
@@ -144,66 +148,11 @@ fun AddReminderView(
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF0F7FF))
                     ) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(selectedDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), color = Color(0xFF202630))
+                            Text(
+                                selectedDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
+                                color = Color(0xFF202630)
+                            )
                             Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color(0xFF2F93FF))
-                        }
-                    }
-                }
-            }
-
-            // Schedule Type
-            item {
-                Column {
-                    Text("Schedule Type", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FilterChip(
-                            selected = scheduleType == "DAILY",
-                            onClick = { scheduleType = "DAILY" },
-                            label = { Text("Daily") },
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF2F93FF), selectedLabelColor = Color.White)
-                        )
-                        FilterChip(
-                            selected = scheduleType == "WEEKLY",
-                            onClick = { scheduleType = "WEEKLY" },
-                            label = { Text("Weekly") },
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF2F93FF), selectedLabelColor = Color.White)
-                        )
-                    }
-                }
-            }
-
-            // Day Selector (Hanya tampil jika Weekly)
-            if (scheduleType == "WEEKLY") {
-                item {
-                    Column {
-                        Text("Repeat on", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            daysOfWeek.forEach { day ->
-                                val isSelected = selectedDays.contains(day)
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isSelected) Color(0xFF2F93FF) else Color(0xFFF0F7FF))
-                                        .clickable {
-                                            selectedDays = if (isSelected) selectedDays - day else selectedDays + day
-                                        }
-                                        .border(1.dp, if (isSelected) Color(0xFF2F93FF) else Color(0xFFD9E9FF), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = day.take(1),
-                                        color = if (isSelected) Color.White else Color(0xFF202630),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -211,8 +160,12 @@ fun AddReminderView(
 
             // Time Slots Header
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Time", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Schedule Time", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
                     TextButton(onClick = { selectedTimeIndex = -1; showTimePickerDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
@@ -224,15 +177,21 @@ fun AddReminderView(
             // Time Slots List
             items(timeSlots) { time ->
                 Surface(
-                    modifier = Modifier.fillMaxWidth().clickable {
-                        selectedTimeIndex = timeSlots.indexOf(time)
-                        showTimePickerDialog = true
-                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            selectedTimeIndex = timeSlots.indexOf(time)
+                            showTimePickerDialog = true
+                        },
                     shape = RoundedCornerShape(12.dp),
                     color = Color(0xFFEFF7FF),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD9E9FF))
                 ) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color(0xFF2F93FF))
                             Spacer(Modifier.width(12.dp))
@@ -253,13 +212,12 @@ fun AddReminderView(
                         when {
                             selectedMedicineId == 0 -> Toast.makeText(context, "Please select a medicine", Toast.LENGTH_SHORT).show()
                             timeSlots.isEmpty() -> Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
-                            scheduleType == "WEEKLY" && selectedDays.isEmpty() -> Toast.makeText(context, "Please select at least one day", Toast.LENGTH_SHORT).show()
                             else -> {
                                 val details = timeSlots.map { TimeDetailData(time = it) }
                                 scheduleViewModel.createSchedule(
                                     medicineId = selectedMedicineId,
                                     startDate = selectedDate.toString(),
-                                    scheduleType = scheduleType,
+                                    scheduleType = scheduleType, // Otomatis "DAILY"
                                     details = details
                                 )
                             }
@@ -280,7 +238,7 @@ fun AddReminderView(
         }
     }
 
-    // Dialogs (DatePicker & TimePicker) tetap sama seperti sebelumnya
+    // Dialogs
     if (showTimePickerDialog) {
         TimePickerDialog(
             initialTime = if (selectedTimeIndex >= 0) timeSlots[selectedTimeIndex] else "08:00",
@@ -303,7 +261,10 @@ fun AddReminderView(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        selectedDate = LocalDate.ofEpochDay(it / (24 * 60 * 60 * 1000))
+                        // Perbaikan konversi milidetik ke LocalDate
+                        selectedDate = java.time.Instant.ofEpochMilli(it)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
                     }
                     showDatePicker = false
                 }) { Text("OK") }
