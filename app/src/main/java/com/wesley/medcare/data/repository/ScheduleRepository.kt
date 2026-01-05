@@ -2,6 +2,7 @@ package com.wesley.medcare.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.wesley.medcare.data.dto.Medicine.DetailData
 import com.wesley.medcare.data.dto.Schedule.CreateScheduleDetailsRequest
 import com.wesley.medcare.data.dto.Schedule.CreateScheduleWithDetailsRequest
 import com.wesley.medcare.data.dto.Schedule.GetAllSchedulesWithDetailsResponse
@@ -123,54 +124,22 @@ class ScheduleRepository(
         }
     }
 
-    // Create schedule details (jam)
-    suspend fun createScheduleDetails(
-        scheduleId: Int,
-        details: List<TimeDetailData>
-    ): Boolean {
-        return try {
-            val token = getToken()
-            if (token.isNullOrEmpty()) {
-                Log.e("ScheduleRepository", "Token not found")
-                return false
-            }
-
-            val request = CreateScheduleDetailsRequest()
-            request.addAll(details)
-
-            val response = scheduleService.createScheduleDetails("Bearer $token", scheduleId, request)
-            if (response.isSuccessful) {
-                Log.d("ScheduleRepository", "Schedule details created successfully")
-                true
-            } else {
-                Log.e("ScheduleRepository", "Failed to create schedule details: ${response.errorBody()?.string()}")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e("ScheduleRepository", "Error creating schedule details", e)
-            false
-        }
-    }
-
     // Update schedule with details (keseluruhan)
     suspend fun updateScheduleWithDetails(
         scheduleId: Int,
         medicineId: Int?,
         startDate: String?,
-        scheduleType: String?,
-        details: List<com.wesley.medcare.data.dto.Medicine.DetailData>?
+        details: List<DetailData>?
     ): Boolean {
         return try {
             val token = getToken()
-            if (token.isNullOrEmpty()) {
-                Log.e("ScheduleRepository", "Token not found")
-                return false
-            }
+            if (token.isNullOrEmpty()) return false
 
+            // Perbaikan: Pastikan tipe data di dalam list sesuai dengan DTO UpdateScheduleWithDetailsRequest
             val request = UpdateScheduleWithDetailsRequest(
                 medicineId = medicineId,
                 startDate = startDate,
-                details = details
+                details = details // Langsung kirim list-nya jika DTO menerima TimeDetailData
             )
 
             val response = scheduleService.updateScheduleWithDetails("Bearer $token", scheduleId, request)
@@ -178,7 +147,7 @@ class ScheduleRepository(
                 Log.d("ScheduleRepository", "Schedule updated successfully")
                 true
             } else {
-                Log.e("ScheduleRepository", "Failed to update schedule: ${response.errorBody()?.string()}")
+                Log.e("ScheduleRepository", "Failed: ${response.errorBody()?.string()}")
                 false
             }
         } catch (e: Exception) {

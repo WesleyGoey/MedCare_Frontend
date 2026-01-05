@@ -50,6 +50,7 @@ import com.wesley.medcare.ui.view.Medicine.EditMedicineView
 import com.wesley.medcare.ui.view.Medicine.EditProfileView
 import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
 import com.wesley.medcare.ui.view.Schedule.AddReminderView
+import com.wesley.medcare.ui.view.Schedule.EditReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
@@ -67,6 +68,7 @@ enum class AppView(
     EditMedicineView("Edit Medication"),
     ReminderView("Remind", Icons.Filled.Notifications),
     AddReminderView("Add Reminder"),
+    EditReminderView("Edit Reminder"),
     HistoryView("History", Icons.Filled.History),
     ProfileView("Profile", Icons.Filled.Person),
     EditProfileView("Edit Profile")
@@ -196,6 +198,14 @@ fun AppRoute() {
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
                 EditMedicineView(medicineId = medicineId, navController = navController)
+            }
+
+            composable(
+                route = "${AppView.EditReminderView.name}/{scheduleId}",
+                arguments = listOf(navArgument("scheduleId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val scheduleId = backStackEntry.arguments?.getInt("scheduleId") ?: 0
+                EditReminderView(navController = navController, scheduleId = scheduleId)
             }
 
 
