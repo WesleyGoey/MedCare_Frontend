@@ -106,7 +106,6 @@ class ScheduleRepository(
             val request = CreateScheduleWithDetailsRequest(
                 medicineId = medicineId,
                 startDate = startDate,
-                scheduleType = scheduleType,
                 details = details
             )
 
@@ -171,7 +170,6 @@ class ScheduleRepository(
             val request = UpdateScheduleWithDetailsRequest(
                 medicineId = medicineId,
                 startDate = startDate,
-                scheduleType = scheduleType,
                 details = details
             )
 
