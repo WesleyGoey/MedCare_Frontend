@@ -20,9 +20,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     private val container = AppContainer(application)
     private val repository = container.scheduleRepository
     private val historyRepository = container.historyRepository
-
-    // TAMBAHAN: Inisialisasi AlarmScheduler
-    private val alarmScheduler = AlarmScheduler(application)
+    private val alarmScheduler by lazy { AlarmScheduler(application) }
 
     private val _schedules = MutableStateFlow<List<DetailData>>(emptyList())
     val schedules: StateFlow<List<DetailData>> = _schedules
@@ -72,45 +70,49 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // UPDATE: Menambahkan medicineName agar bisa ditampilkan di notifikasi alarm
     fun createSchedule(medicineId: Int, medicineName: String, startDate: String, details: List<TimeDetailData>) {
+        if (medicineId == 0) {
+            _errorMessage.value = "Silakan pilih obat terlebih dahulu"
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val success = repository.createScheduleWithDetails(medicineId, startDate, details)
                 if (success) {
-                    // JADWALKAN ALARM
+                    // REVISI: Jadwalkan alarm saat jadwal baru dibuat
                     details.forEachIndexed { index, detail ->
-                        // Gunakan ID unik: kombinasi medicineId dan index jam
                         val uniqueId = medicineId * 100 + index
                         alarmScheduler.schedule(uniqueId, detail.time, medicineName)
                     }
-                    _successMessage.value = "Jadwal & Alarm berhasil dibuat"
+                    _successMessage.value = "Jadwal berhasil disimpan"
                 } else {
-                    _errorMessage.value = "Gagal membuat jadwal"
+                    _errorMessage.value = "Gagal menyimpan jadwal ke server"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Terjadi kesalahan saat membuat jadwal"
+                _errorMessage.value = "Terjadi kesalahan jaringan"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // UPDATE: Menambahkan medicineName untuk memperbarui alarm
     fun updateSchedule(scheduleId: Int, medicineId: Int, medicineName: String, startDate: String, details: List<TimeDetailData>) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val success = repository.updateScheduleWithDetails(scheduleId, medicineId, startDate, details)
                 if (success) {
-                    // Batalkan alarm lama dan pasang yang baru
+                    // Hapus alarm lama dan buat yang baru
+                    for (i in 0..5) {
+                        alarmScheduler.cancel(medicineId * 100 + i)
+                    }
                     details.forEachIndexed { index, detail ->
                         val uniqueId = medicineId * 100 + index
-                        alarmScheduler.cancel(uniqueId)
                         alarmScheduler.schedule(uniqueId, detail.time, medicineName)
                     }
-                    _successMessage.value = "Jadwal & Alarm berhasil diperbarui"
+                    _successMessage.value = "Jadwal berhasil diperbarui"
                 } else {
                     _errorMessage.value = "Gagal memperbarui jadwal"
                 }
@@ -125,32 +127,28 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     fun deleteSchedule(scheduleId: Int, medicineId: Int, dateToRefresh: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            if (repository.deleteScheduleWithDetails(scheduleId)) {
-                // Batalkan alarm jika jadwal dihapus (asumsi ada 3 kali minum sehari)
-                for (i in 0..5) {
-                    alarmScheduler.cancel(medicineId * 100 + i)
+            try {
+                if (repository.deleteScheduleWithDetails(scheduleId)) {
+                    for (i in 0..5) {
+                        alarmScheduler.cancel(medicineId * 100 + i)
+                    }
+                    _successMessage.value = "Jadwal berhasil dihapus"
+                    getSchedulesByDate(dateToRefresh)
                 }
-                _successMessage.value = "Jadwal dihapus"
-                getSchedulesByDate(dateToRefresh)
+            } catch (e: Exception) {
+                _errorMessage.value = "Gagal menghapus jadwal"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
-    fun markAsTaken(detailId: Int, date: String) { // 'date' here is the "Viewed Date"
+    fun markAsTaken(detailId: Int, date: String) {
         viewModelScope.launch {
-
             val todayForDb = LocalDate.now().toString()
             val timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-
             if (historyRepository.markAsTaken(detailId, todayForDb, timeNow)) {
-
-
                 getSchedulesByDate(date)
-
-                if (date != todayForDb) {
-                    getSchedulesByDate(todayForDb)
-                }
             }
         }
     }

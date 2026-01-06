@@ -6,11 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,19 +32,12 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
-import com.wesley.medcare.ui.view.Medicine.MedicineView
-import com.wesley.medcare.ui.view.Medicine.ProfileView
-import com.wesley.medcare.ui.view.Schedule.ReminderView
+import com.wesley.medcare.ui.view.Medicine.*
+import com.wesley.medcare.ui.view.Schedule.*
 import com.wesley.medcare.ui.view.History.HistoryView
-import com.wesley.medcare.ui.view.Medicine.AddMedicineView
-import com.wesley.medcare.ui.view.Medicine.EditMedicineView
-import com.wesley.medcare.ui.view.Medicine.EditProfileView
-import com.wesley.medcare.ui.view.Medicine.MedicineInfoView
-import com.wesley.medcare.ui.view.Schedule.AddReminderView
-import com.wesley.medcare.ui.view.Schedule.EditReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
-import com.wesley.medcare.ui.viewmodel.ScheduleViewModel // Pastikan ini diimport
+import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
 
 enum class AppView(
     val title: String,
@@ -75,30 +64,16 @@ data class BottomNavItem(
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AppRoute() {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val app = context.applicationContext as Application
 
-    // Initialize UserViewModel
-    val userViewModel: UserViewModel = remember {
-        UserViewModel(context.applicationContext as Application)
-    }
-
-    // Initialize MedicineViewModel
-    val medicineViewModel: MedicineViewModel = viewModel(
-        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
-            context.applicationContext as Application
-        )
-    )
-
-    // TAMBAHKAN INI: Inisialisasi ScheduleViewModel agar bisa digunakan di MedicineView & Info
-    val scheduleViewModel: ScheduleViewModel = viewModel(
-        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
-            context.applicationContext as Application
-        )
-    )
+    // Initialize ViewModels with explicit Factories to ensure they get the Application Context
+    val userViewModel: UserViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app))
+    val medicineViewModel: MedicineViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app))
+    val scheduleViewModel: ScheduleViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app))
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -150,48 +125,46 @@ fun AppRoute() {
                             popUpTo(AppView.RegisterView.name) { inclusive = true }
                         }
                     },
-                    onSignInClick = {
-                        navController.popBackStack()
-                    }
+                    onSignInClick = { navController.popBackStack() }
                 )
             }
-            composable(route = AppView.HomeView.name) {
-                HomeView()
-            }
+            composable(route = AppView.HomeView.name) { HomeView() }
+
             composable(route = AppView.MedicineView.name) {
-                // UPDATE: Kirim medicineViewModel dan scheduleViewModel
                 MedicineView(
                     navController = navController,
                     medicineViewModel = medicineViewModel,
                     scheduleViewModel = scheduleViewModel
                 )
             }
+
             composable(route = AppView.ReminderView.name) {
-                // UPDATE: Gunakan instance scheduleViewModel yang sama
                 ReminderView(navController = navController, viewModel = scheduleViewModel)
             }
 
+            // PERBAIKAN: Berikan ViewModel agar dropdown obat terisi
             composable(route = AppView.AddReminderView.name) {
-                AddReminderView(onBack = { navController.popBackStack() })
+                AddReminderView(
+                    navController = navController,
+                    medicineViewModel = medicineViewModel,
+                    scheduleViewModel = scheduleViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
-            composable(route = AppView.HistoryView.name) {
-                HistoryView(navController = navController)
-            }
-            composable(route = AppView.ProfileView.name) {
-                ProfileView(navController = navController)
-            }
-            composable(route = AppView.EditProfileView.name) {
-                EditProfileView(navController = navController)
-            }
+
+            composable(route = AppView.HistoryView.name) { HistoryView(navController = navController) }
+            composable(route = AppView.ProfileView.name) { ProfileView(navController = navController) }
+            composable(route = AppView.EditProfileView.name) { EditProfileView(navController = navController) }
+
             composable(route = AppView.AddMedicineView.name) {
                 AddMedicineView(navController = navController, viewModel = medicineViewModel)
             }
+
             composable(
                 route = "${AppView.MedicineInfoView.name}/{medicineId}",
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
-                // UPDATE: Berikan ViewModel pendukung
                 MedicineInfoView(
                     navController = navController,
                     medicineId = medicineId,
@@ -208,16 +181,23 @@ fun AppRoute() {
                 EditMedicineView(medicineId = medicineId, navController = navController)
             }
 
+            // PERBAIKAN: Pastikan ViewModel dikirim jika EditReminderView membutuhkannya
             composable(
                 route = "${AppView.EditReminderView.name}/{scheduleId}",
                 arguments = listOf(navArgument("scheduleId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val scheduleId = backStackEntry.arguments?.getInt("scheduleId") ?: 0
-                EditReminderView(navController = navController, scheduleId = scheduleId)
+                EditReminderView(
+                    navController = navController,
+                    scheduleId = scheduleId,
+                    viewModel = scheduleViewModel
+                )
             }
         }
     }
 }
+
+// ... MyBottomNavigationBar tetap sama ...
 
 @Composable
 fun MyBottomNavigationBar(
