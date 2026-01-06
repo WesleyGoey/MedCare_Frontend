@@ -37,10 +37,16 @@ class ScheduleRepository(
         return scheduleService.createScheduleWithDetails("Bearer $token", request).isSuccessful
     }
 
-    suspend fun updateScheduleWithDetails(scheduleId: Int, medicineId: Int?, startDate: String?, details: List<TimeDetailData>?): Boolean {
+    suspend fun updateScheduleWithDetails(scheduleId: Int, medicineId: Int, startDate: String, details: List<TimeDetailData>): Boolean {
         val token = getToken() ?: return false
+        // Pastikan medicineId tidak null saat membuat request
         val request = UpdateScheduleWithDetailsRequest(details, medicineId, startDate)
-        return scheduleService.updateScheduleWithDetails("Bearer $token", scheduleId, request).isSuccessful
+        return try {
+            val response = scheduleService.updateScheduleWithDetails("Bearer $token", scheduleId, request)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
     }
 
     suspend fun deleteScheduleWithDetails(scheduleId: Int): Boolean {

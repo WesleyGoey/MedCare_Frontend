@@ -212,11 +212,12 @@ fun AddReminderView(
                             timeSlots.isEmpty() -> Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
                             else -> {
                                 val details = timeSlots.map { TimeDetailData(time = it) }
+                                // PERBAIKAN: Menghapus scheduleType dari parameter call
                                 scheduleViewModel.createSchedule(
                                     medicineId = selectedMedicineId,
-                                    medicineName = selectedMedicineName, // TAMBAHKAN BARIS INI
                                     startDate = selectedDate.toString(),
-                                    details = details
+                                    details = details,
+                                    medicineName = selectedMedicineName
                                 )
                             }
                         }

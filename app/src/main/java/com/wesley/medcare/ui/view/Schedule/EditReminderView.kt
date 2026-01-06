@@ -220,11 +220,11 @@ fun EditReminderView(
                         viewModel.updateSchedule(
                             scheduleId = scheduleId,
                             medicineId = medicineId,
-                            medicineName = medicineName, // TAMBAHKAN INI
+                            medicineName = medicineName, // Gunakan variabel medicineName
                             startDate = startDate,
-                            details = timeSlots.map { TimeDetailData(time = it) }
+                            details = timeSlots.map { TimeDetailData(time = it) },
                         )
-                      },
+                    },
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF)),
