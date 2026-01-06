@@ -20,9 +20,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.wesley.medcare.ui.route.AppView
@@ -40,8 +43,11 @@ fun ReminderView(
     viewModel: ScheduleViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     val reminders by viewModel.schedules.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val processingIds by viewModel.processingIds.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
@@ -51,18 +57,27 @@ fun ReminderView(
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
 
+    val isToday = remember(pickedDate) { pickedDate.isEqual(LocalDate.now()) }
     val primaryBlue = Color(0xFF457AF9)
     val backgroundGray = Color(0xFFF5F7FA)
 
-    // Sync data saat pertama kali buka atau saat tanggal berubah
-    LaunchedEffect(pickedDate) {
-        viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+    // Load data awal saat aplikasi dibuka atau tanggal diganti
+    DisposableEffect(lifecycleOwner, pickedDate) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Listener untuk pesan Toast
     LaunchedEffect(successMessage, errorMessage) {
         successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.clearMessages()
+            // REVISI: DI SINI TIDAK BOLEH ADA getSchedulesByDate()
         }
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -79,33 +94,14 @@ fun ReminderView(
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.offset(y = 20.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Reminder",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+            ) { Icon(Icons.Default.Add, null, modifier = Modifier.size(28.dp)) }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 20.dp)) {
             Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "Reminders",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A2E)
-            )
-
+            Text("Reminders", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Menggunakan desain Card Selector yang premium
             DateSelectorCard(
                 formattedDate = pickedDate.format(displayFormatter),
                 onClick = { showDatePicker = true },
@@ -114,7 +110,7 @@ fun ReminderView(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            if (isLoading) {
+            if (isLoading && reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = primaryBlue)
                 }
@@ -130,6 +126,7 @@ fun ReminderView(
                 ) {
                     items(reminders, key = { it.id }) { item ->
                         val currentStatus = item.history?.firstOrNull()?.status ?: "PENDING"
+                        val isProcessing = processingIds.contains(item.id)
 
                         ReminderTimelineItem(
                             time = item.time,
@@ -137,13 +134,13 @@ fun ReminderView(
                             dosage = item.medicine.dosage,
                             status = currentStatus,
                             themeColor = primaryBlue,
+                            isActionEnabled = isToday,
+                            isLoadingAction = isProcessing,
                             onMarkAsTaken = {
-                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
-                                viewModel.markAsTaken(item.id, exactDateTime)
+                                viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
                             },
                             onUndo = {
-                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
-                                viewModel.undoMarkAsTaken(item.id, exactDateTime)
+                                viewModel.undoMarkAsTaken(item.id, pickedDate.format(apiFormatter))
                             },
                             onCardClick = {
                                 navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
@@ -162,70 +159,29 @@ fun ReminderView(
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let {
-                            pickedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                        }
-                        showDatePicker = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = primaryBlue)
-                ) { Text("OK", fontWeight = FontWeight.Bold) }
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        pickedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text("OK", fontWeight = FontWeight.Bold, color = primaryBlue) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color(0xFF757575)) }
-            },
-            colors = DatePickerDefaults.colors(containerColor = Color.White)
-        ) {
-            DatePicker(
-                state = datePickerState,
-                colors = DatePickerDefaults.colors(
-                    containerColor = Color.White,
-                    titleContentColor = Color(0xFF8A94A6),
-                    headlineContentColor = Color(0xFF1A1A2E),
-                    selectedDayContainerColor = primaryBlue,
-                    selectedDayContentColor = Color.White,
-                    todayContentColor = primaryBlue,
-                    todayDateBorderColor = primaryBlue,
-                    dayContentColor = Color(0xFF1A1A2E),
-                    weekdayContentColor = Color(0xFF8A94A6),
-                    navigationContentColor = Color(0xFF1A1A2E),
-                    currentYearContentColor = primaryBlue,
-                    selectedYearContainerColor = primaryBlue,
-                    selectedYearContentColor = Color.White,
-                    dateTextFieldColors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = primaryBlue,
-                        errorContainerColor = Color(0xFFFFF0F0),
-                        errorTextColor = Color(0xFFFF5A5F)
-                    )
-                )
-            )
-        }
+                TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color.Gray) }
+            }
+        ) { DatePicker(state = datePickerState) }
     }
 }
 
 @Composable
 fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Color) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .shadow(2.dp, RoundedCornerShape(20.dp)),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.shadow(2.dp, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(themeColor),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(themeColor), contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.CalendarToday, null, tint = Color.White, modifier = Modifier.size(22.dp))
             }
             Spacer(modifier = Modifier.width(14.dp))
@@ -240,24 +196,19 @@ fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Col
 
 @Composable
 fun ReminderTimelineItem(
-    time: String,
-    medicineName: String,
-    dosage: String,
-    status: String,
-    themeColor: Color,
+    time: String, medicineName: String, dosage: String, status: String,
+    themeColor: Color, isActionEnabled: Boolean,
+    isLoadingAction: Boolean,
     onMarkAsTaken: () -> Unit,
-    onUndo: () -> Unit,
-    onCardClick: () -> Unit
+    onUndo: () -> Unit, onCardClick: () -> Unit
 ) {
     val isTaken = status == "DONE"
     val isMissed = status == "MISSED"
-
     val statusColor = when {
         isTaken -> Color(0xFF4CAF50)
         isMissed -> Color(0xFFEF5350)
         else -> themeColor
     }
-
     val statusText = when {
         isTaken -> "Taken"
         isMissed -> "Missed"
@@ -265,134 +216,54 @@ fun ReminderTimelineItem(
     }
 
     Row(modifier = Modifier.fillMaxWidth()) {
-        // Timeline UI
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 10.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(statusColor.copy(alpha = 0.15f))
-                    .border(1.5.dp, statusColor, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isTaken) Icons.Default.Check else Icons.Default.Circle,
-                    contentDescription = null,
-                    tint = statusColor,
-                    modifier = Modifier.size(12.dp)
-                )
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 10.dp)) {
+            Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(statusColor.copy(alpha = 0.15f)).border(1.5.dp, statusColor, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(imageVector = if (isTaken) Icons.Default.Check else Icons.Default.Circle, null, tint = statusColor, modifier = Modifier.size(12.dp))
             }
-            Box(
-                modifier = Modifier
-                    .width(1.5.dp)
-                    .height(140.dp)
-                    .background(statusColor.copy(alpha = 0.2f))
-            )
+            Box(modifier = Modifier.width(1.5.dp).height(140.dp).background(statusColor.copy(alpha = 0.2f)))
         }
-
         Spacer(modifier = Modifier.width(16.dp))
-
-        // Card Content
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onCardClick() }
-                .padding(bottom = 8.dp)
-                .shadow(4.dp, RoundedCornerShape(24.dp)),
+            modifier = Modifier.fillMaxWidth().clickable { onCardClick() }.padding(bottom = 8.dp).shadow(4.dp, RoundedCornerShape(24.dp)),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(statusColor.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime,
-                                contentDescription = null,
-                                tint = statusColor,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(statusColor.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime, null, tint = statusColor, modifier = Modifier.size(20.dp))
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         val cleanTime = if (time.contains("T")) time.split("T")[1].substring(0, 5) else time
-                        Text(
-                            text = cleanTime,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF1A1A2E)
-                        )
+                        Text(cleanTime, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF1A1A2E))
                     }
-
-                    Surface(
-                        color = statusColor.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = statusText,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            fontSize = 13.sp,
-                            color = statusColor,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Surface(color = statusColor.copy(alpha = 0.1f), shape = RoundedCornerShape(12.dp)) {
+                        Text(statusText, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontSize = 13.sp, color = statusColor, fontWeight = FontWeight.Bold)
                     }
                 }
-
                 Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = medicineName,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A2E)
-                )
-
-                Text(
-                    text = dosage,
-                    fontSize = 15.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-
+                Text(medicineName, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
+                Text(dosage, fontSize = 15.sp, color = Color(0xFF757575))
                 Spacer(modifier = Modifier.height(20.dp))
 
-                if (isTaken) {
-                    OutlinedButton(
-                        onClick = onUndo,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
-                        border = BorderStroke(1.dp, Color.LightGray),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Undo Mark", fontWeight = FontWeight.Bold)
-                    }
-                } else {
-                    Button(
-                        onClick = onMarkAsTaken,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = themeColor, contentColor = Color.White),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                    ) {
-                        Text("Mark as Taken", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                if (isActionEnabled) {
+                    if (isLoadingAction) {
+                        Box(modifier = Modifier.fillMaxWidth().height(50.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = themeColor, strokeWidth = 2.dp)
+                        }
+                    } else {
+                        if (isTaken) {
+                            OutlinedButton(onClick = onUndo, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Color.LightGray)) {
+                                Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Undo Mark", fontWeight = FontWeight.Bold)
+                            }
+                        } else {
+                            Button(onClick = onMarkAsTaken, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = themeColor), shape = RoundedCornerShape(16.dp)) {
+                                Text("Mark as Taken", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                        }
                     }
                 }
             }

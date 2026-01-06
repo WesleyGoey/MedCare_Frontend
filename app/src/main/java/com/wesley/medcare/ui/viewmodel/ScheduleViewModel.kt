@@ -37,6 +37,9 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage
 
+    private val _processingIds = MutableStateFlow<Set<Int>>(emptySet())
+    val processingIds: StateFlow<Set<Int>> = _processingIds
+
     fun clearMessages() {
         _errorMessage.value = null
         _successMessage.value = null
@@ -49,7 +52,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
             _isLoading.value = true
             try {
                 val response = repository.getScheduleWithDetailsByDate(date)
-                _schedules.value = response?.data ?: emptyList()
+                response?.data?.let { _schedules.value = it }
             } catch (e: Exception) {
                 _errorMessage.value = "Gagal memuat jadwal"
             } finally {
@@ -72,14 +75,13 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- WRITE FUNCTIONS (CRUD + ALARM) ---
+    // --- WRITE FUNCTIONS ---
 
     fun createSchedule(medicineId: Int, medicineName: String, startDate: String, details: List<TimeDetailData>) {
         if (medicineId == 0) {
             _errorMessage.value = "Silakan pilih obat terlebih dahulu"
             return
         }
-
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -90,14 +92,10 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
                         alarmScheduler.schedule(uniqueId, detail.time, medicineName)
                     }
                     _successMessage.value = "Jadwal & Alarm berhasil dibuat"
-                } else {
-                    _errorMessage.value = "Gagal menyimpan jadwal ke server"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Terjadi kesalahan jaringan"
-            } finally {
-                _isLoading.value = false
-            }
+            } finally { _isLoading.value = false }
         }
     }
 
@@ -107,23 +105,16 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
             try {
                 val success = repository.updateScheduleWithDetails(scheduleId, medicineId, startDate, details)
                 if (success) {
-                    // Batalkan alarm lama dan pasang yang baru
-                    for (i in 0..5) {
-                        alarmScheduler.cancel(medicineId * 100 + i)
-                    }
+                    for (i in 0..5) alarmScheduler.cancel(medicineId * 100 + i)
                     details.forEachIndexed { index, detail ->
                         val uniqueId = medicineId * 100 + index
                         alarmScheduler.schedule(uniqueId, detail.time, medicineName)
                     }
                     _successMessage.value = "Jadwal & Alarm berhasil diperbarui"
-                } else {
-                    _errorMessage.value = "Gagal memperbarui jadwal"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Terjadi kesalahan saat memperbarui jadwal"
-            } finally {
-                _isLoading.value = false
-            }
+                _errorMessage.value = "Kesalahan saat memperbarui"
+            } finally { _isLoading.value = false }
         }
     }
 
@@ -132,95 +123,98 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
             _isLoading.value = true
             try {
                 if (repository.deleteScheduleWithDetails(scheduleId)) {
-                    for (i in 0..5) {
-                        alarmScheduler.cancel(medicineId * 100 + i)
-                    }
+                    for (i in 0..5) alarmScheduler.cancel(medicineId * 100 + i)
                     _successMessage.value = "Jadwal berhasil dihapus"
                     getSchedulesByDate(dateToRefresh)
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Gagal menghapus jadwal"
-            } finally {
-                _isLoading.value = false
-            }
+            } finally { _isLoading.value = false }
         }
     }
 
     // --- HISTORY LOGIC (TAKEN / UNDO) ---
 
     fun markAsTaken(detailId: Int, originalScheduledDate: String) {
-        viewModelScope.launch {
-            val dateToSend = if (originalScheduledDate.contains("T")) {
-                originalScheduledDate
-            } else {
-                "${originalScheduledDate}T00:00:00"
-            }
+        if (_processingIds.value.contains(detailId)) return
 
-            // Optimistic Update UI
-            updateLocalStatus(detailId, "DONE", dateToSend)
+        viewModelScope.launch {
+            _processingIds.value += detailId
+            val datePart = originalScheduledDate.split("T")[0]
+            val dateTimeToSend = "${datePart}T00:00:00"
+
+            // 1. Update UI secara Instan (Optimistic Update)
+            updateStatusLocally(detailId, "DONE", dateTimeToSend)
 
             try {
                 val jakartaZone = ZoneId.of("Asia/Jakarta")
                 val timeTakenNow = LocalTime.now(jakartaZone).format(DateTimeFormatter.ofPattern("HH:mm"))
 
-                val success = historyRepository.markAsTaken(detailId, dateToSend, timeTakenNow)
+                // 2. Simpan ke Backend
+                val success = historyRepository.markAsTaken(detailId, dateTimeToSend, timeTakenNow)
 
-                if (!success) {
-                    updateLocalStatus(detailId, "PENDING", dateToSend)
-                    _errorMessage.value = "Gagal mencatat riwayat"
+                if (success) {
+                    _successMessage.value = "Berhasil mencatat obat"
+                } else {
+                    // Revert jika gagal
+                    updateStatusLocally(detailId, "PENDING", dateTimeToSend)
+                    _errorMessage.value = "Gagal mencatat ke server"
                 }
             } catch (e: Exception) {
-                updateLocalStatus(detailId, "PENDING", dateToSend)
-                _errorMessage.value = "Error: ${e.message}"
+                updateStatusLocally(detailId, "PENDING", dateTimeToSend)
+                _errorMessage.value = "Error koneksi"
+            } finally {
+                _processingIds.value -= detailId
             }
         }
     }
 
     fun undoMarkAsTaken(detailId: Int, viewedDate: String) {
-        viewModelScope.launch {
-            val dateToSend = if (viewedDate.contains("T")) {
-                viewedDate
-            } else {
-                "${viewedDate}T00:00:00"
-            }
+        if (_processingIds.value.contains(detailId)) return
 
-            // Optimistic Update UI
-            updateLocalStatus(detailId, "PENDING", dateToSend)
+        viewModelScope.launch {
+            _processingIds.value += detailId
+            val datePart = viewedDate.split("T")[0]
+            val dateTimeToSend = "${datePart}T00:00:00"
+
+            // 1. Update UI secara Instan (Optimistic Update)
+            updateStatusLocally(detailId, "PENDING", dateTimeToSend)
 
             try {
-                val success = historyRepository.undoMarkAsTaken(detailId, dateToSend)
+                val success = historyRepository.undoMarkAsTaken(detailId, dateTimeToSend)
 
-                if (!success) {
-                    updateLocalStatus(detailId, "DONE", dateToSend)
+                if (success) {
+                    _successMessage.value = "Berhasil membatalkan status"
+                } else {
+                    // Revert jika gagal
+                    updateStatusLocally(detailId, "DONE", dateTimeToSend)
                     _errorMessage.value = "Gagal membatalkan status"
                 }
             } catch (e: Exception) {
-                updateLocalStatus(detailId, "DONE", dateToSend)
-                _errorMessage.value = "Error: ${e.message}"
+                updateStatusLocally(detailId, "DONE", dateTimeToSend)
+                _errorMessage.value = "Error koneksi"
+            } finally {
+                _processingIds.value -= detailId
             }
         }
     }
 
-    // --- HELPER FOR OPTIMISTIC UI UPDATES ---
-
-    private fun updateLocalStatus(scheduleId: Int, newStatus: String, currentDateString: String) {
+    private fun updateStatusLocally(id: Int, newStatus: String, dateStr: String) {
         val currentList = _schedules.value.toMutableList()
-        val index = currentList.indexOfFirst { it.id == scheduleId }
+        val index = currentList.indexOfFirst { it.id == id }
 
         if (index != -1) {
             val item = currentList[index]
-
-            // Create fake history item for immediate UI feedback
-            val newHistoryItem = History(
+            val fakeHistory = History(
                 id = 0,
                 status = newStatus,
-                scheduledDate = currentDateString,
-                scheduledTime = item.time
+                scheduledDate = dateStr,
+                scheduledTime = item.time,
+                timeTaken = if (newStatus == "DONE") "Now" else ""
             )
 
-            val updatedHistoryList = listOf(newHistoryItem)
-            currentList[index] = item.copy(history = updatedHistoryList)
-            _schedules.value = ArrayList(currentList)
+            currentList[index] = item.copy(history = listOf(fakeHistory))
+            _schedules.value = currentList.toList()
         }
     }
 }

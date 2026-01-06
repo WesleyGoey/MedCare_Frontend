@@ -211,9 +211,9 @@ fun AddReminderView(
                             val details = timeSlots.map { TimeDetailData(time = it) }
                             scheduleViewModel.createSchedule(
                                 medicineId = selectedMedicineId,
+                                medicineName = selectedMedicineName, // Pindahkan ke posisi kedua
                                 startDate = selectedDate.toString(),
-                                details = details,
-                                medicineName = selectedMedicineName
+                                details = details
                             )
                         }
                     },

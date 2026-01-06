@@ -5,8 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wesley.medcare.data.container.AppContainer
-import com.wesley.medcare.data.dto.History.HistoryData // The DTO from Database
-import com.wesley.medcare.ui.model.History // <--- IMPORT YOUR UI MODEL
+import com.wesley.medcare.ui.model.History
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,11 +15,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     private val container = AppContainer(application)
     private val repository = container.historyRepository
 
-    // CHANGE 1: Update the type to List<History> (your UI model)
     private val _recentActivityList = MutableStateFlow<List<History>>(emptyList())
     val recentActivityList: StateFlow<List<History>> = _recentActivityList
 
-    // Keep other stats as they were (assuming they are just numbers or generic lists)
     private val _compliancePercentage = MutableStateFlow(0)
     val compliancePercentage: StateFlow<Int> = _compliancePercentage
 
@@ -39,6 +36,7 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                // Berjalan secara paralel untuk kecepatan
                 fetchCompliance()
                 fetchMissedDoses()
                 fetchRecentActivity()
@@ -62,7 +60,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun fetchRecentActivity() {
-        val response = repository.getAllHistory()
+        // PERBAIKAN: Gunakan repository.getRecentActivity() bukan getAllHistory()
+        // Karena backend sudah membatasi 'take: 5'
+        val response = repository.getRecentActivity()
 
         val mappedList = response?.data?.map { dto ->
             History(
@@ -75,10 +75,7 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
             )
         } ?: emptyList()
 
-        val filteredList = mappedList.filter { it.status != "PENDING" }
-
-        val sortedList = filteredList.sortedByDescending { it.scheduledDate + it.scheduledTime }
-
-        _recentActivityList.value = sortedList
+        // Dashboard hanya menampilkan aktivitas yang sudah dilakukan (DONE) atau terlewat (MISSED)
+        _recentActivityList.value = mappedList.filter { it.status == "DONE" || it.status == "MISSED" }
     }
 }
