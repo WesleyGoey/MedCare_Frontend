@@ -132,9 +132,22 @@ fun WeeklyComplianceCard(historyData: List<History>) {
     // 1. Prepare Data Map: Group by Date (Key = "2026-01-06")
     // We do this first for fast lookup inside the loop
     val historyMap = remember(historyData) {
-        historyData.groupBy {
-            // Fix: Handle full timestamps like "2026-01-06T09:00:00Z" -> "2026-01-06"
-            it.scheduledDate.take(10)
+        historyData.groupBy { historyItem ->
+            try {
+                // 1. Extract the raw date string (e.g., "2026-01-06")
+                val rawDate = historyItem.scheduledDate.take(10)
+
+                // 2. Parse it to a real Date object
+                val parsedDate = LocalDate.parse(rawDate)
+
+                // 3. Shift it forward by 1 day
+                // "2026-01-06" (Tuesday) becomes "2026-01-07" (Wednesday)
+                parsedDate.plusDays(1).toString()
+
+            } catch (e: Exception) {
+                // Fallback: If parsing fails, use the original string
+                historyItem.scheduledDate.take(10)
+            }
         }
     }
 

@@ -8,11 +8,13 @@ import com.wesley.medcare.data.alarm.AlarmScheduler
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.data.dto.Schedule.DetailData
 import com.wesley.medcare.data.dto.Schedule.TimeDetailData
+import com.wesley.medcare.ui.model.History
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class ScheduleViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,7 +75,12 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     }
 
     // UPDATE: Menambahkan medicineName agar bisa ditampilkan di notifikasi alarm
-    fun createSchedule(medicineId: Int, medicineName: String, startDate: String, details: List<TimeDetailData>) {
+    fun createSchedule(
+        medicineId: Int,
+        medicineName: String,
+        startDate: String,
+        details: List<TimeDetailData>
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -98,11 +105,18 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     }
 
     // UPDATE: Menambahkan medicineName untuk memperbarui alarm
-    fun updateSchedule(scheduleId: Int, medicineId: Int, medicineName: String, startDate: String, details: List<TimeDetailData>) {
+    fun updateSchedule(
+        scheduleId: Int,
+        medicineId: Int,
+        medicineName: String,
+        startDate: String,
+        details: List<TimeDetailData>
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val success = repository.updateScheduleWithDetails(scheduleId, medicineId, startDate, details)
+                val success =
+                    repository.updateScheduleWithDetails(scheduleId, medicineId, startDate, details)
                 if (success) {
                     // Batalkan alarm lama dan pasang yang baru
                     details.forEachIndexed { index, detail ->
@@ -137,21 +151,81 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun markAsTaken(detailId: Int, date: String) { // 'date' here is the "Viewed Date"
+    fun markAsTaken(detailId: Int, originalScheduledDate: String) {
         viewModelScope.launch {
-
-            val todayForDb = LocalDate.now().toString()
-            val timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-
-            if (historyRepository.markAsTaken(detailId, todayForDb, timeNow)) {
-
-
-                getSchedulesByDate(date)
-
-                if (date != todayForDb) {
-                    getSchedulesByDate(todayForDb)
-                }
+            // Prepare the date string FIRST
+            val dateToSend = if (originalScheduledDate.contains("T")) {
+                originalScheduledDate
+            } else {
+                "${originalScheduledDate}T00:00:00"
             }
+
+            // FIX: Pass 'dateToSend' to updateLocalStatus
+            updateLocalStatus(detailId, "DONE", dateToSend)
+
+            try {
+                val jakartaZone = ZoneId.of("Asia/Jakarta")
+                val timeTakenNow = LocalTime.now(jakartaZone).format(DateTimeFormatter.ofPattern("HH:mm"))
+
+                val success = historyRepository.markAsTaken(detailId, dateToSend, timeTakenNow)
+
+                // FIX: Pass 'dateToSend' here too if we need to revert
+                if (!success) updateLocalStatus(detailId, "PENDING", dateToSend)
+
+            } catch (e: Exception) {
+                updateLocalStatus(detailId, "PENDING", dateToSend)
+            }
+        }
+    }
+
+    // 2. Undo Mark As Taken (CRITICAL FIX HERE)
+    fun undoMarkAsTaken(detailId: Int, viewedDate: String) {
+        viewModelScope.launch {
+            // Prepare the date string FIRST
+            val dateToSend = if (viewedDate.contains("T")) {
+                viewedDate
+            } else {
+                "${viewedDate}T00:00:00"
+            }
+
+            // FIX: Pass 'dateToSend' to updateLocalStatus
+            updateLocalStatus(detailId, "PENDING", dateToSend)
+
+            try {
+                val success = historyRepository.undoMarkAsTaken(detailId, dateToSend)
+
+                if (!success) {
+                    // Revert to DONE if failed
+                    updateLocalStatus(detailId, "DONE", dateToSend)
+                    _errorMessage.value = "Failed to undo"
+                }
+            } catch (e: Exception) {
+                updateLocalStatus(detailId, "DONE", dateToSend)
+                _errorMessage.value = "Error: ${e.message}"
+            }
+        }
+    }
+
+    // 3. Helper for Optimistic Updates
+    private fun updateLocalStatus(scheduleId: Int, newStatus: String, currentDateString: String) {
+        val currentList = _schedules.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == scheduleId }
+
+        if (index != -1) {
+            val item = currentList[index]
+
+            // Create the fake history item for immediate UI feedback
+            val newHistoryItem = History(
+                status = newStatus,
+                // FIX: Use the passed date string instead of 'item.scheduledDate'
+                scheduledDate = currentDateString,
+                id = 0,
+                scheduledTime = item.time 
+            )
+
+            val updatedHistoryList = listOf(newHistoryItem)
+            currentList[index] = item.copy(history = updatedHistoryList)
+            _schedules.value = ArrayList(currentList)
         }
     }
 }

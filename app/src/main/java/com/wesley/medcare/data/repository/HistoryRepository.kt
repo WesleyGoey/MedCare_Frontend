@@ -111,9 +111,12 @@ class HistoryRepository(
         }
     }
 
+    // 1. Mark as Taken (Looks good, ensure it accepts date/time from ViewModel)
     suspend fun markAsTaken(detailId: Int, date: String, timeTaken: String): Boolean {
         return try {
             val token = getToken() ?: return false
+
+            // The ViewModel determines the 'date' (e.g., "2026-01-06")
             val request = MarkAsTakenRequest(date = date, timeTaken = timeTaken)
 
             val response = historyService.markAsTaken("Bearer $token", detailId, request)
@@ -127,6 +130,34 @@ class HistoryRepository(
             }
         } catch (e: Exception) {
             Log.e("HistoryRepository", "Error marking as taken", e)
+            false
+        }
+    }
+
+    // 2. Undo Mark as Taken (UPDATED: Added 'date' parameter)
+    suspend fun undoMarkAsTaken(detailId: Int, date: String): Boolean {
+        return try {
+            val token = getToken() ?: return false
+
+            // REMOVED: val currentDate = java.time.LocalDate.now().toString()
+            // REASON: The Repository shouldn't guess the date.
+            // We use the 'date' passed from the ViewModel to ensure we target the exact record we just created.
+
+            val request = UndoMarkAsTakenRequest(
+                date = date
+            )
+
+            val response = historyService.undoMarkAsTaken("Bearer $token", detailId, request)
+
+            if (response.isSuccessful) {
+                Log.d("HistoryRepository", "Undo successful")
+                true
+            } else {
+                Log.e("HistoryRepository", "Failed to undo: ${response.errorBody()?.string()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("HistoryRepository", "Error undoing", e)
             false
         }
     }
@@ -147,29 +178,6 @@ class HistoryRepository(
             }
         } catch (e: Exception) {
             Log.e("HistoryRepository", "Error skipping", e)
-            false
-        }
-    }
-
-    suspend fun undoMarkAsTaken(detailId: Int): Boolean {
-        return try {
-            val token = getToken() ?: return false
-            val currentDate = java.time.LocalDate.now().toString()
-            val request = UndoMarkAsTakenRequest(
-                date = currentDate
-            )
-
-            val response = historyService.undoMarkAsTaken("Bearer $token", detailId, request)
-
-            if (response.isSuccessful) {
-                Log.d("HistoryRepository", "Undo successful")
-                true
-            } else {
-                Log.e("HistoryRepository", "Failed to undo: ${response.errorBody()?.string()}")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e("HistoryRepository", "Error undoing", e)
             false
         }
     }
