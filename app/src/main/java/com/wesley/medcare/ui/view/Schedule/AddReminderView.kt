@@ -1,6 +1,7 @@
 package com.wesley.medcare.ui.view.Schedule
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -256,44 +257,118 @@ fun AddReminderView(
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        selectedDate = java.time.Instant.ofEpochMilli(it)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate()
-                    }
-                    showDatePicker = false
-                }) { Text("OK") }
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            selectedDate = java.time.Instant.ofEpochMilli(it)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF2F93FF))
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                ) { Text("Cancel") }
             }
-        ) { DatePicker(state = datePickerState) }
+        ) {
+            // PERBAIKAN: Menambahkan colors agar header dan seleksi berwarna biru
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color.White,
+                    titleContentColor = Color(0xFF202630),
+                    headlineContentColor = Color(0xFF202630),
+                    weekdayContentColor = Color(0xFF202630),
+                    currentYearContentColor = Color(0xFF2F93FF),
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = Color(0xFF2F93FF),
+                    dayContentColor = Color(0xFF202630),
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = Color(0xFF2F93FF),
+                    todayContentColor = Color(0xFF2F93FF),
+                    todayDateBorderColor = Color(0xFF2F93FF)
+                )
+            )
+
+        }
     }
 }
 
-// TimePickerDialog tetap sama seperti sebelumnya
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
     initialTime: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val context = LocalContext.current
     val timeParts = initialTime.split(":")
     val hour = timeParts[0].toIntOrNull() ?: 8
     val minute = timeParts[1].toIntOrNull() ?: 0
 
-    DisposableEffect(Unit) {
-        val timePickerDialog = android.app.TimePickerDialog(
-            context,
-            { _, selectedHour, selectedMinute ->
-                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-                onConfirm(formattedTime)
-            },
-            hour,
-            minute,
-            true
-        )
-        timePickerDialog.setOnDismissListener { onDismiss() }
-        timePickerDialog.show()
-        onDispose { timePickerDialog.dismiss() }
+    val state = rememberTimePickerState(
+        initialHour = hour,
+        initialMinute = minute,
+        is24Hour = true
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .width(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min)
+                .background(MaterialTheme.colorScheme.surface),
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Select Time",
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
+                )
+
+                // PERBAIKAN: Custom warna dial dan selector menjadi biru
+                TimePicker(
+                    state = state,
+                    colors = TimePickerDefaults.colors(
+                        clockDialColor = Color(0xFFF0F7FF),
+                        selectorColor = Color(0xFF2F93FF), // Jarum Jam Biru
+                        containerColor = Color.White,
+                        periodSelectorSelectedContainerColor = Color(0xFFD9E9FF),
+                        timeSelectorSelectedContainerColor = Color(0xFFD9E9FF),
+                        timeSelectorSelectedContentColor = Color(0xFF2F93FF)
+                    )
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel", color = Color.Gray)
+                    }
+                    TextButton(
+                        onClick = {
+                            val formattedTime = String.format("%02d:%02d", state.hour, state.minute)
+                            onConfirm(formattedTime)
+                        }
+                    ) {
+                        Text("OK", color = Color(0xFF2F93FF), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
     }
 }

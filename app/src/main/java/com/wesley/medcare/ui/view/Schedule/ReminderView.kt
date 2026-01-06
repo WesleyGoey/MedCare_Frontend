@@ -1,6 +1,5 @@
 package com.wesley.medcare.ui.view.Schedule
 
-import android.app.DatePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,10 +25,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderView(
     navController: NavHostController,
@@ -42,10 +44,14 @@ fun ReminderView(
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var pickedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) } // State untuk dialog baru
+
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy", Locale.ENGLISH)
 
-    // Load data setiap kali tanggal berubah
+    val primaryBlue = Color(0xFF457AF9) // Tema Biru Utama
+    val backgroundGray = Color(0xFFF5F7FA)
+
     LaunchedEffect(pickedDate) {
         viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
     }
@@ -61,26 +67,18 @@ fun ReminderView(
         }
     }
 
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            pickedDate = LocalDate.of(year, month + 1, dayOfMonth)
-        },
-        pickedDate.year, pickedDate.monthValue - 1, pickedDate.dayOfMonth
-    )
-
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(AppView.AddReminderView.name) },
-                containerColor = Color(0xFF457AF9),
+                containerColor = primaryBlue,
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(30.dp))
             }
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = backgroundGray
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -89,19 +87,26 @@ fun ReminderView(
                 .padding(horizontal = 20.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Medication Schedule", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
+            Text(
+                "Medication Schedule",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A2E)
+            )
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Selector tanggal dengan warna tema
             DateSelectorCard(
                 formattedDate = pickedDate.format(displayFormatter),
-                onClick = { datePickerDialog.show() }
+                onClick = { showDatePicker = true },
+                themeColor = primaryBlue
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF457AF9))
+                    CircularProgressIndicator(color = primaryBlue)
                 }
             } else if (reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -117,11 +122,11 @@ fun ReminderView(
                             time = item.time,
                             medicineName = item.medicine.name,
                             dosage = item.medicine.dosage,
+                            themeColor = primaryBlue,
                             onMarkAsTaken = {
                                 viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
                             },
                             onCardClick = {
-                                // PERUBAHAN: Navigasi ke EditReminderView menggunakan scheduleId
                                 navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
                             }
                         )
@@ -130,10 +135,56 @@ fun ReminderView(
             }
         }
     }
+
+    // Modal Date Picker yang warnanya bisa disesuaikan (Menghilangkan warna hijau)
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = pickedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            pickedDate = Instant.ofEpochMilli(it)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = primaryBlue)
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                ) { Text("CANCEL") }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color.White,
+                    titleContentColor = primaryBlue,
+                    headlineContentColor = primaryBlue,
+                    selectedDayContainerColor = primaryBlue,
+                    selectedDayContentColor = Color.White,
+                    todayContentColor = primaryBlue,
+                    todayDateBorderColor = primaryBlue,
+                    currentYearContentColor = primaryBlue,
+                    selectedYearContainerColor = primaryBlue,
+                    selectedYearContentColor = Color.White
+                )
+            )
+        }
+    }
 }
 
 @Composable
-fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
+fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Color) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,10 +198,10 @@ fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF457AF9).copy(alpha = 0.1f)),
+                    .background(themeColor.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.CalendarToday, null, tint = Color(0xFF457AF9), modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.CalendarToday, null, tint = themeColor, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -167,8 +218,9 @@ fun ReminderTimelineItem(
     time: String,
     medicineName: String,
     dosage: String,
+    themeColor: Color,
     onMarkAsTaken: () -> Unit,
-    onCardClick: () -> Unit // Tambahkan parameter baru
+    onCardClick: () -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -176,21 +228,21 @@ fun ReminderTimelineItem(
                 modifier = Modifier
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF457AF9).copy(alpha = 0.2f))
-                    .border(2.dp, Color(0xFF457AF9), CircleShape)
+                    .background(themeColor.copy(alpha = 0.2f))
+                    .border(2.dp, themeColor, CircleShape)
             )
             Box(
                 modifier = Modifier
                     .width(2.dp)
-                    .height(110.dp)
-                    .background(Color(0xFF457AF9).copy(alpha = 0.1f))
+                    .height(115.dp) // Disesuaikan sedikit lebih panjang
+                    .background(themeColor.copy(alpha = 0.1f))
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onCardClick() }, // PERUBAHAN: Membuat Card bisa diklik
+                .clickable { onCardClick() },
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -198,27 +250,26 @@ fun ReminderTimelineItem(
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AccessTime, null, tint = Color(0xFF457AF9), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.AccessTime, null, tint = themeColor, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        // Format jam agar lebih cantik jika dari DB (ISO string)
                         val formattedTime = if (time.contains("T")) time.split("T")[1].substring(0, 5) else time
                         Text(formattedTime, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
-                    Text("Pending", fontSize = 12.sp, color = Color(0xFF457AF9))
+                    Text("Pending", fontSize = 12.sp, color = themeColor, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(medicineName, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                Text(medicineName, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1A1A2E))
                 Text(dosage, fontSize = 14.sp, color = Color.Gray)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = onMarkAsTaken, // Tombol ini tetap untuk fungsi Check
+                    onClick = onMarkAsTaken,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
-                    shape = RoundedCornerShape(10.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = themeColor),
+                    shape = RoundedCornerShape(12.dp) // Lebih membulat agar modern
                 ) {
                     Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mark as Taken")
+                    Text("Mark as Taken", fontWeight = FontWeight.Bold)
                 }
             }
         }
