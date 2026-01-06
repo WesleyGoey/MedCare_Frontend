@@ -15,13 +15,17 @@ import java.time.format.DateTimeFormatter
 
 class ScheduleViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = AppContainer(application).scheduleRepository
-    private val historyRepository = AppContainer(application).historyRepository
+    private val container = AppContainer(application)
+    private val repository = container.scheduleRepository
+    private val historyRepository = container.historyRepository
+
+    // List untuk tampilan harian
     private val _schedules = MutableStateFlow<List<DetailData>>(emptyList())
     val schedules: StateFlow<List<DetailData>> = _schedules
 
-    private val _selectedSchedule = MutableStateFlow<DetailData?>(null)
-    val selectedSchedule: StateFlow<DetailData?> = _selectedSchedule
+    // List khusus untuk menampung data jam saat Edit
+    private val _editingScheduleDetails = MutableStateFlow<List<DetailData>>(emptyList())
+    val editingScheduleDetails: StateFlow<List<DetailData>> = _editingScheduleDetails
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -37,164 +41,72 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         _successMessage.value = null
     }
 
-    fun getAllSchedules() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            try {
-                val response = repository.getAllScheduleWithDetails()
-                _schedules.value = response?.data ?: emptyList()
-            } catch (e: Exception) {
-                Log.e("ScheduleViewModel", "getAllSchedules error", e)
-                _errorMessage.value = e.message ?: "Failed to load schedules"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-
     fun getSchedulesByDate(date: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
             try {
                 val response = repository.getScheduleWithDetailsByDate(date)
                 _schedules.value = response?.data ?: emptyList()
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load schedules"
+                _errorMessage.value = "Gagal memuat jadwal"
             } finally {
                 _isLoading.value = false
             }
         }
     }
-
-    fun markAsTaken(detailId: Int, date: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-
-            // Mengambil waktu saat ini (LocalTime) untuk timeTaken
-            val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-
-            val success = historyRepository.markAsTaken(
-                detailId = detailId,
-                date = date,
-                timeTaken = currentTime
-            )
-
-            if (success) {
-                _successMessage.value = "Medicine recorded successfully!"
-                getSchedulesByDate(date) // Refresh list
-            } else {
-                _errorMessage.value = "Failed to record medicine"
-            }
-            _isLoading.value = false
-        }
-    }
-
-    private val _editingScheduleDetails = MutableStateFlow<List<DetailData>>(emptyList())
-    val editingScheduleDetails: StateFlow<List<DetailData>> = _editingScheduleDetails
 
     fun getScheduleById(scheduleId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val response = repository.getScheduleWithDetailsById(scheduleId)
-                // Backend mengembalikan List<DetailData> untuk 1 scheduleId
+                // ERROR HILANG: Karena DTO sekarang menggunakan Schedule.DetailData
                 _editingScheduleDetails.value = response?.data ?: emptyList()
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to fetch schedule data"
+                _errorMessage.value = "Gagal mengambil data jadwal"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun createSchedule(
-        medicineId: Int,
-        startDate: String,
-        details: List<TimeDetailData>
-    ) {
+    fun createSchedule(medicineId: Int, startDate: String, details: List<TimeDetailData>) {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
-            try {
-                // Kita tidak perlu lagi kirim scheduleType karena backend sudah pasti DAILY
-                val success = repository.createScheduleWithDetails(
-                    medicineId = medicineId,
-                    startDate = startDate,
-                    scheduleType = "DAILY", // Kirim default atau hapus param di repository
-                    details = details
-                )
-                if (success) {
-                    _successMessage.value = "Schedule added successfully"
-                    getAllSchedules()
-                } else {
-                    _errorMessage.value = "Failed to add schedule"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Failed to add schedule"
-            } finally {
-                _isLoading.value = false
-            }
+            val success = repository.createScheduleWithDetails(medicineId, startDate, details)
+            if (success) _successMessage.value = "Jadwal berhasil dibuat"
+            else _errorMessage.value = "Gagal membuat jadwal"
+            _isLoading.value = false
         }
     }
 
-
-    fun updateSchedule(
-        scheduleId: Int,
-        medicineId: Int,
-        startDate: String,
-        details: List<TimeDetailData>
-    ) {
+    fun updateSchedule(scheduleId: Int, medicineId: Int, startDate: String, details: List<TimeDetailData>) {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
-            try {
-                // Panggil repository tanpa scheduleType
-                val success = repository.updateScheduleWithDetails(
-                    scheduleId = scheduleId,
-                    medicineId = medicineId,
-                    startDate = startDate,
-                    details = details
-                )
-                if (success) {
-                    _successMessage.value = "Schedule updated successfully"
-                    getAllSchedules() // Refresh list utama
-                } else {
-                    _errorMessage.value = "Failed to update schedule"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
-            } finally {
-                _isLoading.value = false
-            }
+            val success = repository.updateScheduleWithDetails(scheduleId, medicineId, startDate, details)
+            if (success) _successMessage.value = "Jadwal berhasil diperbarui"
+            else _errorMessage.value = "Gagal memperbarui jadwal"
+            _isLoading.value = false
         }
     }
 
-
-    // Fungsi Delete (Soft Delete di Backend)
-    fun deleteSchedule(scheduleId: Int) {
+    fun deleteSchedule(scheduleId: Int, dateToRefresh: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            val success = repository.deleteScheduleWithDetails(scheduleId)
-            if (success) {
-                _successMessage.value = "Schedule deleted successfully"
-                // Refresh data setelah delete
-                getAllSchedules()
-            } else {
-                _errorMessage.value = "Failed to delete schedule"
+            if (repository.deleteScheduleWithDetails(scheduleId)) {
+                _successMessage.value = "Jadwal dihapus"
+                getSchedulesByDate(dateToRefresh)
             }
             _isLoading.value = false
         }
     }
 
-    fun validateAndCreateSchedule(medicineId: Int, startDate: String, details: List<TimeDetailData>) {
-        if (details.size > 3) {
-            _errorMessage.value = "Maximum 3 reminder times allowed"
-            return
+    fun markAsTaken(detailId: Int, date: String) {
+        viewModelScope.launch {
+            val time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+            if (historyRepository.markAsTaken(detailId, date, time)) {
+                getSchedulesByDate(date)
+            }
         }
-        createSchedule(medicineId, startDate, details)
     }
 }
-
