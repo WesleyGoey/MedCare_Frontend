@@ -27,8 +27,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.wesley.medcare.ui.model.History // IMPORT YOUR MODEL
 import com.wesley.medcare.ui.viewmodel.HistoryViewModel
+import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 // ... (Color definitions remain the same: Teal500, etc.) ...
@@ -94,8 +99,7 @@ fun HistoryView(
             item {
                 // 2. Pass the raw history list to the activity list
                 RecentActivityCard(
-                    activityList = recentActivity,
-                    onUndoClick = { historyId -> viewModel.undoMarkAsTaken(historyId) }
+                    activityList = recentActivity
                 )
             }
         }
@@ -125,18 +129,43 @@ fun SummaryCard(
 
 @Composable
 fun WeeklyComplianceCard(historyData: List<History>) {
-    // 3. LOGIC: Transform raw History list into Daily Percentages
-    // Group by Date -> Calculate (Taken / Total) * 100
-    val chartData = remember(historyData) {
-        historyData.groupBy { it.scheduledDate } // Group by "2023-10-01"
-            .mapValues { (_, items) ->
-                val total = items.size
-                val taken = items.count { it.status == "TAKEN" }
-                if (total > 0) (taken * 100) / total else 0
+    // 1. Prepare Data Map: Group by Date (Key = "2026-01-06")
+    // We do this first for fast lookup inside the loop
+    val historyMap = remember(historyData) {
+        historyData.groupBy {
+            // Fix: Handle full timestamps like "2026-01-06T09:00:00Z" -> "2026-01-06"
+            it.scheduledDate.take(10)
+        }
+    }
+
+    // 2. Generate the Fixed Week (Mon - Sun)
+    val weeklyData = remember(historyMap) {
+        val today = LocalDate.now()
+        // Find the Monday of the current week (anchors the chart)
+        val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+        // Create exactly 7 bars starting from Monday
+        (0..6).map { dayOffset ->
+            val date = startOfWeek.plusDays(dayOffset.toLong())
+            val dateStr = date.toString() // e.g. "2026-01-06"
+
+            // Format label: "MON", "TUE"
+            val dayLabel = date.format(DateTimeFormatter.ofPattern("EEE", Locale.US)).uppercase()
+
+            // Lookup data for this specific day
+            val items = historyMap[dateStr] ?: emptyList()
+
+            // Calculate Percentage
+            val percentage = if (items.isNotEmpty()) {
+                val taken = items.count { it.status.equals("DONE", ignoreCase = true) }
+                (taken * 100) / items.size
+            } else {
+                0
             }
-            .toList()
-            .sortedBy { it.first } // Sort by Date
-            .takeLast(7) // Show last 7 days
+
+            // Return pair: Label + Value
+            dayLabel to percentage
+        }
     }
 
     Card(
@@ -147,33 +176,29 @@ fun WeeklyComplianceCard(historyData: List<History>) {
         border = BorderStroke(1.dp, Color(0xFFE0E0E0).copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Weekly Compliance", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkText, modifier = Modifier.padding(bottom = 24.dp))
+            Text(
+                "Weekly Compliance",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkText,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
-            if (chartData.isEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    Text("No data available", color = GrayText)
-                }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(160.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    chartData.forEach { (dateStr, percentage) ->
-                        // Convert "2023-10-01" to "Mon"
-                        val dayLabel = try {
-                            LocalDate.parse(dateStr).format(DateTimeFormatter.ofPattern("EEE", Locale.US))
-                        } catch (e: Exception) {
-                            dateStr.take(3)
-                        }
-
-                        ComplianceBar(day = dayLabel, percentage = percentage)
-                    }
+            // RENDER THE CHART
+            Row(
+                modifier = Modifier.fillMaxWidth().height(160.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // Loop through our fixed 7 days (Mon-Sun) instead of the raw data list
+                weeklyData.forEach { (dayLabel, percentage) ->
+                    ComplianceBar(day = dayLabel, percentage = percentage)
                 }
             }
-            // ... (LegendItem row remains the same) ...
+
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Legend (Kept the same)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 LegendItem(color = Teal500, label = "90-100%")
                 Spacer(modifier = Modifier.width(12.dp))
@@ -187,10 +212,10 @@ fun WeeklyComplianceCard(historyData: List<History>) {
 
 @Composable
 fun RecentActivityCard(
-    activityList: List<History>, // 4. Use your Model
-    onUndoClick: (Int) -> Unit
+    activityList: List<History>
 ) {
     Card(
+        // ... (modifiers and colors remain the same)
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -204,25 +229,26 @@ fun RecentActivityCard(
                 Text("No recent activity", color = GrayText, modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 activityList.take(5).forEachIndexed { index, history ->
-                    // 5. Map fields from your History Model
-                    val isTaken = history.status.equals("TAKEN", ignoreCase = true)
+                    // 1. Determine Status
+                    val isTaken = history.status.equals("DONE", ignoreCase = true) ||
+                            history.status.equals("TAKEN", ignoreCase = true)
 
-                    // Display Time: If taken, show taken time. If missed/pending, show scheduled time.
-                    val timeLabel = if (isTaken && history.timeTaken.isNotEmpty()) {
+                    // 2. Format Time: Pick 'timeTaken' if done, otherwise 'scheduledTime'
+                    val rawTime = if (isTaken && history.timeTaken.isNotEmpty()) {
                         history.timeTaken
                     } else {
                         history.scheduledTime
                     }
+                    val formattedTime = formatDisplayTime(rawTime)
 
-                    // Display Date: "Today", "Yesterday", or the date string
-                    // Simple logic: just use scheduledDate for now
-                    val dateLabel = history.scheduledDate
+                    // 3. Format Date
+                    val formattedDate = formatDisplayDate(history.scheduledDate)
 
                     ActivityItem(
-                        time = "$dateLabel • $timeLabel",
+                        // Combine them nicely: "Today • 4:04 PM"
+                        time = "$formattedDate • $formattedTime",
                         medicine = history.medicineName,
-                        isTaken = isTaken,
-                        onClick = { onUndoClick(history.id) }
+                        isTaken = isTaken
                     )
 
                     if (index < activityList.size - 1) {
@@ -233,14 +259,11 @@ fun RecentActivityCard(
         }
     }
 }
-
-// ... (ActivityItem, ComplianceBar, LegendItem remain the same as previous response) ...
 @Composable
 fun ActivityItem(
     time: String,
     medicine: String,
-    isTaken: Boolean,
-    onClick: () -> Unit
+    isTaken: Boolean
 ) {
     val bgColor = if (isTaken) TealLightBg else RedLightBg
     val borderColor = if (isTaken) TealBorder else RedBorder
@@ -253,7 +276,6 @@ fun ActivityItem(
             .clip(RoundedCornerShape(20.dp))
             .background(bgColor)
             .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp))
-            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -279,17 +301,36 @@ fun ComplianceBar(day: String, percentage: Int) {
         percentage >= 70 -> Yellow500
         else -> Red500
     }
-    val weight = if (percentage > 0) percentage / 100f else 0.01f
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxHeight()) {
+    // Convert integer percentage (e.g., 80) to float fraction (0.8f)
+    // Ensure we show at least a tiny sliver (0.02f) even if 0%, so it's visible
+    val fillFraction = (percentage / 100f).coerceAtLeast(0.02f)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        // Remove fillMaxHeight() here; let the weight handle the height
+        modifier = Modifier.fillMaxHeight()
+    ) {
+        // 1. The "Track" (Invisible container that holds the bar)
         Box(
             modifier = Modifier
-                .width(22.dp)
-                .weight(weight)
-                .clip(RoundedCornerShape(6.dp))
-                .background(barColor)
-        )
+                .weight(1f) // Takes up all available space above the text
+                .width(22.dp),
+            contentAlignment = Alignment.BottomCenter // Important: Anchors bar to bottom
+        ) {
+            // 2. The Actual Colored Bar
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(fillFraction) // <--- THIS FIXES THE HEIGHT
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(barColor)
+            )
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
+
+        // 3. Day Label
         Text(text = day, fontSize = 12.sp, color = GrayText)
     }
 }
@@ -300,5 +341,40 @@ fun LegendItem(color: Color, label: String) {
         Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(color))
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = label, fontSize = 12.sp, color = GrayText)
+    }
+}
+
+fun formatDisplayDate(isoString: String): String {
+    if (isoString.isBlank()) return ""
+    return try {
+        val instant = Instant.parse(isoString)
+
+        // USE LOCAL TIMEZONE HERE
+        val zoneId = ZoneId.systemDefault()
+
+        val date = LocalDateTime.ofInstant(instant, zoneId).toLocalDate()
+        val today = LocalDate.now(zoneId)
+
+        when (date) {
+            today -> "Today"
+            today.minusDays(1) -> "Yesterday"
+            else -> DateTimeFormatter.ofPattern("MMM d", Locale.US).format(date)
+        }
+    } catch (e: Exception) {
+        isoString.take(10)
+    }
+}
+
+fun formatDisplayTime(isoString: String): String {
+    if (isoString.isBlank()) return ""
+    return try {
+        val instant = Instant.parse(isoString)
+
+        val zoneId = ZoneId.of("UTC")
+
+        val dateTime = LocalDateTime.ofInstant(instant, zoneId)
+        DateTimeFormatter.ofPattern("h:mm a", Locale.US).format(dateTime)
+    } catch (e: Exception) {
+        isoString.takeLast(8)
     }
 }

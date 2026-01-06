@@ -10,6 +10,7 @@ import com.wesley.medcare.data.dto.Schedule.TimeDetailData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -99,11 +100,20 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun markAsTaken(detailId: Int, date: String) {
+    fun markAsTaken(detailId: Int, date: String) { // 'date' here is the "Viewed Date"
         viewModelScope.launch {
-            val time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-            if (historyRepository.markAsTaken(detailId, date, time)) {
+
+            val todayForDb = LocalDate.now().toString()
+            val timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+
+            if (historyRepository.markAsTaken(detailId, todayForDb, timeNow)) {
+
+
                 getSchedulesByDate(date)
+
+                if (date != todayForDb) {
+                    getSchedulesByDate(todayForDb)
+                }
             }
         }
     }
