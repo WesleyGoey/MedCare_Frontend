@@ -11,8 +11,13 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,21 +32,19 @@ class AlarmAlertActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Ambil Data dari Intent
-        val medicineName = intent.getStringExtra("MEDICINE_NAME") ?: "Obat"
+        val medicineName = intent.getStringExtra("MEDICINE_NAME") ?: "Medication"
         val alarmId = intent.getIntExtra("ALARM_ID", 0)
         val detailId = intent.getIntExtra("DETAIL_ID", -1)
 
-        // 2. KUNCI: Langsung hapus notifikasi di tray agar tidak terlihat double
+        // Hilangkan notifikasi di tray saat activity terbuka
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(alarmId)
 
-        // 3. Pengaturan Window agar muncul di atas lockscreen & layar tetap nyala
+        // Pengaturan agar layar menyala dan melewati lockscreen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
         }
-
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
@@ -50,65 +53,95 @@ class AlarmAlertActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
 
-        // 4. Jalankan Suara Alarm
         startAlarmSound()
 
-        // 5. Tampilan UI Alarm Layar Penuh
         setContent {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = Color(0xFFF0F7FF) // Latar belakang biru muda bersih
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "WAKTUNYA MINUM OBAT!",
-                        color = Color.Red,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = medicineName,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black
-                    )
-
-                    Spacer(modifier = Modifier.height(64.dp))
-
-                    Button(
-                        onClick = {
-                            // Kirim broadcast untuk update database & cek stok rendah
-                            val takenIntent = Intent(this@AlarmAlertActivity, ActionReceiver::class.java).apply {
-                                action = "ACTION_TAKEN"
-                                putExtra("DETAIL_ID", detailId)
-                                putExtra("NOTIFICATION_ID", alarmId)
-                            }
-                            sendBroadcast(takenIntent)
-
-                            // Berhenti dan tutup activity
-                            stopAlarmAndExit()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF))
-                    ) {
-                        Text(
-                            text = "SAYA SUDAH MINUM",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+            AlarmScreen(
+                medicineName = medicineName,
+                onTakenClick = {
+                    // Memicu ActionReceiver untuk update database
+                    val takenIntent = Intent(this, ActionReceiver::class.java).apply {
+                        action = "ACTION_TAKEN"
+                        putExtra("DETAIL_ID", detailId)
+                        putExtra("NOTIFICATION_ID", alarmId)
                     }
+                    sendBroadcast(takenIntent)
+                    stopAlarmAndExit()
+                },
+                onSkipClick = {
+                    // Hanya mematikan suara dan keluar tanpa update status
+                    stopAlarmAndExit()
+                }
+            )
+        }
+    }
+
+    @Composable
+    fun AlarmScreen(
+        medicineName: String,
+        onTakenClick: () -> Unit,
+        onSkipClick: () -> Unit
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFFF8F9FB)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AccessTime,
+                    contentDescription = null,
+                    modifier = Modifier.size(160.dp),
+                    tint = Color(0xFF457AF9) // Sesuai Primary Blue Anda
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = medicineName,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A2E)
+                )
+
+                Text(
+                    text = "Time to take your medication",
+                    fontSize = 18.sp,
+                    color = Color(0xFF8A94A6),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(60.dp))
+
+                // Tombol Mark As Taken
+                Button(
+                    onClick = onTakenClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9))
+                ) {
+                    Text("Mark As Taken", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Tombol Skip (Hanya mematikan alarm)
+                OutlinedButton(
+                    onClick = onSkipClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+                ) {
+                    Text("Skip Reminder", color = Color(0xFF8A94A6), fontSize = 16.sp)
                 }
             }
         }
@@ -127,7 +160,7 @@ class AlarmAlertActivity : ComponentActivity() {
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build()
                 )
-                isLooping = true // Suara akan terus berulang sampai tombol ditekan
+                isLooping = true
                 prepare()
                 start()
             }

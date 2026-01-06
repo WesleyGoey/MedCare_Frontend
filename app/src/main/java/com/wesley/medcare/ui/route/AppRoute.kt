@@ -1,6 +1,5 @@
 package com.wesley.medcare.ui.route
 
-import HomeView
 import android.app.Application
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,6 +34,7 @@ import com.wesley.medcare.ui.view.LoginRegister.RegisterView
 import com.wesley.medcare.ui.view.Medicine.*
 import com.wesley.medcare.ui.view.Schedule.*
 import com.wesley.medcare.ui.view.History.HistoryView
+import com.wesley.medcare.ui.view.Home.HomeView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
 import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
@@ -128,7 +128,14 @@ fun AppRoute() {
                     onSignInClick = { navController.popBackStack() }
                 )
             }
-            composable(route = AppView.HomeView.name) { HomeView() }
+            composable(route = AppView.HomeView.name) {
+                HomeView(
+                    navController = navController,
+                    // Kirimkan ViewModel yang sudah di-init di atas agar data tersinkronisasi
+                    medicineVM = medicineViewModel,
+                    scheduleVM = scheduleViewModel
+                )
+            }
 
             composable(route = AppView.MedicineView.name) {
                 MedicineView(

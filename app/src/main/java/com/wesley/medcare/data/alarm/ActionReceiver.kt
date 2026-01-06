@@ -8,8 +8,8 @@ import com.wesley.medcare.data.container.AppContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalTime
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class ActionReceiver : BroadcastReceiver() {
@@ -18,19 +18,28 @@ class ActionReceiver : BroadcastReceiver() {
         val detailId = intent.getIntExtra("DETAIL_ID", -1)
         val notificationId = intent.getIntExtra("NOTIFICATION_ID", 0)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val container = AppContainer(context.applicationContext)
-                val historyRepo = container.historyRepository
-                val medicineRepo = container.medicineRepository
-                val date = LocalDate.now().toString()
+        if (detailId == -1) return
 
-                if (action == "ACTION_TAKEN") {
-                    val time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-                    val isSuccess = historyRepo.markAsTaken(detailId, date, time)
+        if (action == "ACTION_TAKEN") {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val container = AppContainer(context.applicationContext)
+                    val historyRepo = container.historyRepository
+                    val medicineRepo = container.medicineRepository
 
-                    // JIKA BERHASIL, CEK STOK UNTUK NOTIFIKASI TRAY
+                    // Gunakan Waktu Jakarta
+                    val jakartaZone = ZoneId.of("Asia/Jakarta")
+                    val now = LocalDateTime.now(jakartaZone)
+
+                    // Format tanggal harus sinkron dengan ViewModel: YYYY-MM-DDT00:00:00
+                    val dateFormatted = now.toLocalDate().toString() + "T00:00:00"
+                    val timeTaken = now.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+
+                    val isSuccess = historyRepo.markAsTaken(detailId, dateFormatted, timeTaken)
+
                     if (isSuccess) {
+                        Log.d("ALARM_ACTION", "Berhasil Mark As Taken untuk ID: $detailId")
+                        // Cek Stok Obat
                         val response = medicineRepo.getAllMedicines()
                         response?.data?.forEach { medicine ->
                             if (medicine.stock <= medicine.minStock) {
@@ -41,13 +50,13 @@ class ActionReceiver : BroadcastReceiver() {
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    Log.e("ALARM_ACTION", "Error updating history: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.e("ALARM_API", "Error: ${e.message}")
             }
         }
 
-        // Tutup notifikasi alarm dari tray
+        // Hapus notifikasi dari tray
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         manager.cancel(notificationId)
     }
