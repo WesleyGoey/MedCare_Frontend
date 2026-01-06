@@ -1,14 +1,11 @@
-// kotlin
 package com.wesley.medcare.ui.route
 
 import HomeView
 import android.app.Application
-import android.widget.Toast
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MedicalServices
@@ -18,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -38,7 +34,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
@@ -53,7 +48,7 @@ import com.wesley.medcare.ui.view.Schedule.AddReminderView
 import com.wesley.medcare.ui.view.Schedule.EditReminderView
 import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.UserViewModel
-import kotlinx.coroutines.launch
+import com.wesley.medcare.ui.viewmodel.ScheduleViewModel // Pastikan ini diimport
 
 enum class AppView(
     val title: String,
@@ -91,8 +86,15 @@ fun AppRoute() {
         UserViewModel(context.applicationContext as Application)
     }
 
-    // Initialize MedicineViewModel using AndroidViewModelFactory so it's lifecycle-aware
+    // Initialize MedicineViewModel
     val medicineViewModel: MedicineViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
+            context.applicationContext as Application
+        )
+    )
+
+    // TAMBAHKAN INI: Inisialisasi ScheduleViewModel agar bisa digunakan di MedicineView & Info
+    val scheduleViewModel: ScheduleViewModel = viewModel(
         factory = ViewModelProvider.AndroidViewModelFactory.getInstance(
             context.applicationContext as Application
         )
@@ -101,7 +103,6 @@ fun AppRoute() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
-    val currentView = AppView.entries.find { it.name == currentRoute }
 
     val bottomNavItems = listOf(
         BottomNavItem(AppView.HomeView, "Home"),
@@ -109,11 +110,6 @@ fun AppRoute() {
         BottomNavItem(AppView.ReminderView, "Remind"),
         BottomNavItem(AppView.HistoryView, "History"),
         BottomNavItem(AppView.ProfileView, "Profile")
-    )
-
-    val showTopBar = currentRoute !in listOf(
-        AppView.LoginView.name,
-        AppView.RegisterView.name
     )
 
     val bottomRoutes = bottomNavItems.map { it.view.name }
@@ -163,10 +159,16 @@ fun AppRoute() {
                 HomeView()
             }
             composable(route = AppView.MedicineView.name) {
-                MedicineView(navController = navController, viewModel = medicineViewModel)
+                // UPDATE: Kirim medicineViewModel dan scheduleViewModel
+                MedicineView(
+                    navController = navController,
+                    medicineViewModel = medicineViewModel,
+                    scheduleViewModel = scheduleViewModel
+                )
             }
             composable(route = AppView.ReminderView.name) {
-                ReminderView(navController = navController)
+                // UPDATE: Gunakan instance scheduleViewModel yang sama
+                ReminderView(navController = navController, viewModel = scheduleViewModel)
             }
 
             composable(route = AppView.AddReminderView.name) {
@@ -189,7 +191,13 @@ fun AppRoute() {
                 arguments = listOf(navArgument("medicineId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val medicineId = backStackEntry.arguments?.getInt("medicineId") ?: 0
-                MedicineInfoView(navController = navController, medicineId = medicineId)
+                // UPDATE: Berikan ViewModel pendukung
+                MedicineInfoView(
+                    navController = navController,
+                    medicineId = medicineId,
+                    medicineViewModel = medicineViewModel,
+                    scheduleViewModel = scheduleViewModel
+                )
             }
 
             composable(
@@ -207,46 +215,9 @@ fun AppRoute() {
                 val scheduleId = backStackEntry.arguments?.getInt("scheduleId") ?: 0
                 EditReminderView(navController = navController, scheduleId = scheduleId)
             }
-
-
         }
     }
 }
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun MyTopAppBar(
-//    currentView: AppView?,
-//    canNavigateBack: Boolean,
-//    navigateUp: () -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    TopAppBar(
-//        title = {
-//            Text(
-//                text = currentView?.title ?: "MedCare",
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.SemiBold
-//            )
-//        },
-//        modifier = modifier,
-//        navigationIcon = {
-//            if (canNavigateBack) {
-//                IconButton(onClick = navigateUp) {
-//                    Icon(
-//                        imageVector = Icons.Filled.ArrowBack,
-//                        contentDescription = "Back"
-//                    )
-//                }
-//            }
-//        },
-//        colors = TopAppBarDefaults.topAppBarColors(
-//            containerColor = Color(0xFF2F93FF),
-//            titleContentColor = Color.White,
-//            navigationIconContentColor = Color.White
-//        )
-//    )
-//}
 
 @Composable
 fun MyBottomNavigationBar(
@@ -254,14 +225,13 @@ fun MyBottomNavigationBar(
     currentDestination: NavDestination?,
     items: List<BottomNavItem>
 ) {
-    // Definisi warna berdasarkan palet yang diberikan
-    val activeColor = Color(0xFF457AF9)   // Biru Aktif
-    val inactiveColor = Color(0xFF8A94A6) // Abu-abu Inaktif
+    val activeColor = Color(0xFF457AF9)
+    val inactiveColor = Color(0xFF8A94A6)
 
     NavigationBar(
         containerColor = Color.White,
-        tonalElevation = 8.dp, // Memberikan bayangan halus di atas bar
-        modifier = Modifier.height(80.dp) // Menyesuaikan tinggi agar proporsional dengan ikon
+        tonalElevation = 8.dp,
+        modifier = Modifier.height(80.dp)
     ) {
         items.forEach { item ->
             val isSelected = currentDestination?.hierarchy?.any {
@@ -283,7 +253,7 @@ fun MyBottomNavigationBar(
                     Icon(
                         imageVector = item.view.icon!!,
                         contentDescription = item.label,
-                        modifier = Modifier.size(26.dp), // Ukuran ikon sesuai gambar
+                        modifier = Modifier.size(26.dp),
                         tint = if (isSelected) activeColor else inactiveColor
                     )
                 },
@@ -295,7 +265,6 @@ fun MyBottomNavigationBar(
                         color = if (isSelected) activeColor else inactiveColor
                     )
                 },
-                // Menghilangkan pill indicator agar tampilan persis seperti gambar
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = Color.Transparent,
                     selectedIconColor = activeColor,
