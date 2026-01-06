@@ -41,7 +41,6 @@ fun AddReminderView(
     val successMessage by scheduleViewModel.successMessage.collectAsState()
     val errorMessage by scheduleViewModel.errorMessage.collectAsState()
 
-    // State Variables
     var selectedMedicineId by remember { mutableIntStateOf(0) }
     var selectedMedicineName by remember { mutableStateOf("") }
     var showMedicineDropdown by remember { mutableStateOf(false) }
@@ -72,14 +71,17 @@ fun AddReminderView(
     }
 
     Scaffold(
+        // PERBAIKAN: Set background Scaffold menjadi putih
+        containerColor = Color.White,
         topBar = {
             TopAppBar(
-                title = { Text("Add Reminder", fontWeight = FontWeight.Bold) },
+                title = { Text("Add Reminder", fontWeight = FontWeight.Bold, color = Color(0xFF202630)) },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF202630))
                     }
                 },
+                // PERBAIKAN: Set TopAppBar background menjadi putih
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     titleContentColor = Color(0xFF202630)
@@ -90,11 +92,12 @@ fun AddReminderView(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                // PERBAIKAN: Memastikan background konten LazyColumn tetap putih
+                .background(Color.White)
                 .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Medicine Selector
             item {
                 Column {
                     Text("Medicine", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
@@ -117,11 +120,12 @@ fun AddReminderView(
                         DropdownMenu(
                             expanded = showMedicineDropdown,
                             onDismissRequest = { showMedicineDropdown = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            // Memastikan dropdown tetap putih
+                            modifier = Modifier.fillMaxWidth(0.9f).background(Color.White)
                         ) {
                             medicines.forEach { medicine ->
                                 DropdownMenuItem(
-                                    text = { Text("${medicine.name} (${medicine.dosage})") },
+                                    text = { Text("${medicine.name} (${medicine.dosage})", color = Color(0xFF202630)) },
                                     onClick = {
                                         selectedMedicineId = medicine.id
                                         selectedMedicineName = medicine.name
@@ -134,7 +138,6 @@ fun AddReminderView(
                 }
             }
 
-            // Start Date Selector
             item {
                 Column {
                     Text("Start Date", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
@@ -156,7 +159,6 @@ fun AddReminderView(
                 }
             }
 
-            // Time Slots Header
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -165,14 +167,13 @@ fun AddReminderView(
                 ) {
                     Text("Schedule Time", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF202630))
                     TextButton(onClick = { selectedTimeIndex = -1; showTimePickerDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFF2F93FF))
                         Spacer(Modifier.width(4.dp))
-                        Text("Add Time")
+                        Text("Add Time", color = Color(0xFF2F93FF), fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            // Time Slots List
             items(timeSlots) { time ->
                 Surface(
                     modifier = Modifier
@@ -202,7 +203,6 @@ fun AddReminderView(
                 }
             }
 
-            // Save Button
             item {
                 Spacer(Modifier.height(16.dp))
                 Button(
@@ -212,7 +212,6 @@ fun AddReminderView(
                             timeSlots.isEmpty() -> Toast.makeText(context, "Please add at least one time", Toast.LENGTH_SHORT).show()
                             else -> {
                                 val details = timeSlots.map { TimeDetailData(time = it) }
-                                // PERBAIKAN: Menghapus scheduleType dari parameter call
                                 scheduleViewModel.createSchedule(
                                     medicineId = selectedMedicineId,
                                     startDate = selectedDate.toString(),
@@ -223,20 +222,22 @@ fun AddReminderView(
                     },
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F93FF)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2F93FF),
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text("Save Reminder", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("Save Reminder", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
         }
     }
 
-    // Dialogs (DatePicker & TimePicker tetap sama)
     if (showTimePickerDialog) {
         TimePickerDialog(
             initialTime = if (selectedTimeIndex >= 0) timeSlots[selectedTimeIndex] else "08:00",
@@ -276,7 +277,6 @@ fun AddReminderView(
                 ) { Text("Cancel") }
             }
         ) {
-            // PERBAIKAN: Menambahkan colors agar header dan seleksi berwarna biru
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
@@ -294,7 +294,6 @@ fun AddReminderView(
                     todayDateBorderColor = Color(0xFF2F93FF)
                 )
             )
-
         }
     }
 }
@@ -326,7 +325,9 @@ fun TimePickerDialog(
             modifier = Modifier
                 .width(IntrinsicSize.Min)
                 .height(IntrinsicSize.Min)
-                .background(MaterialTheme.colorScheme.surface),
+                // Memastikan dialog tetap putih
+                .background(Color.White),
+            color = Color.White
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -339,12 +340,11 @@ fun TimePickerDialog(
                     color = Color.Gray
                 )
 
-                // PERBAIKAN: Custom warna dial dan selector menjadi biru
                 TimePicker(
                     state = state,
                     colors = TimePickerDefaults.colors(
                         clockDialColor = Color(0xFFF0F7FF),
-                        selectorColor = Color(0xFF2F93FF), // Jarum Jam Biru
+                        selectorColor = Color(0xFF2F93FF),
                         containerColor = Color.White,
                         periodSelectorSelectedContainerColor = Color(0xFFD9E9FF),
                         timeSelectorSelectedContainerColor = Color(0xFFD9E9FF),
