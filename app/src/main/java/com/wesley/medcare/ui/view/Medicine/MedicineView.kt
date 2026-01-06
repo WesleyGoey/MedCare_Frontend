@@ -33,6 +33,7 @@ import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@OptIn(ExperimentalLayoutApi::class) // Diperlukan untuk FlowRow
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MedicineView(
@@ -104,7 +105,9 @@ fun MedicineView(
                         val medicineSchedules = allSchedules.filter { it.medicine.id == med.id }
 
                         Card(
-                            modifier = Modifier.fillMaxWidth().clickable { navController.navigate("${AppView.MedicineInfoView.name}/${med.id}") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navController.navigate("${AppView.MedicineInfoView.name}/${med.id}") },
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
@@ -129,13 +132,29 @@ fun MedicineView(
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (medicineSchedules.isEmpty()) {
-                                        Text("No schedule set", fontSize = 14.sp, color = Color.Gray)
-                                    } else {
+                                // MENGGUNAKAN FLOWROW UNTUK OTOMATIS PINDAH BARIS
+                                if (medicineSchedules.isEmpty()) {
+                                    Text("No schedule set", fontSize = 14.sp, color = Color.Gray)
+                                } else {
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        maxItemsInEachRow = 3 // Batas maksimal 3 per baris
+                                    ) {
                                         medicineSchedules.forEach { schedule ->
-                                            Box(modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0xFFECF1FF)).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                                Text(text = schedule.time.substring(0, 5), color = Color(0xFF457AF9), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(Color(0xFFECF1FF))
+                                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                            ) {
+                                                Text(
+                                                    text = schedule.time.substring(0, 5),
+                                                    color = Color(0xFF457AF9),
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
                                         }
                                     }

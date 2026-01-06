@@ -32,6 +32,7 @@ import com.wesley.medcare.ui.viewmodel.MedicineViewModel
 import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
 import java.time.LocalDate
 
+@OptIn(ExperimentalLayoutApi::class) // Diperlukan untuk FlowRow
 @Composable
 fun MedicineInfoView(
     medicineId: Int,
@@ -44,7 +45,7 @@ fun MedicineInfoView(
     val successMessage by medicineViewModel.successMessage.collectAsState()
     val allSchedules by scheduleViewModel.schedules.collectAsState()
 
-    val medicineSchedules = allSchedules.filter { it.medicine.id == medicineId }
+    val medicineSchedules = allSchedules.filter { it.medicine.id == medicineId }.sortedBy { it.time }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
@@ -66,9 +67,15 @@ fun MedicineInfoView(
         topBar = { BackTopAppBar(title = "Back", onBack = { navController.navigateUp() }) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(paddingValues).fillMaxSize().background(Color(0xFFF5F7FA)).verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 8.dp),
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(Color(0xFFF5F7FA))
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // --- Header Card (Logo & Name) ---
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -84,6 +91,7 @@ fun MedicineInfoView(
                 }
             }
 
+            // --- Schedule Card (Bagian yang Diperbarui dengan FlowRow) ---
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -93,20 +101,43 @@ fun MedicineInfoView(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.AccessTime, null, tint = Color(0xFF457AF9), modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Medication Schedule", color = Color(0xFF1A1A2E))
+                        Text("Medication Schedule", fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     }
                     Spacer(Modifier.height(12.dp))
-                    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFECF1FF)).padding(16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFECF1FF))
+                            .padding(16.dp)
+                    ) {
                         Text("Daily Times:", fontSize = 13.sp, color = Color(0xFF457AF9), fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (medicineSchedules.isEmpty()) {
-                                Text("-", color = Color(0xFF457AF9), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            } else {
+                        // MENGGUNAKAN FLOWROW UNTUK MAKSIMAL 3 PER BARIS
+                        if (medicineSchedules.isEmpty()) {
+                            Text("-", color = Color(0xFF457AF9), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                maxItemsInEachRow = 3 // Batas maksimal 3 item per baris
+                            ) {
                                 medicineSchedules.forEach { schedule ->
-                                    Surface(shape = RoundedCornerShape(10.dp), color = Color.White, modifier = Modifier.width(75.dp)) {
-                                        Text(text = schedule.time.substring(0, 5), modifier = Modifier.padding(vertical = 6.dp), textAlign = TextAlign.Center, color = Color(0xFF457AF9), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.White,
+                                        modifier = Modifier.width(75.dp) // Lebar tetap agar rapi 3 kolom
+                                    ) {
+                                        Text(
+                                            text = schedule.time.substring(0, 5),
+                                            modifier = Modifier.padding(vertical = 8.dp),
+                                            textAlign = TextAlign.Center,
+                                            color = Color(0xFF457AF9),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
                                     }
                                 }
                             }
@@ -116,7 +147,6 @@ fun MedicineInfoView(
                         HorizontalDivider(color = Color(0xFF457AF9).copy(alpha = 0.2f), thickness = 1.dp)
                         Spacer(Modifier.height(12.dp))
 
-                        // BAGIAN DETAIL DENGAN TANDA "-" JIKA KOSONG
                         val scheduleItems = listOf(
                             "📅" to (if (medicineSchedules.isNotEmpty()) "Every day" else "-"),
                             "💊" to (medicine?.dosage?.let { "Dose: 1 x $it" } ?: "-"),
@@ -133,6 +163,7 @@ fun MedicineInfoView(
                 }
             }
 
+            // --- Stock Card ---
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -144,7 +175,7 @@ fun MedicineInfoView(
                             Icon(Icons.Outlined.Inventory2, null, tint = Color.White, modifier = Modifier.size(18.dp))
                         }
                         Spacer(Modifier.width(12.dp))
-                        Text("Stock Information", color = Color(0xFF1A1A2E))
+                        Text("Stock Information", fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     }
                     Spacer(Modifier.height(16.dp))
                     Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFF5F7FA)).padding(16.dp)) {
@@ -174,6 +205,7 @@ fun MedicineInfoView(
             Spacer(Modifier.height(20.dp))
         }
 
+        // --- Dialog & Loading ---
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
