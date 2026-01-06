@@ -37,7 +37,6 @@ fun ProfileView(
     val isLoading by userViewModel.isLoading.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // SCROLL: State untuk kontrol posisi scroll
     val scrollState = rememberScrollState()
 
     var pushEnabled by remember { mutableStateOf(true) }
@@ -54,7 +53,7 @@ fun ProfileView(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F7FA))
-                .verticalScroll(scrollState) // Menggunakan state scroll
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
             // --- SECTION HEADER ---
@@ -194,94 +193,6 @@ fun ProfileView(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // Alarm Sound
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.Alarm,
-                                null,
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 14.dp)
-                        ) {
-                            Text(
-                                "Alarm Sound",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF1A1A2E)
-                            )
-                            Text("Default Alarm", fontSize = 12.sp, color = Color(0xFF757575))
-                        }
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            null,
-                            tint = Color(0xFFE0E0E0),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
-
-                    // Notification Sound
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.NotificationsActive,
-                                null,
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 14.dp)
-                        ) {
-                            Text(
-                                "Notification Sound",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF1A1A2E)
-                            )
-                            Text("Gentle Chime", fontSize = 12.sp, color = Color(0xFF757575))
-                        }
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            null,
-                            tint = Color(0xFFE0E0E0),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    HorizontalDivider(color = Color(0xFFF5F7FA), thickness = 1.dp)
-
                     // Push Notifications Toggle
                     Row(
                         modifier = Modifier
@@ -293,7 +204,8 @@ fun ProfileView(
                             modifier = Modifier
                                 .size(46.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                                .background(Color(0xFF457AF9)),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Outlined.Notifications,
@@ -345,7 +257,8 @@ fun ProfileView(
                             modifier = Modifier
                                 .size(46.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF457AF9)), contentAlignment = Alignment.Center
+                                .background(Color(0xFF457AF9)),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Outlined.Inventory2,

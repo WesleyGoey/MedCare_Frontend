@@ -5,6 +5,5 @@ data class UserData(
     val email: String,
     val id: Int,
     val name: String,
-    val phone: String,
-    val settingId: Int
+    val phone: String
 )
