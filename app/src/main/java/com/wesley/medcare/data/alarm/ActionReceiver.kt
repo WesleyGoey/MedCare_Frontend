@@ -22,18 +22,32 @@ class ActionReceiver : BroadcastReceiver() {
             try {
                 val container = AppContainer(context.applicationContext)
                 val historyRepo = container.historyRepository
+                val medicineRepo = container.medicineRepository
                 val date = LocalDate.now().toString()
 
                 if (action == "ACTION_TAKEN") {
                     val time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-                    historyRepo.markAsTaken(detailId, date, time)
+                    val isSuccess = historyRepo.markAsTaken(detailId, date, time)
+
+                    // JIKA BERHASIL, CEK STOK UNTUK NOTIFIKASI TRAY
+                    if (isSuccess) {
+                        val response = medicineRepo.getAllMedicines()
+                        response?.data?.forEach { medicine ->
+                            if (medicine.stock <= medicine.minStock) {
+                                NotificationHelper(context).showLowStockNotification(
+                                    medicine.name,
+                                    medicine.stock
+                                )
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ALARM_API", "Error: ${e.message}")
             }
         }
 
-        // Tutup notifikasi tray
+        // Tutup notifikasi alarm dari tray
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         manager.cancel(notificationId)
     }
