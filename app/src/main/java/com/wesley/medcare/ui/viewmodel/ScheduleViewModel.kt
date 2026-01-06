@@ -143,13 +143,30 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun markAsTaken(detailId: Int, date: String) {
+    fun markAsTaken(detailId: Int, originalScheduledDate: String) {
         viewModelScope.launch {
-            val todayForDb = LocalDate.now().toString()
-            val timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-            if (historyRepository.markAsTaken(detailId, todayForDb, timeNow)) {
-                getSchedulesByDate(date)
+            // Prepare the date string FIRST
+            val dateToSend = if (originalScheduledDate.contains("T")) {
+                originalScheduledDate
+            } else {
+                "${originalScheduledDate}T00:00:00"
+            }
+
+            // FIX: Pass 'dateToSend' to updateLocalStatus
+            updateLocalStatus(detailId, "DONE", dateToSend)
+
+            try {
+                val jakartaZone = ZoneId.of("Asia/Jakarta")
+                val timeTakenNow =
+                    LocalTime.now(jakartaZone).format(DateTimeFormatter.ofPattern("HH:mm"))
+
+                val success = historyRepository.markAsTaken(detailId, dateToSend, timeTakenNow)
+
+                // FIX: Pass 'dateToSend' here too if we need to revert
+                if (!success) updateLocalStatus(detailId, "PENDING", dateToSend)
+
+            } catch (e: Exception) {
+                updateLocalStatus(detailId, "PENDING", dateToSend)
             }
         }
-    }
 }
