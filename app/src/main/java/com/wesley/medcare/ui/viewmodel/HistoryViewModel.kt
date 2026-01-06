@@ -62,8 +62,6 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun fetchRecentActivity() {
-        // CHANGE 1: Call getAllHistory() instead of getRecentActivity()
-        // We need the full list to calculate the chart correctly.
         val response = repository.getAllHistory()
 
         val mappedList = response?.data?.map { dto ->
@@ -77,30 +75,10 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
             )
         } ?: emptyList()
 
-        // CHANGE 2: Sort by Date/Time Descending (Newest first)
-        // This ensures RecentActivityCard shows the latest items,
-        // while the Chart can still use the whole list.
-        val sortedList = mappedList.sortedByDescending { it.scheduledDate + it.scheduledTime }
+        val filteredList = mappedList.filter { it.status != "PENDING" }
+
+        val sortedList = filteredList.sortedByDescending { it.scheduledDate + it.scheduledTime }
 
         _recentActivityList.value = sortedList
-    }
-
-    fun undoMarkAsTaken(historyId: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val success = repository.undoMarkAsTaken(historyId)
-                if (success) {
-                    _message.value = "Action undone"
-                    refreshDashboard()
-                } else {
-                    _message.value = "Failed to undo"
-                }
-            } catch (e: Exception) {
-                _message.value = "Error: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
     }
 }

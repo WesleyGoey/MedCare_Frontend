@@ -1,6 +1,7 @@
 package com.wesley.medcare.ui.view.Schedule
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,8 +51,9 @@ fun ReminderView(
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
 
-    LaunchedEffect(pickedDate) {
-        viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+    LaunchedEffect(Unit) {
+        // This runs every time you navigate BACK to this screen
+        viewModel.getSchedulesByDate(pickedDate.format(DateTimeFormatter.ISO_DATE))
     }
 
     LaunchedEffect(successMessage, errorMessage) {
@@ -122,12 +124,31 @@ fun ReminderView(
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     items(reminders, key = { it.id }) { item ->
+                        // No need to manually override "MISSED" anymore!
+                        // The server will now return nothing (null), so this defaults to "PENDING"
+                        val currentStatus = item.history?.firstOrNull()?.status ?: "PENDING"
+
                         ReminderTimelineItem(
                             time = item.time,
                             medicineName = item.medicine.name,
                             dosage = item.medicine.dosage,
+<<<<<<< HEAD
+=======
+
+                            // 3. Pass the FIX variable here
+                            status = currentStatus,
+
+                            themeColor = primaryBlue,
+>>>>>>> fj
                             onMarkAsTaken = {
-                                viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
+                                // Create the full timestamp: "2026-01-07T08:00:00"
+                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
+                                viewModel.markAsTaken(item.id, exactDateTime)
+                            },
+                            onUndo = {
+                                // Use the exact same format for Undo!
+                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
+                                viewModel.undoMarkAsTaken(item.id, exactDateTime)
                             },
                             onCardClick = {
                                 navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
@@ -245,18 +266,47 @@ fun ReminderTimelineItem(
     time: String,
     medicineName: String,
     dosage: String,
+<<<<<<< HEAD
+=======
+    status: String, // <--- Add this parameter (e.g., "DONE", "PENDING", "MISSED")
+    themeColor: Color,
+>>>>>>> fj
     onMarkAsTaken: () -> Unit,
+    onUndo: () -> Unit, // <--- Add Undo Callback
     onCardClick: () -> Unit
 ) {
+    // Determine State
+    val isTaken = status == "DONE"
+    val isMissed = status == "MISSED"
+
+    // Dynamic Colors
+    val statusColor = when {
+        isTaken -> Color(0xFF4CAF50) // Green
+        isMissed -> Color(0xFFEF5350) // Red
+        else -> themeColor // Blue
+    }
+
+    val statusText = when {
+        isTaken -> "Taken"
+        isMissed -> "Missed"
+        else -> "Pending"
+    }
+
     Row(modifier = Modifier.fillMaxWidth()) {
+<<<<<<< HEAD
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(top = 10.dp)
         ) {
+=======
+        // Timeline Line (Left side)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+>>>>>>> fj
             Box(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
+<<<<<<< HEAD
                     .border(1.5.dp, Color(0xFFD1D5DC), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -267,11 +317,25 @@ fun ReminderTimelineItem(
                     .width(1.5.dp)
                     .height(130.dp)
                     .background(Color(0xFFD1D5DC).copy(alpha = 0.4f))
+=======
+                    .background(statusColor.copy(alpha = 0.2f))
+                    .border(2.dp, statusColor, CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(130.dp) // Slightly taller to fit Undo button space
+                    .background(statusColor.copy(alpha = 0.1f))
+>>>>>>> fj
             )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
+<<<<<<< HEAD
+=======
+        // Card Content
+>>>>>>> fj
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -281,6 +345,7 @@ fun ReminderTimelineItem(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
+<<<<<<< HEAD
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -354,6 +419,72 @@ fun ReminderTimelineItem(
                         fontSize = 16.sp,
                         color = Color.White
                     )
+=======
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Header: Time and Status Badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = statusColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        val formattedTime = if (time.contains("T")) time.split("T")[1].substring(0, 5) else time
+                        Text(formattedTime, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+
+                    // Status Badge
+                    Surface(
+                        color = statusColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = statusText,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 12.sp,
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(medicineName, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1A1A2E))
+                Text(dosage, fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // BUTTON LOGIC
+                if (isTaken) {
+                    // UNDO BUTTON (Outlined or Text Button)
+                    OutlinedButton(
+                        onClick = onUndo,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
+                        border = BorderStroke(1.dp, Color.LightGray),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Undo")
+                    }
+                } else {
+                    // MARK AS TAKEN BUTTON (Filled)
+                    Button(
+                        onClick = onMarkAsTaken,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = themeColor),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Mark as Taken", fontWeight = FontWeight.Bold)
+                    }
+>>>>>>> fj
                 }
             }
         }
