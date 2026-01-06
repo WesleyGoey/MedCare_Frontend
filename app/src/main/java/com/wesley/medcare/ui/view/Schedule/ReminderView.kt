@@ -388,12 +388,10 @@ fun ReminderTimelineItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = themeColor),
+                        colors = ButtonDefaults.buttonColors(containerColor = themeColor, contentColor = Color.White),
                         shape = RoundedCornerShape(16.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                     ) {
-                        Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text("Mark as Taken", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
