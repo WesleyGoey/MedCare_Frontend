@@ -18,9 +18,9 @@ class AppContainer(private val context: Context) {
 
 //        const val ROOT_URL = "http://10.222.192.93:3000" //hotspot wesley
 //        const val ROOT_URL = "http://192.168.1.5:3000" //wifi wesley
-//        const val ROOT_URL = "http://10.0.188.86:3000" //staff uc
+        const val ROOT_URL = "http://10.0.163.233:3000" //staff uc
 //        const val ROOT_URL = "http://172.20.10.4:3000" //hotspot niki
-        const val ROOT_URL = "http://192.168.1.104:3000" //wifi niki
+//        const val ROOT_URL = "http://192.168.1.104:3000" //wifi niki
 //        const val ROOT_URL = "http://192.168.1.72:3000" //mrn
         const val BASE_URL = "${ROOT_URL}/api/"
     }

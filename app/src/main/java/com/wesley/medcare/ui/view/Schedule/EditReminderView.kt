@@ -181,7 +181,8 @@ fun EditReminderView(
             }
 
             OutlinedButton(
-                onClick = { viewModel.deleteSchedule(scheduleId) },
+                onClick = { val today = LocalDate.now().toString()
+                    viewModel.deleteSchedule(scheduleId, today) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE57373)),
