@@ -23,9 +23,9 @@ class BootReceiver : BroadcastReceiver() {
                 val response = repository.getScheduleWithDetailsByDate(today)
 
                 response?.data?.forEach { detail ->
-                    // Re-schedule menggunakan ID unik (contoh: medicineId * 100)
+                    // Menggunakan medicineId * 100 sebagai ID unik
                     scheduler.schedule(
-                        id = detail.medicine.id * 100,
+                        id = detail.id,
                         time = detail.time,
                         medicineName = detail.medicine.name
                     )
