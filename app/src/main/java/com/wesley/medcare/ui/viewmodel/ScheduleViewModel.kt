@@ -19,11 +19,9 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     private val repository = container.scheduleRepository
     private val historyRepository = container.historyRepository
 
-    // List untuk tampilan harian
     private val _schedules = MutableStateFlow<List<DetailData>>(emptyList())
     val schedules: StateFlow<List<DetailData>> = _schedules
 
-    // List khusus untuk menampung data jam saat Edit
     private val _editingScheduleDetails = MutableStateFlow<List<DetailData>>(emptyList())
     val editingScheduleDetails: StateFlow<List<DetailData>> = _editingScheduleDetails
 
