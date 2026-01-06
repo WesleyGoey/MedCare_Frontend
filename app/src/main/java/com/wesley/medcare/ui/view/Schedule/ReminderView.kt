@@ -1,6 +1,7 @@
 package com.wesley.medcare.ui.view.Schedule
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,6 +51,10 @@ fun ReminderView(
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
 
+    val primaryBlue = Color(0xFF457AF9)
+    val backgroundGray = Color(0xFFF5F7FA)
+
+    // Sync data saat pertama kali buka atau saat tanggal berubah
     LaunchedEffect(pickedDate) {
         viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
     }
@@ -66,18 +71,18 @@ fun ReminderView(
     }
 
     Scaffold(
-        containerColor = Color(0xFFF5F7FA),
+        containerColor = backgroundGray,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(AppView.AddReminderView.name) },
-                containerColor = Color(0xFF457AF9),
+                containerColor = primaryBlue,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.offset(y = 20.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = null,
+                    contentDescription = "Add Reminder",
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -100,16 +105,18 @@ fun ReminderView(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Menggunakan desain Card Selector yang premium
             DateSelectorCard(
                 formattedDate = pickedDate.format(displayFormatter),
-                onClick = { showDatePicker = true }
+                onClick = { showDatePicker = true },
+                themeColor = primaryBlue
             )
 
             Spacer(modifier = Modifier.height(28.dp))
 
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF457AF9))
+                    CircularProgressIndicator(color = primaryBlue)
                 }
             } else if (reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -122,12 +129,21 @@ fun ReminderView(
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     items(reminders, key = { it.id }) { item ->
+                        val currentStatus = item.history?.firstOrNull()?.status ?: "PENDING"
+
                         ReminderTimelineItem(
                             time = item.time,
                             medicineName = item.medicine.name,
                             dosage = item.medicine.dosage,
+                            status = currentStatus,
+                            themeColor = primaryBlue,
                             onMarkAsTaken = {
-                                viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
+                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
+                                viewModel.markAsTaken(item.id, exactDateTime)
+                            },
+                            onUndo = {
+                                val exactDateTime = "${pickedDate.format(apiFormatter)}T${item.time}:00"
+                                viewModel.undoMarkAsTaken(item.id, exactDateTime)
                             },
                             onCardClick = {
                                 navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
@@ -153,56 +169,38 @@ fun ReminderView(
                         }
                         showDatePicker = false
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF457AF9))
+                    colors = ButtonDefaults.textButtonColors(contentColor = primaryBlue)
                 ) { Text("OK", fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color(0xFF757575)) }
             },
-            // Update warna dialog background agar konsisten
             colors = DatePickerDefaults.colors(containerColor = Color.White)
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    // --- Warna Utama Kalender ---
                     containerColor = Color.White,
                     titleContentColor = Color(0xFF8A94A6),
                     headlineContentColor = Color(0xFF1A1A2E),
-                    selectedDayContainerColor = Color(0xFF457AF9),
+                    selectedDayContainerColor = primaryBlue,
                     selectedDayContentColor = Color.White,
-                    disabledSelectedDayContainerColor = Color(0xFF457AF9).copy(alpha = 0.38f),
-                    todayContentColor = Color(0xFF457AF9),
-                    todayDateBorderColor = Color(0xFF457AF9),
+                    todayContentColor = primaryBlue,
+                    todayDateBorderColor = primaryBlue,
                     dayContentColor = Color(0xFF1A1A2E),
-                    disabledDayContentColor = Color(0xFF1A1A2E).copy(alpha = 0.38f),
                     weekdayContentColor = Color(0xFF8A94A6),
                     navigationContentColor = Color(0xFF1A1A2E),
-                    yearContentColor = Color(0xFF1A1A2E),
-                    currentYearContentColor = Color(0xFF457AF9),
-                    selectedYearContainerColor = Color(0xFF457AF9),
+                    currentYearContentColor = primaryBlue,
+                    selectedYearContainerColor = primaryBlue,
                     selectedYearContentColor = Color.White,
-
-                    // --- WARNA INPUT KEYBOARD (TextField) ---
                     dateTextFieldColors = TextFieldDefaults.colors(
-                        // Keadaan Normal
                         focusedContainerColor = Color(0xFFF5F5F5),
                         unfocusedContainerColor = Color(0xFFF5F5F5),
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = Color(0xFF1A1A2E),
-                        unfocusedTextColor = Color(0xFF1A1A2E),
-                        cursorColor = Color(0xFF457AF9),
-                        focusedLabelColor = Color(0xFF457AF9),
-                        unfocusedLabelColor = Color(0xFF8A94A6),
-
-                        // Keadaan Error (Input tidak valid seperti 01/11/11111)
-                        errorContainerColor = Color(0xFFFFF0F0), // Background merah sangat muda
-                        errorTextColor = Color(0xFFFF5A5F),      // Teks merah MedCare
-                        errorCursorColor = Color(0xFFFF5A5F),
-                        errorIndicatorColor = Color.Transparent, // Menghapus garis bawah merah tebal
-                        errorLabelColor = Color(0xFFFF5A5F),
-                        errorSupportingTextColor = Color(0xFFFF5A5F)
+                        cursorColor = primaryBlue,
+                        errorContainerColor = Color(0xFFFFF0F0),
+                        errorTextColor = Color(0xFFFF5A5F)
                     )
                 )
             )
@@ -211,7 +209,7 @@ fun ReminderView(
 }
 
 @Composable
-fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
+fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Color) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -225,7 +223,7 @@ fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(46.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF457AF9)),
+                    .background(themeColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.CalendarToday, null, tint = Color.White, modifier = Modifier.size(22.dp))
@@ -235,7 +233,7 @@ fun DateSelectorCard(formattedDate: String, onClick: () -> Unit) {
                 Text("Selected Date", fontSize = 12.sp, color = Color.Gray)
                 Text(formattedDate, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
             }
-            Icon(Icons.Default.KeyboardArrowDown, null, tint = Color(0xFF457AF9), modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.KeyboardArrowDown, null, tint = themeColor, modifier = Modifier.size(28.dp))
         }
     }
 }
@@ -245,10 +243,29 @@ fun ReminderTimelineItem(
     time: String,
     medicineName: String,
     dosage: String,
+    status: String,
+    themeColor: Color,
     onMarkAsTaken: () -> Unit,
+    onUndo: () -> Unit,
     onCardClick: () -> Unit
 ) {
+    val isTaken = status == "DONE"
+    val isMissed = status == "MISSED"
+
+    val statusColor = when {
+        isTaken -> Color(0xFF4CAF50)
+        isMissed -> Color(0xFFEF5350)
+        else -> themeColor
+    }
+
+    val statusText = when {
+        isTaken -> "Taken"
+        isMissed -> "Missed"
+        else -> "Pending"
+    }
+
     Row(modifier = Modifier.fillMaxWidth()) {
+        // Timeline UI
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(top = 10.dp)
@@ -257,21 +274,28 @@ fun ReminderTimelineItem(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .border(1.5.dp, Color(0xFFD1D5DC), CircleShape),
+                    .background(statusColor.copy(alpha = 0.15f))
+                    .border(1.5.dp, statusColor, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Check, null, tint = Color(0xFFD1D5DC), modifier = Modifier.size(14.dp))
+                Icon(
+                    imageVector = if (isTaken) Icons.Default.Check else Icons.Default.Circle,
+                    contentDescription = null,
+                    tint = statusColor,
+                    modifier = Modifier.size(12.dp)
+                )
             }
             Box(
                 modifier = Modifier
                     .width(1.5.dp)
-                    .height(130.dp)
-                    .background(Color(0xFFD1D5DC).copy(alpha = 0.4f))
+                    .height(140.dp)
+                    .background(statusColor.copy(alpha = 0.2f))
             )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
+        // Card Content
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -292,10 +316,15 @@ fun ReminderTimelineItem(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF457AF9).copy(alpha = 0.15f)),
+                                .background(statusColor.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.AccessTime, null, tint = Color(0xFF457AF9), modifier = Modifier.size(20.dp))
+                            Icon(
+                                imageVector = if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         val cleanTime = if (time.contains("T")) time.split("T")[1].substring(0, 5) else time
@@ -308,15 +337,15 @@ fun ReminderTimelineItem(
                     }
 
                     Surface(
-                        color = Color(0xFFF3F4F6),
+                        color = statusColor.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Pending",
+                            text = statusText,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             fontSize = 13.sp,
-                            color = Color(0xFF757575),
-                            fontWeight = FontWeight.SemiBold
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -339,21 +368,34 @@ fun ReminderTimelineItem(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(
-                    onClick = onMarkAsTaken,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                ) {
-                    Text(
-                        text = "Mark as Taken",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+                if (isTaken) {
+                    OutlinedButton(
+                        onClick = onUndo,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
+                        border = BorderStroke(1.dp, Color.LightGray),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Undo Mark", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Button(
+                        onClick = onMarkAsTaken,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = themeColor),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Mark as Taken", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
             }
         }
