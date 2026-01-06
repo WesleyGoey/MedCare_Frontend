@@ -26,16 +26,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.wesley.medcare.ui.model.History
 import com.wesley.medcare.ui.viewmodel.HistoryViewModel
-import java.time.DayOfWeek
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
-// Color Palette Tetap Sama
 private val Teal500 = Color(0xFF2FB6A3)
 private val TealBorder = Color(0xFF2FB6A3).copy(alpha = 0.25f)
 private val TealLightBg = Color(0xFFF0F9F8)
@@ -95,9 +91,7 @@ fun HistoryView(
 }
 
 @Composable
-fun SummaryCard(
-    icon: ImageVector, iconColor: Color, borderColor: Color, value: String, label: String, modifier: Modifier = Modifier
-) {
+fun SummaryCard(icon: ImageVector, iconColor: Color, borderColor: Color, value: String, label: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
@@ -116,29 +110,19 @@ fun SummaryCard(
 
 @Composable
 fun WeeklyComplianceCard(historyData: List<History>) {
-    // REVISI LOGIKA: Pengelompokan data berdasarkan tanggal yang murni (tanpa plusDays)
-    val historyMap = remember(historyData) {
-        historyData.groupBy { it.scheduledDate.take(10) }
-    }
-
-    // REVISI LOGIKA: Membuat 7 hari (Senin-Minggu)
+    val historyMap = remember(historyData) { historyData.groupBy { it.scheduledDate.take(10) } }
     val weeklyData = remember(historyMap) {
         val today = LocalDate.now()
-        // Sesuai instruksi Anda: Dihitung dari SENIN
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-
         (0..6).map { dayOffset ->
             val date = startOfWeek.plusDays(dayOffset.toLong())
             val dateStr = date.toString()
-            val dayLabel = date.format(DateTimeFormatter.ofPattern("EEE", Locale.US)).uppercase()
-
+            val dayLabel = date.format(DateTimeFormatter.ofPattern("EEE", Locale.US))
             val items = historyMap[dateStr] ?: emptyList()
-
             val percentage = if (items.isNotEmpty()) {
                 val taken = items.count { it.status.equals("DONE", ignoreCase = true) }
                 (taken * 100) / items.size
             } else 0
-
             dayLabel to percentage
         }
     }
@@ -152,19 +136,10 @@ fun WeeklyComplianceCard(historyData: List<History>) {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text("Weekly Compliance", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkText, modifier = Modifier.padding(bottom = 24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth().height(160.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                weeklyData.forEach { (dayLabel, percentage) ->
-                    ComplianceBar(day = dayLabel, percentage = percentage)
-                }
+            Row(modifier = Modifier.fillMaxWidth().height(160.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                weeklyData.forEach { (dayLabel, percentage) -> ComplianceBar(day = dayLabel, percentage = percentage) }
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 LegendItem(color = Teal500, label = "90-100%")
                 Spacer(modifier = Modifier.width(12.dp))
@@ -191,23 +166,16 @@ fun RecentActivityCard(activityList: List<History>) {
             if (activityList.isEmpty()) {
                 Text("No recent activity", color = GrayText, modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
-                // Sesuai Instruksi: Ambil 5 terbaru
                 activityList.take(5).forEachIndexed { index, history ->
                     val isTaken = history.status.equals("DONE", ignoreCase = true)
 
-                    val rawTime = if (isTaken && history.timeTaken.isNotEmpty()) history.timeTaken else history.scheduledTime
-                    val formattedTime = formatDisplayTime(rawTime)
-                    val formattedDate = formatDisplayDate(history.scheduledDate)
+                    // INSTRUKSI: Selalu gunakan jam jadwal (scheduledTime)
+                    val timeString = history.scheduledTime
+                    val formattedTime = formatDisplayTime(timeString)
+                    val formattedDate = formatRelativeDate(history.scheduledDate)
 
-                    ActivityItem(
-                        time = "$formattedDate • $formattedTime",
-                        medicine = history.medicineName,
-                        isTaken = isTaken
-                    )
-
-                    if (index < 4 && index < activityList.size - 1) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
+                    ActivityItem(time = "$formattedDate - $formattedTime", medicine = history.medicineName, isTaken = isTaken)
+                    if (index < 4 && index < activityList.size - 1) Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -222,23 +190,14 @@ fun ActivityItem(time: String, medicine: String, isTaken: Boolean) {
     val icon = if (isTaken) Icons.Default.Check else Icons.Default.Close
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(bgColor)
-            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(bgColor).border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
             Text(text = time, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
             Text(text = medicine, fontSize = 14.sp, color = GrayText)
         }
-        Box(
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(iconColor),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(iconColor), contentAlignment = Alignment.Center) {
             Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
     }
@@ -246,28 +205,11 @@ fun ActivityItem(time: String, medicine: String, isTaken: Boolean) {
 
 @Composable
 fun ComplianceBar(day: String, percentage: Int) {
-    val barColor = when {
-        percentage >= 90 -> Teal500
-        percentage >= 70 -> Yellow500
-        else -> Red500
-    }
-    val fillFraction = (percentage / 100f).coerceAtLeast(0.05f)
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxHeight()
-    ) {
-        Box(
-            modifier = Modifier.weight(1f).width(22.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight(fillFraction)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(barColor)
-            )
+    val barColor = when { percentage >= 90 -> Teal500; percentage >= 70 -> Yellow500; else -> Red500 }
+    val fillFraction = (percentage / 100f).coerceAtLeast(0.02f)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxHeight()) {
+        Box(modifier = Modifier.weight(1f).width(24.dp), contentAlignment = Alignment.BottomCenter) {
+            Box(modifier = Modifier.fillMaxHeight(fillFraction).fillMaxWidth().clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)).background(barColor))
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = day, fontSize = 12.sp, color = GrayText)
@@ -283,33 +225,33 @@ fun LegendItem(color: Color, label: String) {
     }
 }
 
-// REVISI HELPER: Penanganan Zona Waktu yang Konsisten
-fun formatDisplayDate(isoString: String): String {
+fun formatRelativeDate(isoString: String): String {
     if (isoString.isBlank()) return ""
     return try {
-        // Backend mengirim ISO String, kita parsing ke LocalDate lokal
         val date = LocalDate.parse(isoString.take(10))
         val today = LocalDate.now()
-
-        when (date) {
-            today -> "Today"
-            today.minusDays(1) -> "Yesterday"
+        val diff = ChronoUnit.DAYS.between(date, today)
+        when {
+            diff == 0L -> "Today"
+            diff == 1L -> "Yesterday"
             else -> date.format(DateTimeFormatter.ofPattern("MMM d", Locale.US))
         }
-    } catch (e: Exception) {
-        isoString.take(10)
-    }
+    } catch (e: Exception) { isoString.take(10) }
 }
 
-fun formatDisplayTime(isoString: String): String {
-    if (isoString.isBlank()) return ""
+fun formatDisplayTime(timeString: String): String {
+    if (timeString.isBlank()) return ""
     return try {
-        // REVISI: Menggunakan Instant agar sinkron dengan format database (Z)
-        val instant = Instant.parse(isoString)
-        val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.US)
-            .withZone(ZoneId.systemDefault()) // Konversi ke waktu HP user
-        formatter.format(instant)
+        if (timeString.contains("Z") || timeString.contains("T")) {
+            val instant = Instant.parse(timeString)
+            // Paksa pakai UTC supaya jam 07.30 tidak jadi 14.30
+            val formatter = DateTimeFormatter.ofPattern("HH.mm").withZone(ZoneId.of("UTC"))
+            formatter.format(instant)
+        } else {
+            val time = LocalTime.parse(timeString.take(8))
+            time.format(DateTimeFormatter.ofPattern("HH.mm"))
+        }
     } catch (e: Exception) {
-        isoString.takeLast(8)
+        timeString.take(5).replace(":", ".")
     }
 }

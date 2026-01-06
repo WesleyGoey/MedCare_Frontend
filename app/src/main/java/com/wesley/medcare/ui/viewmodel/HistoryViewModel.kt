@@ -30,13 +30,10 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
-    fun clearMessage() { _message.value = null }
-
     fun refreshDashboard() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Berjalan secara paralel untuk kecepatan
                 fetchCompliance()
                 fetchMissedDoses()
                 fetchRecentActivity()
@@ -50,18 +47,18 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun fetchCompliance() {
+        // Stats total dihitung Senin - Minggu sesuai instruksi
         val response = repository.getWeeklyComplianceStatsTotal()
         _compliancePercentage.value = response?.data ?: 0
     }
 
     private suspend fun fetchMissedDoses() {
+        // Missed dose dihitung Senin - Minggu sesuai instruksi
         val response = repository.getWeeklyMissedDose()
         _missedDosesCount.value = response?.data ?: 0
     }
 
     private suspend fun fetchRecentActivity() {
-        // PERBAIKAN: Gunakan repository.getRecentActivity() bukan getAllHistory()
-        // Karena backend sudah membatasi 'take: 5'
         val response = repository.getRecentActivity()
 
         val mappedList = response?.data?.map { dto ->
@@ -69,13 +66,15 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
                 id = dto.id,
                 medicineName = dto.medicineName ?: "Unknown",
                 scheduledDate = dto.scheduledDate ?: "",
-                scheduledTime = dto.scheduledTime ?: "",
+                scheduledTime = dto.scheduledTime ?: "", // Ini kunci agar jam history = jam reminder
                 status = (dto.status ?: "PENDING").uppercase(),
                 timeTaken = dto.timeTaken ?: ""
             )
         } ?: emptyList()
 
-        // Dashboard hanya menampilkan aktivitas yang sudah dilakukan (DONE) atau terlewat (MISSED)
-        _recentActivityList.value = mappedList.filter { it.status == "DONE" || it.status == "MISSED" }
+        // Filter hanya yang sudah DONE atau MISSED
+        _recentActivityList.value = mappedList.filter {
+            it.status == "DONE" || it.status == "MISSED"
+        }
     }
 }
