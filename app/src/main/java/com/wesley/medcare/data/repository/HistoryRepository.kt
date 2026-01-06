@@ -151,10 +151,13 @@ class HistoryRepository(
         }
     }
 
-    suspend fun undoMarkAsTaken(detailId: Int, date: String): Boolean {
+    suspend fun undoMarkAsTaken(detailId: Int): Boolean {
         return try {
             val token = getToken() ?: return false
-            val request = UndoMarkAsTakenRequest(date = date)
+            val currentDate = java.time.LocalDate.now().toString()
+            val request = UndoMarkAsTakenRequest(
+                date = currentDate
+            )
 
             val response = historyService.undoMarkAsTaken("Bearer $token", detailId, request)
 

@@ -1,6 +1,7 @@
 // kotlin
 package com.wesley.medcare.ui.route
 
+import HomeView
 import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.layout.height
@@ -40,7 +41,6 @@ import androidx.navigation.navArgument
 import com.wesley.medcare.data.container.AppContainer
 import com.wesley.medcare.ui.view.LoginRegister.LoginView
 import com.wesley.medcare.ui.view.LoginRegister.RegisterView
-import com.wesley.medcare.ui.view.Medicine.HomeView
 import com.wesley.medcare.ui.view.Medicine.MedicineView
 import com.wesley.medcare.ui.view.Medicine.ProfileView
 import com.wesley.medcare.ui.view.Schedule.ReminderView
