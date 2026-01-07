@@ -110,25 +110,33 @@ fun SummaryCard(icon: ImageVector, iconColor: Color, borderColor: Color, value: 
     }
 }
 
+// ✅ Revisi WeeklyComplianceCard di HistoryView.kt
 @Composable
 fun WeeklyComplianceCard(historyData: List<History>) {
-    val historyMap = remember(historyData) { historyData.groupBy { it.scheduledDate.take(10) } }
+    // Ambil hanya yyyy-MM-dd agar grouping akurat
+    val historyMap = remember(historyData) {
+        historyData.groupBy { it.scheduledDate.take(10) }
+    }
+
     val weeklyData = remember(historyMap) {
         val today = LocalDate.now()
+        // Standard Senin
         val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
         (0..6).map { dayOffset ->
             val date = startOfWeek.plusDays(dayOffset.toLong())
-            val dateStr = date.toString()
+            val dateStr = date.toString() // Format yyyy-MM-dd
             val dayLabel = date.format(DateTimeFormatter.ofPattern("EEE", Locale.US))
+
             val items = historyMap[dateStr] ?: emptyList()
             val percentage = if (items.isNotEmpty()) {
                 val taken = items.count { it.status.equals("DONE", ignoreCase = true) }
                 (taken * 100) / items.size
             } else 0
+
             dayLabel to percentage
         }
     }
-
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),

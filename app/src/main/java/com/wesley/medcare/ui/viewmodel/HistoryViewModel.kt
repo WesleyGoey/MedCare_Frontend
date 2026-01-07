@@ -129,9 +129,11 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
      * Mengambil riwayat terbaru.
      * Aturan: Mengambil 5 terbaru yang berstatus DONE atau MISSED.
      */
+    // ✅ Revisi fetchRecentActivity di HistoryViewModel.kt
     private suspend fun fetchRecentActivity() {
         val response = repository.getRecentActivity()
 
+        // JANGAN di-sort lagi di sini agar urutan 'updatedAt' dari backend tidak rusak
         val mappedList = response?.data?.map { dto ->
             History(
                 id = dto.id,
@@ -141,11 +143,11 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
                 status = (dto.status ?: "PENDING").uppercase(),
                 timeTaken = dto.timeTaken ?: ""
             )
-        }?.sortedByDescending { it.scheduledDate + it.scheduledTime } ?: emptyList()
+        } ?: emptyList()
 
-        // Filter: Hanya 5 teratas yang statusnya DONE atau MISSED
+        // Hanya ambil yang DONE atau MISSED (sebagai double-check)
         _recentActivityList.value = mappedList.filter {
             it.status == "DONE" || it.status == "MISSED"
-        }.take(5)
+        }
     }
 }

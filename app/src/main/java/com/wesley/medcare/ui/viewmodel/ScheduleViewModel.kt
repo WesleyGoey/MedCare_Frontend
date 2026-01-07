@@ -72,31 +72,32 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
 
     // --- HISTORY LOGIC (TAKEN / UNDO) ---
 
+    // Di dalam ScheduleViewModel.kt
+
     fun markAsTaken(detailId: Int, originalScheduledDate: String) {
         if (_processingIds.value.contains(detailId)) return
 
         viewModelScope.launch {
             _processingIds.value += detailId
-            val datePart = originalScheduledDate.split("T")[0]
-            val dateTimeToSend = "${datePart}T00:00:00"
 
-            // 1. UPDATE LOKAL (UI berubah seketika)
-            updateStatusLocally(detailId, "DONE", dateTimeToSend)
+            // Ambil yyyy-MM-dd saja (misal: "2026-01-07")
+            val dateOnly = originalScheduledDate.split("T")[0]
+
+            // Update lokal tetap pakai format lengkap untuk UI
+            updateStatusLocally(detailId, "DONE", "${dateOnly}T00:00:00")
 
             try {
-                val jakartaZone = ZoneId.of("Asia/Jakarta")
-                val timeTakenNow = LocalTime.now(jakartaZone).format(DateTimeFormatter.ofPattern("HH:mm"))
-
-                val success = historyRepository.markAsTaken(detailId, dateTimeToSend, timeTakenNow)
+                // KIRIM DATE ONLY (Tanpa T00:00:00) agar Backend membacanya sebagai UTC murni
+                val success = historyRepository.markAsTaken(detailId, dateOnly, "")
 
                 if (success) {
                     _successMessage.value = "Berhasil mencatat obat"
                 } else {
-                    updateStatusLocally(detailId, "PENDING", dateTimeToSend)
+                    updateStatusLocally(detailId, "PENDING", "${dateOnly}T00:00:00")
                     _errorMessage.value = "Hanya bisa mencatat untuk hari ini"
                 }
             } catch (e: Exception) {
-                updateStatusLocally(detailId, "PENDING", dateTimeToSend)
+                updateStatusLocally(detailId, "PENDING", "${dateOnly}T00:00:00")
                 _errorMessage.value = "Terjadi kesalahan jaringan"
             } finally {
                 _processingIds.value -= detailId
@@ -104,27 +105,27 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // Lakukan hal yang sama untuk undoMarkAsTaken
     fun undoMarkAsTaken(detailId: Int, viewedDate: String) {
         if (_processingIds.value.contains(detailId)) return
 
         viewModelScope.launch {
             _processingIds.value += detailId
-            val datePart = viewedDate.split("T")[0]
-            val dateTimeToSend = "${datePart}T00:00:00"
+            val dateOnly = viewedDate.split("T")[0]
 
-            // 1. UPDATE LOKAL (Kembali ke Pending)
-            updateStatusLocally(detailId, "PENDING", dateTimeToSend)
+            updateStatusLocally(detailId, "PENDING", "${dateOnly}T00:00:00")
 
             try {
-                val success = historyRepository.undoMarkAsTaken(detailId, dateTimeToSend)
+                // KIRIM DATE ONLY
+                val success = historyRepository.undoMarkAsTaken(detailId, dateOnly)
                 if (success) {
                     _successMessage.value = "Status berhasil dibatalkan"
                 } else {
-                    updateStatusLocally(detailId, "DONE", dateTimeToSend)
+                    updateStatusLocally(detailId, "DONE", "${dateOnly}T00:00:00")
                     _errorMessage.value = "Hanya bisa mengubah hari ini"
                 }
             } catch (e: Exception) {
-                updateStatusLocally(detailId, "DONE", dateTimeToSend)
+                updateStatusLocally(detailId, "DONE", "${dateOnly}T00:00:00")
                 _errorMessage.value = "Kesalahan jaringan"
             } finally {
                 _processingIds.value -= detailId
