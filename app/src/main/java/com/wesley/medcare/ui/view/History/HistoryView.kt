@@ -53,9 +53,11 @@ fun HistoryView(
     val missed by viewModel.missedDosesCount.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.refreshDashboard() }
+    LaunchedEffect(Unit) {
+        viewModel.refreshDashboard()
+    }
 
-    if (isLoading) {
+    if (isLoading && recentActivity.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Teal500)
         }
@@ -68,7 +70,7 @@ fun HistoryView(
             item {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     Text("History", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = DarkText)
-                    Text("This Week", fontSize = 16.sp, color = GrayText)
+                    Text("This Week (Mon - Sun)", fontSize = 16.sp, color = GrayText)
                 }
             }
 
@@ -164,18 +166,16 @@ fun RecentActivityCard(activityList: List<History>) {
             Text("Recent Activity", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkText, modifier = Modifier.padding(bottom = 16.dp))
 
             if (activityList.isEmpty()) {
-                Text("No recent activity", color = GrayText, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text("No recent activity", color = GrayText, modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 12.dp))
             } else {
-                activityList.take(5).forEachIndexed { index, history ->
+                activityList.forEachIndexed { index, history ->
                     val isTaken = history.status.equals("DONE", ignoreCase = true)
-
-                    // INSTRUKSI: Selalu gunakan jam jadwal (scheduledTime)
                     val timeString = history.scheduledTime
                     val formattedTime = formatDisplayTime(timeString)
                     val formattedDate = formatRelativeDate(history.scheduledDate)
 
                     ActivityItem(time = "$formattedDate - $formattedTime", medicine = history.medicineName, isTaken = isTaken)
-                    if (index < 4 && index < activityList.size - 1) Spacer(modifier = Modifier.height(12.dp))
+                    if (index < activityList.size - 1) Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -190,8 +190,14 @@ fun ActivityItem(time: String, medicine: String, isTaken: Boolean) {
     val icon = if (isTaken) Icons.Default.Check else Icons.Default.Close
 
     Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(bgColor).border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(bgColor)
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(20.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
             Text(text = time, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
@@ -244,7 +250,6 @@ fun formatDisplayTime(timeString: String): String {
     return try {
         if (timeString.contains("Z") || timeString.contains("T")) {
             val instant = Instant.parse(timeString)
-            // Paksa pakai UTC supaya jam 07.30 tidak jadi 14.30
             val formatter = DateTimeFormatter.ofPattern("HH.mm").withZone(ZoneId.of("UTC"))
             formatter.format(instant)
         } else {

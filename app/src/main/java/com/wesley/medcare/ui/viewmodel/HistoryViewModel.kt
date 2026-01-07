@@ -30,6 +30,16 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
+    /**
+     * Membersihkan pesan setelah ditampilkan di UI.
+     */
+    fun clearMessage() {
+        _message.value = null
+    }
+
+    /**
+     * Memperbarui seluruh data dashboard riwayat.
+     */
     fun refreshDashboard() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -39,25 +49,86 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
                 fetchRecentActivity()
             } catch (e: Exception) {
                 Log.e("HistoryVM", "Error refreshing dashboard", e)
-                _message.value = "Failed to load history data"
+                _message.value = "Gagal memuat data riwayat"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    /**
+     * Menandai obat sebagai sudah diminum (Taken).
+     * Sesuai aturan: Hanya bisa dilakukan di hari ini.
+     */
+    fun markAsTaken(detailId: Int, date: String, timeTaken: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.markAsTaken(detailId, date, timeTaken)
+            if (success) {
+                _message.value = "Berhasil: Obat telah diminum"
+                refreshDashboard()
+            } else {
+                _message.value = "Gagal: Hanya bisa dilakukan di hari ini"
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Melewati jadwal minum obat (Skip).
+     */
+    fun skipOccurrence(detailId: Int, date: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.skipOccurrence(detailId, date)
+            if (success) {
+                _message.value = "Jadwal berhasil dilewati"
+                refreshDashboard()
+            } else {
+                _message.value = "Gagal melewati jadwal"
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Membatalkan status diminum dan mengembalikan stok obat.
+     * Sesuai aturan: Nama fungsi undoMarkAsTaken dan hanya bisa di hari ini.
+     */
+    fun undoMarkAsTaken(detailId: Int, date: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.undoMarkAsTaken(detailId, date)
+            if (success) {
+                _message.value = "Aksi dibatalkan, stok dikembalikan"
+                refreshDashboard()
+            } else {
+                _message.value = "Gagal: Hanya bisa membatalkan aksi hari ini"
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Statistik kepatuhan mingguan (Senin - Minggu).
+     */
     private suspend fun fetchCompliance() {
-        // Stats total dihitung Senin - Minggu sesuai instruksi
         val response = repository.getWeeklyComplianceStatsTotal()
         _compliancePercentage.value = response?.data ?: 0
     }
 
+    /**
+     * Jumlah dosis terlewat mingguan (Senin - Minggu).
+     */
     private suspend fun fetchMissedDoses() {
-        // Missed dose dihitung Senin - Minggu sesuai instruksi
         val response = repository.getWeeklyMissedDose()
         _missedDosesCount.value = response?.data ?: 0
     }
 
+    /**
+     * Mengambil riwayat terbaru.
+     * Aturan: Mengambil 5 terbaru yang berstatus DONE atau MISSED.
+     */
     private suspend fun fetchRecentActivity() {
         val response = repository.getRecentActivity()
 
@@ -66,15 +137,15 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
                 id = dto.id,
                 medicineName = dto.medicineName ?: "Unknown",
                 scheduledDate = dto.scheduledDate ?: "",
-                scheduledTime = dto.scheduledTime ?: "", // Ini kunci agar jam history = jam reminder
+                scheduledTime = dto.scheduledTime ?: "",
                 status = (dto.status ?: "PENDING").uppercase(),
                 timeTaken = dto.timeTaken ?: ""
             )
-        } ?: emptyList()
+        }?.sortedByDescending { it.scheduledDate + it.scheduledTime } ?: emptyList()
 
-        // Filter hanya yang sudah DONE atau MISSED
+        // Filter: Hanya 5 teratas yang statusnya DONE atau MISSED
         _recentActivityList.value = mappedList.filter {
             it.status == "DONE" || it.status == "MISSED"
-        }
+        }.take(5)
     }
 }

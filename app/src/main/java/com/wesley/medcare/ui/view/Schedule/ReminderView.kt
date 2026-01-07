@@ -56,15 +56,19 @@ fun ReminderView(
 
     val apiFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
-
     val isToday = remember(pickedDate) { pickedDate.isEqual(LocalDate.now()) }
-    val primaryBlue = Color(0xFF457AF9)
-    val backgroundGray = Color(0xFFF5F7FA)
 
-    DisposableEffect(lifecycleOwner, pickedDate) {
+    // PERBAIKAN UTAMA: Gunakan LaunchedEffect agar tidak memicu fetch ulang setiap recomposition tab
+    LaunchedEffect(pickedDate) {
+        viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+    }
+
+    // Hanya observe On_Resume jika benar-benar ingin sinkron data server saat buka app lagi
+    DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+                // Jangan dipaksa fetch di sini agar status lokal tidak hilang saat pindah tab
+                // viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -72,22 +76,16 @@ fun ReminderView(
     }
 
     LaunchedEffect(successMessage, errorMessage) {
-        successMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearMessages()
-        }
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearMessages()
-        }
+        successMessage?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show(); viewModel.clearMessages() }
+        errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show(); viewModel.clearMessages() }
     }
 
     Scaffold(
-        containerColor = backgroundGray,
+        containerColor = Color(0xFFF5F7FA),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(AppView.AddReminderView.name) },
-                containerColor = primaryBlue,
+                containerColor = Color(0xFF457AF9),
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.offset(y = 20.dp)
@@ -102,14 +100,14 @@ fun ReminderView(
             DateSelectorCard(
                 formattedDate = pickedDate.format(displayFormatter),
                 onClick = { showDatePicker = true },
-                themeColor = primaryBlue
+                themeColor = Color(0xFF457AF9)
             )
 
             Spacer(modifier = Modifier.height(28.dp))
 
             if (isLoading && reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = primaryBlue)
+                    CircularProgressIndicator(color = Color(0xFF457AF9))
                 }
             } else if (reminders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -130,20 +128,14 @@ fun ReminderView(
                             medicineName = item.medicine.name,
                             dosage = item.medicine.dosage,
                             status = currentStatus,
-                            themeColor = primaryBlue,
+                            themeColor = Color(0xFF457AF9),
                             isActionEnabled = isToday,
                             isLoadingAction = isProcessing,
                             isFirst = index == 0,
                             isLast = index == reminders.size - 1,
-                            onMarkAsTaken = {
-                                viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter))
-                            },
-                            onUndo = {
-                                viewModel.undoMarkAsTaken(item.id, pickedDate.format(apiFormatter))
-                            },
-                            onCardClick = {
-                                navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}")
-                            }
+                            onMarkAsTaken = { viewModel.markAsTaken(item.id, pickedDate.format(apiFormatter)) },
+                            onUndo = { viewModel.undoMarkAsTaken(item.id, pickedDate.format(apiFormatter)) },
+                            onCardClick = { navController.navigate("${AppView.EditReminderView.name}/${item.scheduleId}") }
                         )
                     }
                 }
@@ -152,50 +144,25 @@ fun ReminderView(
     }
 
     if (showDatePicker) {
-        val initialMillis = remember(pickedDate) {
-            pickedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        }
-
+        val initialMillis = remember(pickedDate) { pickedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
-        MaterialTheme(
-            colorScheme = lightColorScheme(
-                surface = Color.White,
-                onSurface = Color.Black,
-                primary = primaryBlue,
-                onPrimary = Color.White
-            )
-        ) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            pickedDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneOffset.UTC)
-                                .toLocalDate()
-                        }
-                        showDatePicker = false
-                    }) { Text("OK", fontWeight = FontWeight.Bold, color = primaryBlue) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color.Gray) }
-                }
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = Color.White,
-                        selectedDayContainerColor = primaryBlue,
-                        selectedDayContentColor = Color.White,
-                        todayDateBorderColor = primaryBlue,
-                        todayContentColor = primaryBlue
-                    )
-                )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { pickedDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate() }
+                    showDatePicker = false
+                }) { Text("OK", fontWeight = FontWeight.Bold, color = Color(0xFF457AF9)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color.Gray) }
             }
-        }
+        ) { DatePicker(state = datePickerState) }
     }
 }
+
+// ... (Composables DateSelectorCard dan ReminderTimelineItem tetap sama seperti sebelumnya)
 
 @Composable
 fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Color) {
@@ -222,24 +189,13 @@ fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Col
 fun ReminderTimelineItem(
     time: String, medicineName: String, dosage: String, status: String,
     themeColor: Color, isActionEnabled: Boolean,
-    isLoadingAction: Boolean,
-    isFirst: Boolean,
-    isLast: Boolean,
-    onMarkAsTaken: () -> Unit,
-    onUndo: () -> Unit, onCardClick: () -> Unit
+    isLoadingAction: Boolean, isFirst: Boolean, isLast: Boolean,
+    onMarkAsTaken: () -> Unit, onUndo: () -> Unit, onCardClick: () -> Unit
 ) {
     val isTaken = status == "DONE"
     val isMissed = status == "MISSED"
-    val statusColor = when {
-        isTaken -> Color(0xFF4CAF50)
-        isMissed -> Color(0xFFEF5350)
-        else -> themeColor
-    }
-    val statusText = when {
-        isTaken -> "Taken"
-        isMissed -> "Missed"
-        else -> "Pending"
-    }
+    val statusColor = if (isTaken) Color(0xFF4CAF50) else if (isMissed) Color(0xFFEF5350) else themeColor
+    val statusText = if (isTaken) "Taken" else if (isMissed) "Missed" else "Pending"
 
     val displayTime = remember(time) {
         try {
@@ -249,110 +205,31 @@ fun ReminderTimelineItem(
     }
 
     Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        // Timeline Column
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(32.dp)
-        ) {
-            // Garis Atas: Jika item pertama, warnanya transparan.
-            // Jika bukan pertama, garis ditarik penuh ke atas untuk menyambung.
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .weight(1f)
-                    .background(if (isFirst) Color.Transparent else statusColor.copy(alpha = 0.2f))
-            )
-
-            // Indikator Lingkaran (Posisi sejajar secara vertikal dengan icon waktu di dalam card)
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(statusColor.copy(alpha = 0.15f))
-                    .border(1.5.dp, statusColor, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isTaken) Icons.Default.Check else Icons.Default.Circle,
-                    contentDescription = null,
-                    tint = statusColor,
-                    modifier = Modifier.size(12.dp)
-                )
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(32.dp)) {
+            Box(modifier = Modifier.width(2.dp).weight(1f).background(if (isFirst) Color.Transparent else statusColor.copy(alpha = 0.2f)))
+            Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(statusColor.copy(alpha = 0.15f)).border(1.5.dp, statusColor, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(if (isTaken) Icons.Default.Check else Icons.Default.Circle, null, tint = statusColor, modifier = Modifier.size(12.dp))
             }
-
-            // Garis Bawah: Jika item terakhir, warnanya transparan.
-            // Jika bukan terakhir, garis ditarik penuh ke bawah untuk menyambung.
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .weight(1f)
-                    .background(if (isLast) Color.Transparent else statusColor.copy(alpha = 0.2f))
-            )
+            Box(modifier = Modifier.width(2.dp).weight(1f).background(if (isLast) Color.Transparent else statusColor.copy(alpha = 0.2f)))
         }
-
         Spacer(modifier = Modifier.width(8.dp))
-
-        // Konten Card
-        // Gunakan padding vertikal 8.dp untuk memberi jarak antar card,
-        // tapi garis di sisi kiri akan tetap mengisi ruang padding tersebut sehingga tampak menyambung.
         Box(modifier = Modifier.padding(vertical = 8.dp).weight(1f)) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onCardClick() }
-                    .shadow(4.dp, RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
+            Card(modifier = Modifier.fillMaxWidth().clickable { onCardClick() }.shadow(4.dp, RoundedCornerShape(24.dp)), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(statusColor.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime,
-                                    contentDescription = null,
-                                    tint = statusColor,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                            Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(statusColor.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                                Icon(if (isTaken) Icons.Default.CheckCircle else Icons.Default.AccessTime, null, tint = statusColor, modifier = Modifier.size(20.dp))
                             }
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                displayTime,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = Color(0xFF1A1A2E)
-                            )
+                            Text(displayTime, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF1A1A2E))
                         }
-                        Surface(
-                            color = statusColor.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                statusText,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                fontSize = 13.sp,
-                                color = statusColor,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Surface(color = statusColor.copy(alpha = 0.1f), shape = RoundedCornerShape(12.dp)) {
+                            Text(statusText, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontSize = 13.sp, color = statusColor, fontWeight = FontWeight.Bold)
                         }
                     }
                     Spacer(modifier = Modifier.height(14.dp))
-                    Text(
-                        medicineName,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A2E)
-                    )
+                    Text(medicineName, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A2E))
                     Text(dosage, fontSize = 15.sp, color = Color(0xFF757575))
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -363,21 +240,11 @@ fun ReminderTimelineItem(
                             }
                         } else {
                             if (isTaken) {
-                                OutlinedButton(
-                                    onClick = onUndo,
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    border = BorderStroke(1.dp, Color.LightGray)
-                                ) {
+                                OutlinedButton(onClick = onUndo, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Color.LightGray)) {
                                     Text("Undo Mark", fontWeight = FontWeight.Bold)
                                 }
                             } else {
-                                Button(
-                                    onClick = onMarkAsTaken,
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = themeColor, contentColor = Color.White),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
+                                Button(onClick = onMarkAsTaken, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = themeColor, contentColor = Color.White), shape = RoundedCornerShape(16.dp)) {
                                     Text("Mark as Taken", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 }
                             }

@@ -14,7 +14,6 @@ class HistoryRepository(
         return sharedPreferences.getString("auth_token", null)
     }
 
-    // Mengambil 5 aktivitas terbaru (Sesuai Aturan Baru)
     suspend fun getRecentActivity(): GetAllHistoryResponse? {
         return try {
             val token = getToken() ?: return null
@@ -47,6 +46,15 @@ class HistoryRepository(
             val token = getToken() ?: return false
             val request = MarkAsTakenRequest(date = date, timeTaken = timeTaken)
             val response = historyService.markAsTaken("Bearer $token", detailId, request)
+            response.isSuccessful
+        } catch (e: Exception) { false }
+    }
+
+    suspend fun skipOccurrence(detailId: Int, date: String): Boolean {
+        return try {
+            val token = getToken() ?: return false
+            val request = SkipOccurrenceRequest(date = date)
+            val response = historyService.skipOccurrence("Bearer $token", detailId, request)
             response.isSuccessful
         } catch (e: Exception) { false }
     }
