@@ -204,8 +204,6 @@ fun AppRoute() {
     }
 }
 
-// ... MyBottomNavigationBar tetap sama ...
-
 @Composable
 fun MyBottomNavigationBar(
     navController: NavHostController,
