@@ -1,5 +1,6 @@
 package com.wesley.medcare.ui.view.Schedule
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -367,6 +368,7 @@ fun EditReminderView(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTimePickerDialog(
