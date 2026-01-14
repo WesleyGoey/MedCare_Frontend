@@ -32,6 +32,7 @@ import com.wesley.medcare.ui.route.AppView
 import com.wesley.medcare.ui.viewmodel.ScheduleViewModel
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -58,17 +59,14 @@ fun ReminderView(
     val displayFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
     val isToday = remember(pickedDate) { pickedDate.isEqual(LocalDate.now()) }
 
-    // PERBAIKAN UTAMA: Gunakan LaunchedEffect agar tidak memicu fetch ulang setiap recomposition tab
     LaunchedEffect(pickedDate) {
         viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
     }
 
-    // Hanya observe On_Resume jika benar-benar ingin sinkron data server saat buka app lagi
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                // Jangan dipaksa fetch di sini agar status lokal tidak hilang saat pindah tab
-                // viewModel.getSchedulesByDate(pickedDate.format(apiFormatter))
+                // Refresh data if needed when returning to the app
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -143,6 +141,7 @@ fun ReminderView(
         }
     }
 
+    // --- REVISI DATE PICKER DIALOG (IDENTIK DENGAN ADD REMINDER) ---
     if (showDatePicker) {
         val initialMillis = remember(pickedDate) { pickedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
@@ -151,18 +150,39 @@ fun ReminderView(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { pickedDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate() }
+                    datePickerState.selectedDateMillis?.let {
+                        pickedDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
                     showDatePicker = false
-                }) { Text("OK", fontWeight = FontWeight.Bold, color = Color(0xFF457AF9)) }
+                }) { Text("OK", color = Color(0xFF457AF9), fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("CANCEL", color = Color.Gray) }
-            }
-        ) { DatePicker(state = datePickerState) }
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = Color(0xFF8A94A6)) }
+            },
+            colors = DatePickerDefaults.colors(containerColor = Color.White)
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color.White,
+                    titleContentColor = Color(0xFF8A94A6),
+                    headlineContentColor = Color(0xFF1A1A2E),
+                    selectedDayContainerColor = Color(0xFF457AF9),
+                    selectedDayContentColor = Color.White,
+                    todayContentColor = Color(0xFF457AF9),
+                    todayDateBorderColor = Color(0xFF457AF9),
+                    dayContentColor = Color(0xFF1A1A2E),
+                    weekdayContentColor = Color(0xFF8A94A6),
+                    navigationContentColor = Color(0xFF1A1A2E),
+                    yearContentColor = Color(0xFF1A1A2E),
+                    currentYearContentColor = Color(0xFF457AF9),
+                    selectedYearContainerColor = Color(0xFF457AF9),
+                    selectedYearContentColor = Color.White
+                )
+            )
+        }
     }
 }
-
-// ... (Composables DateSelectorCard dan ReminderTimelineItem tetap sama seperti sebelumnya)
 
 @Composable
 fun DateSelectorCard(formattedDate: String, onClick: () -> Unit, themeColor: Color) {
