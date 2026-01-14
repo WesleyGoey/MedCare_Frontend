@@ -53,6 +53,9 @@ fun EditReminderView(
     var showTimePickerDialog by remember { mutableStateOf(false) }
     var selectedTimeIndex by remember { mutableIntStateOf(-1) }
 
+    // TAMBAHAN: State untuk Dialog Konfirmasi
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(scheduleId) {
         viewModel.getScheduleById(scheduleId)
     }
@@ -80,239 +83,269 @@ fun EditReminderView(
         containerColor = Color(0xFFF5F7FA),
         topBar = { BackTopAppBar(title = "Back", onBack = { navController.popBackStack() }) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp)
-        ) {
-            item {
-                Column {
-                    Text(
-                        "Edit Reminder",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A2E)
-                    )
-                    Text("Update reminder information", fontSize = 14.sp, color = Color(0xFF757575))
-                }
-            }
-
-            // --- Section Medication ---
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(2.dp, RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+        Box(modifier = Modifier.fillMaxSize()) { // Tambah Box untuk Loading Overlay
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 10.dp, bottom = 32.dp)
+            ) {
+                item {
+                    Column {
                         Text(
-                            "Medication",
+                            "Edit Reminder",
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color(0xFF1A1A2E),
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            color = Color(0xFF1A1A2E)
                         )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFF0F4FF))
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color.White), contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.logo),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text(
-                                    medicineName,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1A1A2E),
-                                    fontSize = 18.sp
-                                )
-                                Text(dosage, fontSize = 14.sp, color = Color(0xFF757575))
-                            }
-                        }
+                        Text("Update reminder information", fontSize = 14.sp, color = Color(0xFF757575))
                     }
                 }
-            }
 
-            // --- Section Reminder Times ---
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(2.dp, RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Column {
+                // --- Section Medication ---
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(2.dp, RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                "Reminder Times",
+                                "Medication",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = Color(0xFF1A1A2E)
-                            )
-                            Text(
-                                "${timeSlots.size} reminder times per day (Max 3)",
-                                fontSize = 12.sp,
-                                color = Color(0xFF757575)
-                            )
-                        }
-
-                        Spacer(Modifier.height(16.dp))
-
-                        timeSlots.forEachIndexed { index, time ->
-                            Text(
-                                "Time ${index + 1}",
-                                fontSize = 13.sp,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(bottom = 4.dp)
+                                color = Color(0xFF1A1A2E),
+                                modifier = Modifier.padding(bottom = 12.dp)
                             )
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFFF0F4FF))
+                                    .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(Color(0xFFFBC02D)),
-                                    contentAlignment = Alignment.Center
+                                        .size(44.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color.White), contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Default.AccessTime, null, tint = Color.White)
+                                    Image(
+                                        painter = painterResource(id = R.drawable.logo),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(Color(0xFFF5F7FA))
-                                        .clickable {
-                                            selectedTimeIndex = index
-                                            showTimePickerDialog = true
-                                        }
-                                        .padding(horizontal = 16.dp),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
+                                Spacer(Modifier.width(16.dp))
+                                Column {
                                     Text(
-                                        time,
-                                        fontSize = 18.sp,
+                                        medicineName,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF1A1A2E)
+                                        color = Color(0xFF1A1A2E),
+                                        fontSize = 18.sp
                                     )
+                                    Text(dosage, fontSize = 14.sp, color = Color(0xFF757575))
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFFFF5A5F))
-                                        .clickable {
-                                            timeSlots =
-                                                timeSlots.filterIndexed { i, _ -> i != index }
-                                        }, contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        if (timeSlots.size < 3) {
-                            Button(
-                                onClick = { selectedTimeIndex = -1; showTimePickerDialog = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFF457AF9
-                                    ), contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    null,
-                                    modifier = Modifier.size(18.dp)
-                                ); Spacer(Modifier.width(8.dp)); Text("Add Time")
                             }
                         }
                     }
                 }
-            }
 
-            // --- Action Buttons ---
-            item {
-                Spacer(Modifier.height(10.dp))
-                Button(
-                    onClick = {
-                        viewModel.updateSchedule(
-                            scheduleId,
-                            medicineId,
-                            medicineName,
-                            startDate,
-                            timeSlots.map { TimeDetailData(time = it) })
-                    },
-                    enabled = !isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .shadow(4.dp, RoundedCornerShape(16.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    if (isLoading) CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    else Text("Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                // --- Section Reminder Times ---
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(2.dp, RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Column {
+                                Text(
+                                    "Reminder Times",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF1A1A2E)
+                                )
+                                Text(
+                                    "${timeSlots.size} reminder times per day (Max 3)",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF757575)
+                                )
+                            }
+
+                            Spacer(Modifier.height(16.dp))
+
+                            timeSlots.forEachIndexed { index, time ->
+                                Text(
+                                    "Time ${index + 1}",
+                                    fontSize = 13.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(Color(0xFFFBC02D)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.AccessTime, null, tint = Color.White)
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(48.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(Color(0xFFF5F7FA))
+                                            .clickable {
+                                                selectedTimeIndex = index
+                                                showTimePickerDialog = true
+                                            }
+                                            .padding(horizontal = 16.dp),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        Text(
+                                            time,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF1A1A2E)
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFFFF5A5F))
+                                            .clickable {
+                                                timeSlots =
+                                                    timeSlots.filterIndexed { i, _ -> i != index }
+                                            }, contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (timeSlots.size < 3) {
+                                Button(
+                                    onClick = { selectedTimeIndex = -1; showTimePickerDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFF457AF9
+                                        ), contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        null,
+                                        modifier = Modifier.size(18.dp)
+                                    ); Spacer(Modifier.width(8.dp)); Text("Add Time")
+                                }
+                            }
+                        }
+                    }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                // --- Action Buttons ---
+                item {
+                    Spacer(Modifier.height(10.dp))
+                    Button(
+                        onClick = {
+                            viewModel.updateSchedule(
+                                scheduleId,
+                                medicineId,
+                                medicineName,
+                                startDate,
+                                timeSlots.map { TimeDetailData(time = it) })
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .shadow(4.dp, RoundedCornerShape(16.dp)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF457AF9)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
 
-                OutlinedButton(
-                    onClick = {
-                        viewModel.deleteSchedule(
-                            scheduleId,
-                            medicineId,
-                            LocalDate.now().toString()
-                        )
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true }, // REVISI: Munculkan Dialog
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5A5F)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5A5F))
+                    ) {
+                        Icon(Icons.Default.Delete, null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Delete Reminder", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            // --- Dialog Konfirmasi Hapus ---
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Confirm delete", fontWeight = FontWeight.Bold) },
+                    text = { Text("Are you sure you want to delete this reminder? This action cannot be undone.") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDeleteDialog = false
+                            viewModel.deleteSchedule(
+                                scheduleId,
+                                medicineId,
+                                LocalDate.now().toString()
+                            )
+                        }) {
+                            Text("Delete", color = Color(0xFFFF5A5F), fontWeight = FontWeight.Bold)
+                        }
                     },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            // --- Loading Overlay ---
+            if (isLoading) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5A5F)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5A5F))
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Delete Reminder", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    CircularProgressIndicator(color = Color(0xFF457AF9))
                 }
             }
         }

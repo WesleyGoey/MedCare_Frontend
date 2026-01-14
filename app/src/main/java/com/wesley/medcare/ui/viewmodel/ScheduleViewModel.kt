@@ -171,15 +171,30 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // Di dalam ScheduleViewModel.kt
+
     fun deleteSchedule(scheduleId: Int, medicineId: Int, dateToRefresh: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                if (repository.deleteScheduleWithDetails(scheduleId)) {
+                val success = repository.deleteScheduleWithDetails(scheduleId)
+                if (success) {
+                    // Batalkan alarm
                     for (i in 0..5) alarmScheduler.cancel(medicineId * 100 + i)
+
+                    // Set pesan sukses agar UI (EditReminderView) bisa mendeteksi dan navigasi balik
+                    _successMessage.value = "Jadwal berhasil dihapus"
+
+                    // Refresh data untuk list di ReminderView
                     getSchedulesByDate(dateToRefresh, forceRefresh = true)
+                } else {
+                    _errorMessage.value = "Gagal menghapus jadwal"
                 }
-            } finally { _isLoading.value = false }
+            } catch (e: Exception) {
+                _errorMessage.value = "Koneksi bermasalah"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
